@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>Coremium</AssemblyName>
+    <RootNamespace>Coremium.App</RootNamespace>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Product>Coremium for Windows (beta)</Product>
+    <Company>Coremium</Company>
+    <Description>Keeps the app you're using smooth by moving background apps to the efficiency cores.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="app.ico" />
+    <ProjectReference Include="..\Coremium.Core\Coremium.Core.csproj" />
+  </ItemGroup>
+</Project>

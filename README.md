@@ -70,6 +70,12 @@ common local-AI tools). Coremium reads your apps directly and watches your app f
 | 27.0.1 | MacBook Pro 14", M3 Pro | Developed and tested here |
 | 13 to 26, Intel, other Apple chips | | Built for these (deployment target 13.0, universal) but not tested yet. Please report. |
 
+## Windows (beta)
+
+A desktop version for Windows 10 and 11 lives in [`windows/`](windows/). It uses Windows efficiency mode instead of the
+notch, and is a **beta**: not yet tested by hand on a Windows PC. Download it from the
+[Windows beta release](../../releases?q=windows&expanded=true).
+
 ## Install
 
 No paid Apple developer account is needed, so the app is **ad-hoc signed, not notarized**; macOS warns the first time.

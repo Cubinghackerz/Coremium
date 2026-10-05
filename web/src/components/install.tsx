@@ -39,6 +39,7 @@ export function Install() {
           <TabsList>
             <TabsTrigger value="dmg">Disk image</TabsTrigger>
             <TabsTrigger value="terminal">Terminal</TabsTrigger>
+            <TabsTrigger value="windows">Windows (beta)</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="dmg" className="mt-10 grid gap-8 md:grid-cols-[auto_1fr] md:items-center">
@@ -56,6 +57,15 @@ export function Install() {
           <CopyLine text={INSTALL_CMD} />
           <p className="pt-2 text-[15px] text-zinc-500">If something stays slow, this puts every app back:</p>
           <CopyLine text="/Applications/Coremium.app/Contents/MacOS/Coremium --restore-all" />
+        </TabsContent>
+        <TabsContent value="windows" className="mt-10 grid gap-8 md:grid-cols-[auto_1fr] md:items-center">
+          <ButtonLink href="https://github.com/Cubinghackerz/Coremium/releases?q=windows&expanded=true" size="lg" variant="ghost" className="justify-self-start">
+            <Download className="size-[18px]" aria-hidden /> Windows beta
+          </ButtonLink>
+          <p className="text-[16px] leading-relaxed text-zinc-400">
+            A desktop version for Windows 10 and 11 with the same modes and choices. It uses Windows efficiency mode instead of the notch. It is a beta and
+            hasn&apos;t been tested by hand on a Windows PC yet. The app isn&apos;t code-signed, so SmartScreen asks once: More info, Run anyway.
+          </p>
         </TabsContent>
       </Tabs>
     </section>
