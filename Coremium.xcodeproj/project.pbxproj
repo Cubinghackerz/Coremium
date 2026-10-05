@@ -1,0 +1,677 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		04A02B8BA38AFC9CBE0E9EF3 /* InsightsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1128FFA5823DE1E4B93ADEA /* InsightsTab.swift */; };
+		066C8AE504BA64D6382D8ECE /* AppEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FB0A42591D57283FC98E9A0 /* AppEngine.swift */; };
+		09B2B241C20A7746988566BC /* CPULoad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F43C71BBC7D82F445BC7A9 /* CPULoad.swift */; };
+		0C2E3AA3B463807A604C96AC /* CoremiumApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F309A4DA628E12B56BC5F326 /* CoremiumApp.swift */; };
+		12AF2F9FEDD167B33AB008CD /* ProductTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3B76185923C36837CC39DE /* ProductTests.swift */; };
+		275AA604790BEF4CC07EEBD5 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504047CD87248E1B1180B990 /* OnboardingView.swift */; };
+		3DBC2101E51AA1DA8A7C5A3F /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CBB82F7AF85C03A232C477 /* NotchController.swift */; };
+		3EB36F20FD3B7593AA13E853 /* ProcessSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */; };
+		414F9CDEC5459AD43C09C526 /* ModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 239DCD5C408553FAE0C66AAA /* ModeTests.swift */; };
+		421361F07B4991BA64AF0240 /* ChipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958A109951102BDFD94D7305 /* ChipView.swift */; };
+		4354B49D48485FD29DF04F24 /* Logo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8918F561A8BD5DFB26DB662F /* Logo.swift */; };
+		48D1359213D3642339E3DF8B /* NotchViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7552B972EA996FB64E8CDDE7 /* NotchViews.swift */; };
+		4A440635B9A8016C00F7CBFB /* FullscreenFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1692FE952836F132B58CE251 /* FullscreenFix.swift */; };
+		53A0DDEBA898632FF608586D /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76CDB468E43C9B492273FE56 /* Rules.swift */; };
+		53AC5016A4911BE1502AA2D5 /* UsageStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8745E69813751D5C8666CB2A /* UsageStats.swift */; };
+		557803BE47E81EB995596FBB /* Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F47353D77D3294AB2131D351 /* Pitch.swift */; };
+		6690F54A6016421F65A2F6C1 /* CoremiumCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; };
+		775761E4275598427C54A361 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68C498138F008AAB199BFD0E /* Theme.swift */; };
+		7AA508EBA07B72E298F7C7D9 /* PriorityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721D5BF78DEB8ED6703ACA05 /* PriorityController.swift */; };
+		850FA0E0E0C14B0977E860B1 /* SimulationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3EB970F97AFD250CBFB9DD /* SimulationModel.swift */; };
+		8F5B200DF1E996BF610AB368 /* LoginItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96AD8A6A88E7B0242E4D6B16 /* LoginItem.swift */; };
+		999D7924CB35C71719B23344 /* MemoryInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5FA2C0F769434294C3E673 /* MemoryInfo.swift */; };
+		9DAA5E87863F2E1F9F6EBDEB /* GuideSettingsTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4089A208D9CA75523E578BF5 /* GuideSettingsTabs.swift */; };
+		9E0D8CCD25B2D7C72A3EC8F9 /* CoremiumCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; };
+		A10B41D16EAC8D29AF727408 /* RuleEvaluatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40FF670FF732AEBF2D4C9E3 /* RuleEvaluatorTests.swift */; };
+		B33826C2865CC11E48B31279 /* CPUUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */; };
+		BC02B2238434A0E88D991661 /* SimulateTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117964755BEFC6405FDF61D4 /* SimulateTab.swift */; };
+		C17B847C873E005EFE80A953 /* PriorityControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */; };
+		CE79312E123D3B6B6156055E /* CoremiumCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		E28C0C9A1278178913928C85 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677FEFB85D25A87B5BBC84DD /* SettingsStore.swift */; };
+		E427C8AB38A49A1AE5A61B3F /* SystemInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5DB2C289C689AF2656F9F8 /* SystemInfoTests.swift */; };
+		E580F8782832A2FF2E67BC7E /* CoremiumCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		E7CFFA7C31633A9D11BB2829 /* WorkloadLearner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE5FB10CF173B7182E046D9 /* WorkloadLearner.swift */; };
+		F2EE0160439611472E951A30 /* AppCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8BD4A06953CCB5C93E17576 /* AppCategory.swift */; };
+		F7B35295764C5A9BC32B1BA3 /* ChipInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5B1855A2E5BDD1536AA1CF /* ChipInfo.swift */; };
+		F89EC426AA397AC18FF77773 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F728B106F6E1345C43C7124A /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7E12D301E524E6DED43FE709 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7CF2828E8E71DDF5BA9B4537 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E58F4F3B3D3F167F2FBC756E;
+			remoteInfo = CoremiumCore;
+		};
+		D76541E0FE0BF351CB34C127 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7CF2828E8E71DDF5BA9B4537 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E58F4F3B3D3F167F2FBC756E;
+			remoteInfo = CoremiumCore;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		1843D9B4B079718762605731 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				E580F8782832A2FF2E67BC7E /* CoremiumCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F8B455FBE7474B1938895A86 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				CE79312E123D3B6B6156055E /* CoremiumCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0E5DB2C289C689AF2656F9F8 /* SystemInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemInfoTests.swift; sourceTree = "<group>"; };
+		117964755BEFC6405FDF61D4 /* SimulateTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulateTab.swift; sourceTree = "<group>"; };
+		1692FE952836F132B58CE251 /* FullscreenFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenFix.swift; sourceTree = "<group>"; };
+		239DCD5C408553FAE0C66AAA /* ModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeTests.swift; sourceTree = "<group>"; };
+		4089A208D9CA75523E578BF5 /* GuideSettingsTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideSettingsTabs.swift; sourceTree = "<group>"; };
+		4D5B1855A2E5BDD1536AA1CF /* ChipInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipInfo.swift; sourceTree = "<group>"; };
+		504047CD87248E1B1180B990 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		5D4388B9B9014FE40732263E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		677FEFB85D25A87B5BBC84DD /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		68C498138F008AAB199BFD0E /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		6A3EB970F97AFD250CBFB9DD /* SimulationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationModel.swift; sourceTree = "<group>"; };
+		721D5BF78DEB8ED6703ACA05 /* PriorityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriorityController.swift; sourceTree = "<group>"; };
+		72ACDCFF4DC391226F593C42 /* CoremiumCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CoremiumCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7552B972EA996FB64E8CDDE7 /* NotchViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchViews.swift; sourceTree = "<group>"; };
+		76CDB468E43C9B492273FE56 /* Rules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rules.swift; sourceTree = "<group>"; };
+		7B5FA2C0F769434294C3E673 /* MemoryInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryInfo.swift; sourceTree = "<group>"; };
+		81C504EBB7C8B704B50D79EB /* Coremium.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Coremium.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8745E69813751D5C8666CB2A /* UsageStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStats.swift; sourceTree = "<group>"; };
+		8918F561A8BD5DFB26DB662F /* Logo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logo.swift; sourceTree = "<group>"; };
+		8B3B76185923C36837CC39DE /* ProductTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductTests.swift; sourceTree = "<group>"; };
+		8FB0A42591D57283FC98E9A0 /* AppEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEngine.swift; sourceTree = "<group>"; };
+		958A109951102BDFD94D7305 /* ChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipView.swift; sourceTree = "<group>"; };
+		96AD8A6A88E7B0242E4D6B16 /* LoginItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItem.swift; sourceTree = "<group>"; };
+		9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CoremiumCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1128FFA5823DE1E4B93ADEA /* InsightsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsTab.swift; sourceTree = "<group>"; };
+		B8BD4A06953CCB5C93E17576 /* AppCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCategory.swift; sourceTree = "<group>"; };
+		BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriorityControllerTests.swift; sourceTree = "<group>"; };
+		CEE5FB10CF173B7182E046D9 /* WorkloadLearner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkloadLearner.swift; sourceTree = "<group>"; };
+		D40FF670FF732AEBF2D4C9E3 /* RuleEvaluatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleEvaluatorTests.swift; sourceTree = "<group>"; };
+		D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUUsage.swift; sourceTree = "<group>"; };
+		E0CBB82F7AF85C03A232C477 /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
+		EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessSnapshot.swift; sourceTree = "<group>"; };
+		F309A4DA628E12B56BC5F326 /* CoremiumApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoremiumApp.swift; sourceTree = "<group>"; };
+		F47353D77D3294AB2131D351 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
+		F728B106F6E1345C43C7124A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F9F43C71BBC7D82F445BC7A9 /* CPULoad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPULoad.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1CF7DDB26023A82C2308A050 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6690F54A6016421F65A2F6C1 /* CoremiumCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F20E67C288C8769B797EEDBD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9E0D8CCD25B2D7C72A3EC8F9 /* CoremiumCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		06CCF4763EB05DB8A95F4AA4 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				D45F522FAF7E0D359B3E26BB /* CoremiumCoreTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		0D576834D758014CF8F65F30 /* Branding */ = {
+			isa = PBXGroup;
+			children = (
+				8918F561A8BD5DFB26DB662F /* Logo.swift */,
+			);
+			path = Branding;
+			sourceTree = "<group>";
+		};
+		125D9F131450BDC724DC2057 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				96AD8A6A88E7B0242E4D6B16 /* LoginItem.swift */,
+				677FEFB85D25A87B5BBC84DD /* SettingsStore.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		30D6BA14D3043B9AB08786FB /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F309A4DA628E12B56BC5F326 /* CoremiumApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		4179D06421ED937E23B91D0D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				81C504EBB7C8B704B50D79EB /* Coremium.app */,
+				9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */,
+				72ACDCFF4DC391226F593C42 /* CoremiumCoreTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		43FB75C267FD6ED9112728D3 = {
+			isa = PBXGroup;
+			children = (
+				94BA6B8D1DC284C38F0B33DE /* Sources */,
+				06CCF4763EB05DB8A95F4AA4 /* Tests */,
+				4179D06421ED937E23B91D0D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7C79C7D4B5CE7BD31A83AE62 /* Notch */ = {
+			isa = PBXGroup;
+			children = (
+				E0CBB82F7AF85C03A232C477 /* NotchController.swift */,
+				7552B972EA996FB64E8CDDE7 /* NotchViews.swift */,
+				7ED65D154289B46473E60BC1 /* Tabs */,
+			);
+			path = Notch;
+			sourceTree = "<group>";
+		};
+		7D8518C6AD4B6B38DBA5AE20 /* CoremiumCore */ = {
+			isa = PBXGroup;
+			children = (
+				B8BD4A06953CCB5C93E17576 /* AppCategory.swift */,
+				4D5B1855A2E5BDD1536AA1CF /* ChipInfo.swift */,
+				F9F43C71BBC7D82F445BC7A9 /* CPULoad.swift */,
+				D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */,
+				7B5FA2C0F769434294C3E673 /* MemoryInfo.swift */,
+				721D5BF78DEB8ED6703ACA05 /* PriorityController.swift */,
+				EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */,
+				76CDB468E43C9B492273FE56 /* Rules.swift */,
+				6A3EB970F97AFD250CBFB9DD /* SimulationModel.swift */,
+				8745E69813751D5C8666CB2A /* UsageStats.swift */,
+				CEE5FB10CF173B7182E046D9 /* WorkloadLearner.swift */,
+			);
+			path = CoremiumCore;
+			sourceTree = "<group>";
+		};
+		7E63F844BB436444ECC01724 /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				8FB0A42591D57283FC98E9A0 /* AppEngine.swift */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
+		7ED65D154289B46473E60BC1 /* Tabs */ = {
+			isa = PBXGroup;
+			children = (
+				4089A208D9CA75523E578BF5 /* GuideSettingsTabs.swift */,
+				A1128FFA5823DE1E4B93ADEA /* InsightsTab.swift */,
+				117964755BEFC6405FDF61D4 /* SimulateTab.swift */,
+			);
+			path = Tabs;
+			sourceTree = "<group>";
+		};
+		94BA6B8D1DC284C38F0B33DE /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				EF807BCBA315A7F7A633C9D0 /* Coremium */,
+				7D8518C6AD4B6B38DBA5AE20 /* CoremiumCore */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		ACD0551B61F956C0D0DDD847 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				504047CD87248E1B1180B990 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		C6F6D866CE5EC7C78FCDD6C8 /* Chip */ = {
+			isa = PBXGroup;
+			children = (
+				958A109951102BDFD94D7305 /* ChipView.swift */,
+			);
+			path = Chip;
+			sourceTree = "<group>";
+		};
+		CF87DC096D81745E777CF725 /* Fullscreen */ = {
+			isa = PBXGroup;
+			children = (
+				1692FE952836F132B58CE251 /* FullscreenFix.swift */,
+			);
+			path = Fullscreen;
+			sourceTree = "<group>";
+		};
+		D45F522FAF7E0D359B3E26BB /* CoremiumCoreTests */ = {
+			isa = PBXGroup;
+			children = (
+				239DCD5C408553FAE0C66AAA /* ModeTests.swift */,
+				BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */,
+				8B3B76185923C36837CC39DE /* ProductTests.swift */,
+				D40FF670FF732AEBF2D4C9E3 /* RuleEvaluatorTests.swift */,
+				0E5DB2C289C689AF2656F9F8 /* SystemInfoTests.swift */,
+			);
+			path = CoremiumCoreTests;
+			sourceTree = "<group>";
+		};
+		EF807BCBA315A7F7A633C9D0 /* Coremium */ = {
+			isa = PBXGroup;
+			children = (
+				F728B106F6E1345C43C7124A /* Assets.xcassets */,
+				5D4388B9B9014FE40732263E /* Info.plist */,
+				30D6BA14D3043B9AB08786FB /* App */,
+				0D576834D758014CF8F65F30 /* Branding */,
+				C6F6D866CE5EC7C78FCDD6C8 /* Chip */,
+				7E63F844BB436444ECC01724 /* Engine */,
+				CF87DC096D81745E777CF725 /* Fullscreen */,
+				7C79C7D4B5CE7BD31A83AE62 /* Notch */,
+				ACD0551B61F956C0D0DDD847 /* Onboarding */,
+				125D9F131450BDC724DC2057 /* Settings */,
+				FC5BBB91D2B526EAE2969D3B /* Shared */,
+			);
+			path = Coremium;
+			sourceTree = "<group>";
+		};
+		FC5BBB91D2B526EAE2969D3B /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				F47353D77D3294AB2131D351 /* Pitch.swift */,
+				68C498138F008AAB199BFD0E /* Theme.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3E5A6F7E7DABAE61E807690F /* Coremium */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B18725A39CC2B91BF88A074E /* Build configuration list for PBXNativeTarget "Coremium" */;
+			buildPhases = (
+				39D895AA27CBAEE2BB0C4ABA /* Sources */,
+				30792A9D0221EE31F02BF9D0 /* Resources */,
+				1CF7DDB26023A82C2308A050 /* Frameworks */,
+				1843D9B4B079718762605731 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2AFE3CA6CAF148BA41B2738A /* PBXTargetDependency */,
+			);
+			name = Coremium;
+			packageProductDependencies = (
+			);
+			productName = Coremium;
+			productReference = 81C504EBB7C8B704B50D79EB /* Coremium.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AFAD3DFF591F22C958672B78 /* CoremiumCoreTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B650B46CEC98810B3206A28D /* Build configuration list for PBXNativeTarget "CoremiumCoreTests" */;
+			buildPhases = (
+				D095E64F65F6A2753E99EBB9 /* Sources */,
+				F20E67C288C8769B797EEDBD /* Frameworks */,
+				F8B455FBE7474B1938895A86 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				82B0F983F66EAA34FF7D4B51 /* PBXTargetDependency */,
+			);
+			name = CoremiumCoreTests;
+			packageProductDependencies = (
+			);
+			productName = CoremiumCoreTests;
+			productReference = 72ACDCFF4DC391226F593C42 /* CoremiumCoreTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E58F4F3B3D3F167F2FBC756E /* CoremiumCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F3465C8D5697752100B41FE5 /* Build configuration list for PBXNativeTarget "CoremiumCore" */;
+			buildPhases = (
+				AC12D896787256DFFE02CB7C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CoremiumCore;
+			packageProductDependencies = (
+			);
+			productName = CoremiumCore;
+			productReference = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7CF2828E8E71DDF5BA9B4537 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					3E5A6F7E7DABAE61E807690F = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+					AFAD3DFF591F22C958672B78 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+					E58F4F3B3D3F167F2FBC756E = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = F67AF4DD43868D77B2B4BC0F /* Build configuration list for PBXProject "Coremium" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 43FB75C267FD6ED9112728D3;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 4179D06421ED937E23B91D0D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E58F4F3B3D3F167F2FBC756E /* CoremiumCore */,
+				3E5A6F7E7DABAE61E807690F /* Coremium */,
+				AFAD3DFF591F22C958672B78 /* CoremiumCoreTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		30792A9D0221EE31F02BF9D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F89EC426AA397AC18FF77773 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		39D895AA27CBAEE2BB0C4ABA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				066C8AE504BA64D6382D8ECE /* AppEngine.swift in Sources */,
+				421361F07B4991BA64AF0240 /* ChipView.swift in Sources */,
+				0C2E3AA3B463807A604C96AC /* CoremiumApp.swift in Sources */,
+				4A440635B9A8016C00F7CBFB /* FullscreenFix.swift in Sources */,
+				9DAA5E87863F2E1F9F6EBDEB /* GuideSettingsTabs.swift in Sources */,
+				04A02B8BA38AFC9CBE0E9EF3 /* InsightsTab.swift in Sources */,
+				8F5B200DF1E996BF610AB368 /* LoginItem.swift in Sources */,
+				4354B49D48485FD29DF04F24 /* Logo.swift in Sources */,
+				3DBC2101E51AA1DA8A7C5A3F /* NotchController.swift in Sources */,
+				48D1359213D3642339E3DF8B /* NotchViews.swift in Sources */,
+				275AA604790BEF4CC07EEBD5 /* OnboardingView.swift in Sources */,
+				557803BE47E81EB995596FBB /* Pitch.swift in Sources */,
+				E28C0C9A1278178913928C85 /* SettingsStore.swift in Sources */,
+				BC02B2238434A0E88D991661 /* SimulateTab.swift in Sources */,
+				775761E4275598427C54A361 /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AC12D896787256DFFE02CB7C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2EE0160439611472E951A30 /* AppCategory.swift in Sources */,
+				09B2B241C20A7746988566BC /* CPULoad.swift in Sources */,
+				B33826C2865CC11E48B31279 /* CPUUsage.swift in Sources */,
+				F7B35295764C5A9BC32B1BA3 /* ChipInfo.swift in Sources */,
+				999D7924CB35C71719B23344 /* MemoryInfo.swift in Sources */,
+				7AA508EBA07B72E298F7C7D9 /* PriorityController.swift in Sources */,
+				3EB36F20FD3B7593AA13E853 /* ProcessSnapshot.swift in Sources */,
+				53A0DDEBA898632FF608586D /* Rules.swift in Sources */,
+				850FA0E0E0C14B0977E860B1 /* SimulationModel.swift in Sources */,
+				53AC5016A4911BE1502AA2D5 /* UsageStats.swift in Sources */,
+				E7CFFA7C31633A9D11BB2829 /* WorkloadLearner.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D095E64F65F6A2753E99EBB9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				414F9CDEC5459AD43C09C526 /* ModeTests.swift in Sources */,
+				C17B847C873E005EFE80A953 /* PriorityControllerTests.swift in Sources */,
+				12AF2F9FEDD167B33AB008CD /* ProductTests.swift in Sources */,
+				A10B41D16EAC8D29AF727408 /* RuleEvaluatorTests.swift in Sources */,
+				E427C8AB38A49A1AE5A61B3F /* SystemInfoTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2AFE3CA6CAF148BA41B2738A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E58F4F3B3D3F167F2FBC756E /* CoremiumCore */;
+			targetProxy = D76541E0FE0BF351CB34C127 /* PBXContainerItemProxy */;
+		};
+		82B0F983F66EAA34FF7D4B51 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E58F4F3B3D3F167F2FBC756E /* CoremiumCore */;
+			targetProxy = 7E12D301E524E6DED43FE709 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		101A82B474ACDFDA2667E199 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_APP_SANDBOX = NO;
+				INFOPLIST_FILE = Sources/Coremium/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cubinghackerz.coremium;
+				PRODUCT_NAME = Coremium;
+			};
+			name = Debug;
+		};
+		31DD18E1758169ED2D116842 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cubinghackerz.coremium.core;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		5F346F693023368FEFA88BE9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../Frameworks @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cubinghackerz.coremium.tests;
+			};
+			name = Debug;
+		};
+		8DA6C00B25868028A31F0FE6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @loader_path/../Frameworks @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cubinghackerz.coremium.tests;
+			};
+			name = Release;
+		};
+		934AA17E46897AEECF3B01AF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "arm64 x86_64";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.1.0;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		98389E31804CC0307EB67213 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INSTALL_PATH = "@rpath";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cubinghackerz.coremium.core;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		A9F68620DB69BFFE87E06D86 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.1.0;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		BD88868A04363089D4BA9C06 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ENABLE_APP_SANDBOX = NO;
+				INFOPLIST_FILE = Sources/Coremium/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.cubinghackerz.coremium;
+				PRODUCT_NAME = Coremium;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B18725A39CC2B91BF88A074E /* Build configuration list for PBXNativeTarget "Coremium" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				101A82B474ACDFDA2667E199 /* Debug */,
+				BD88868A04363089D4BA9C06 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B650B46CEC98810B3206A28D /* Build configuration list for PBXNativeTarget "CoremiumCoreTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5F346F693023368FEFA88BE9 /* Debug */,
+				8DA6C00B25868028A31F0FE6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F3465C8D5697752100B41FE5 /* Build configuration list for PBXNativeTarget "CoremiumCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				98389E31804CC0307EB67213 /* Debug */,
+				31DD18E1758169ED2D116842 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F67AF4DD43868D77B2B4BC0F /* Build configuration list for PBXProject "Coremium" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A9F68620DB69BFFE87E06D86 /* Debug */,
+				934AA17E46897AEECF3B01AF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7CF2828E8E71DDF5BA9B4537 /* Project object */;
+}

@@ -1,0 +1,18 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project
+        run: xcodegen generate
+      - name: Unit tests (the app itself is never launched)
+        run: xcodebuild -project Coremium.xcodeproj -scheme CoremiumCore -derivedDataPath build test CODE_SIGN_IDENTITY=-
+      - name: Build the app
+        run: xcodebuild -project Coremium.xcodeproj -scheme Coremium -configuration Release -derivedDataPath build CODE_SIGN_IDENTITY=- build

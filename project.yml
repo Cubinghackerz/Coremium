@@ -1,0 +1,115 @@
+name: Coremium
+options:
+  bundleIdPrefix: com.cubinghackerz
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+# All settings are explicit so the project builds the same with any XcodeGen install (no reliance on setting presets).
+settings:
+  base:
+    SDKROOT: macosx
+    PRODUCT_NAME: "$(TARGET_NAME)"
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ALWAYS_SEARCH_USER_PATHS: NO
+    CLANG_ENABLE_MODULES: YES
+    CLANG_ENABLE_OBJC_ARC: YES
+    COMBINE_HIDPI_IMAGES: YES
+    COPY_PHASE_STRIP: NO
+    DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+    # No paid Apple Developer account: ad-hoc signing ("Sign to Run Locally").
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+    DEAD_CODE_STRIPPING: YES
+  configs:
+    Debug:
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+      GCC_OPTIMIZATION_LEVEL: "0"
+      ENABLE_TESTABILITY: YES
+      ONLY_ACTIVE_ARCH: YES
+      DEBUG_INFORMATION_FORMAT: dwarf
+    Release:
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+      SWIFT_COMPILATION_MODE: wholemodule
+      ONLY_ACTIVE_ARCH: NO
+      ARCHS: "arm64 x86_64"
+
+targets:
+  CoremiumCore:
+    type: framework
+    platform: macOS
+    sources: [Sources/CoremiumCore]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cubinghackerz.coremium.core
+        GENERATE_INFOPLIST_FILE: YES
+        DEFINES_MODULE: YES
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: NO
+        INSTALL_PATH: "@rpath"
+        DYLIB_INSTALL_NAME_BASE: "@rpath"
+        DYLIB_COMPATIBILITY_VERSION: "1"
+        DYLIB_CURRENT_VERSION: "1"
+        VERSIONING_SYSTEM: apple-generic
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks"
+
+  Coremium:
+    type: application
+    platform: macOS
+    sources: [Sources/Coremium]
+    dependencies:
+      - target: CoremiumCore
+        embed: true
+    info:
+      path: Sources/Coremium/Info.plist
+      properties:
+        CFBundleDisplayName: Coremium
+        CFBundleName: Coremium
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSUIElement: true
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        LSApplicationCategoryType: public.app-category.utilities
+        NSHumanReadableCopyright: "MIT License. Not affiliated with Apple Inc."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cubinghackerz.coremium
+        PRODUCT_NAME: Coremium
+        ENABLE_APP_SANDBOX: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+
+  CoremiumCoreTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests/CoremiumCoreTests]
+    dependencies:
+      - target: CoremiumCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cubinghackerz.coremium.tests
+        GENERATE_INFOPLIST_FILE: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @loader_path/../Frameworks @executable_path/../Frameworks"
+
+schemes:
+  Coremium:
+    build:
+      targets:
+        Coremium: all
+        CoremiumCoreTests: [test]
+    test:
+      targets: [CoremiumCoreTests]
+  CoremiumCore:
+    build:
+      targets:
+        CoremiumCore: all
+        CoremiumCoreTests: [test]
+    test:
+      targets: [CoremiumCoreTests]

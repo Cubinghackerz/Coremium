@@ -1,0 +1,29 @@
+{
+  "name": "coremium",
+  "projectId": "vRc5afayoaSkqLa0GT8AK",
+  "displayName": "Coremium",
+  "private": true,
+  "type": "module",
+  "main": "index.tsx",
+  "scripts": {
+    "open": "diffusion open .",
+    "context": "diffusion context",
+    "capture": "diffusion capture",
+    "probe": "diffusion media probe",
+    "transcribe": "diffusion media transcribe",
+    "grab": "diffusion media grab",
+    "filmstrip": "diffusion media filmstrip",
+    "waveform": "diffusion media waveform",
+    "listen": "diffusion media listen",
+    "models": "diffusion models",
+    "voices": "diffusion voices",
+    "fonts": "diffusion fonts",
+    "logs": "diffusion logs",
+    "screenshot": "diffusion screenshot",
+    "report": "diffusion report"
+  },
+  "devDependencies": {
+    "@diffusionstudio/jsx": "latest",
+    "solid-js": "^1.9.10"
+  }
+}
