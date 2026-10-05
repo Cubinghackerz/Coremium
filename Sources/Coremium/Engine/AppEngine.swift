@@ -447,7 +447,9 @@ final class AppEngine: ObservableObject {
             if !moved.isEmpty { sentences.append(Self.movedSentence(moved)) }
         } else {
             headline = "Standing by"
-            sentences = ["No Boost is running, so nothing is being moved. Your app rules are ready."]
+            sentences = [rules.mode == .automatic
+                ? "No Boost is running, so nothing is being moved. Automatic switches profile when a game, creative app, dev tool or local AI model is in front."
+                : "No Boost is running, so nothing is being moved. Your app rules are ready."]
         }
         decisions.insert(Decision(date: Date(), headline: headline, detail: sentences.joined(separator: " ")), at: 0)
         if decisions.count > 30 { decisions.removeLast(decisions.count - 30) }

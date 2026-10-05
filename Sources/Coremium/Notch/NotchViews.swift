@@ -282,6 +282,13 @@ private struct ModeBar: View {
         .animation(.easeInOut(duration: 0.2), value: engine.rules.mode)
     }
 
+    /// Automatic shows what it chose right now: "Automatic · Coding".
+    private func pillTitle(_ mode: PerformanceMode, selected: Bool) -> String {
+        guard selected, mode == .automatic else { return mode.label }
+        let active = engine.activeProfile.mode
+        return active == .automatic || active == .balanced || engine.paused ? mode.label : "\(mode.label) · \(active.label)"
+    }
+
     private func bar(labelAll: Bool) -> some View {
         HStack(spacing: 4) {
             ForEach(PerformanceMode.allCases, id: \.self) { mode in
@@ -290,7 +297,7 @@ private struct ModeBar: View {
                     HStack(spacing: 4) {
                         Image(systemName: mode.symbol).font(.system(size: 10.5, weight: .semibold))
                         if selected || labelAll {
-                            Text(mode.label).font(.system(size: 10.5, weight: .semibold, design: .rounded))
+                            Text(pillTitle(mode, selected: selected)).font(.system(size: 10.5, weight: .semibold, design: .rounded))
                                 .lineLimit(1).fixedSize()
                         }
                     }
