@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coremium</title>
+<meta name="description" content="Coremium lives in your Mac's notch and moves background apps to the efficiency cores while the app you're using stays smooth. Nothing is closed. Free and open source.">
+<meta property="og:title" content="Coremium">
+<meta property="og:description" content="Keep what matters smooth, without closing anything.">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --wafer: #e9ecef;
+  --paper: #f6f7f8;
+  --ink: #0a0c10;
+  --die: #161a21;
+  --die-2: #222833;
+  --line: #cdd2d8;
+  --muted: #5a6370;
+  --core: #2bbcf0;
+  --cool: #7c5cff;
+  --mint: #3fd9a6;
+  --amber: #f1a43a;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "SF Pro Display", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --wafer: #0d1014; --paper: #141820; --ink: #eef1f4; --line: #262c36; --muted: #98a2b0; }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--wafer); color: var(--ink);
+  font: 400 18px/1.55 var(--display); font-variation-settings: "opsz" 14;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--core); outline-offset: 3px; border-radius: 6px; }
+
+/* ---------- the menu bar and the notch ---------- */
+.bar {
+  position: fixed; inset: 0 0 auto 0; height: 34px; z-index: 20;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  padding: 0 18px; font-size: 13.5px; font-weight: 500;
+  background: color-mix(in srgb, var(--wafer) 72%, transparent); backdrop-filter: blur(18px) saturate(1.4);
+}
+.bar .left { display: flex; gap: 18px; align-items: center; }
+.bar .left b { font-weight: 800; }
+.bar .right { display: flex; gap: 18px; justify-content: flex-end; align-items: center; }
+.bar a { text-decoration: none; }
+.bar a:hover { text-decoration: underline; }
+.bar .get { background: var(--ink); color: var(--wafer); padding: 3px 12px; border-radius: 99px; font-weight: 700; }
+.bar .get:hover { text-decoration: none; opacity: .85; }
+
+.notch {
+  position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 30;
+  width: 196px; height: 34px; background: #000; color: #fff;
+  border-radius: 0 0 14px 14px; overflow: hidden; cursor: pointer;
+  transition: width .5s cubic-bezier(.2,.9,.25,1.05), height .5s cubic-bezier(.2,.9,.25,1.05), border-radius .5s;
+  box-shadow: 0 18px 40px -18px rgba(0,0,0,.55);
+}
+.notch.open { width: min(640px, 94vw); height: 408px; border-radius: 0 0 30px 30px; cursor: default; }
+.notch .ears { position: absolute; inset: 0 0 auto 0; height: 34px; display: flex; justify-content: space-between; align-items: center; padding: 0 12px; transition: opacity .2s; }
+.notch.open .ears { opacity: 0; pointer-events: none; }
+.notch .dot { width: 8px; height: 8px; border-radius: 50%; background: #5b616b; transition: background .3s, box-shadow .3s; }
+.notch .dot.on { background: #35d07f; box-shadow: 0 0 8px #35d07f; }
+.notch .wand { color: var(--core); font-size: 13px; line-height: 1; }
+.panel { position: absolute; inset: 44px 22px 20px; opacity: 0; transition: opacity .25s; font-size: 13px; }
+.notch.open .panel { opacity: 1; transition-delay: .22s; }
+.modes { display: flex; gap: 5px; flex-wrap: wrap; }
+.modes button { all: unset; cursor: pointer; padding: 5px 10px; border-radius: 99px; background: #ffffff17; font-weight: 600; font-size: 12px; color: #ffffffcc; }
+.modes button[aria-pressed="true"] { background: var(--core); color: #000; }
+.status { margin: 12px 0 2px; font-weight: 600; display: flex; align-items: center; gap: 8px; min-height: 20px; }
+.why { color: #ffffff99; min-height: 36px; line-height: 1.4; font-size: 12.5px; margin-bottom: 10px; }
+.why b { color: #fff; font-weight: 700; }
+.rows { display: grid; gap: 4px; }
+.row { display: flex; align-items: center; gap: 10px; background: #ffffff0d; border-radius: 10px; padding: 6px 10px; }
+.row .ic { width: 20px; height: 20px; border-radius: 6px; flex: none; }
+.row .nm { font-weight: 600; flex: 1; min-width: 0; }
+.row .nm small { display: block; font-weight: 400; font-size: 11px; color: #ffffff77; }
+.row .tag { font-size: 11px; font-weight: 700; color: var(--mint); opacity: 0; transition: opacity .3s; }
+.row.moved .tag { opacity: 1; }
+.chips { display: flex; gap: 3px; }
+.chips button { all: unset; cursor: pointer; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: #ffffff14; color: #ffffffa0; }
+.chips button[aria-pressed="true"] { background: #fff; color: #000; }
+.chips button.boost[aria-pressed="true"] { background: var(--amber); }
+.chips button.yield[aria-pressed="true"] { background: var(--core); }
+.chips button.eco[aria-pressed="true"] { background: var(--mint); }
+.hint { margin-top: 10px; color: #ffffff66; font-size: 11.5px; }
+
+/* ---------- hero ---------- */
+main { padding-top: 96px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+.hero { padding-block: 70px 90px; }
+h1 {
+  font-size: clamp(46px, 8.6vw, 124px); line-height: .94; letter-spacing: -.035em; font-weight: 800;
+  font-variation-settings: "opsz" 96; margin: 0 0 28px; max-width: 12.5em; text-wrap: balance;
+}
+.lead { font-size: clamp(19px, 2.2vw, 24px); max-width: 34em; color: var(--muted); margin: 0 0 34px; line-height: 1.45; }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 15px 26px; border-radius: 99px; font-weight: 700; font-size: 18px; text-decoration: none; background: var(--ink); color: var(--wafer); transition: transform .15s; }
+.btn:hover { transform: translateY(-2px); }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px var(--line); }
+.fine { font-size: 15px; color: var(--muted); margin-top: 18px; }
+
+/* ---------- sections ---------- */
+section { padding: 96px 0; border-top: 1px solid var(--line); }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 64px; align-items: center; }
+h2 { font-size: clamp(32px, 4.6vw, 58px); line-height: 1; letter-spacing: -.03em; font-weight: 800; margin: 0 0 22px; font-variation-settings: "opsz" 72; text-wrap: balance; }
+p { max-width: 36em; margin: 0 0 16px; }
+.muted { color: var(--muted); }
+
+/* the cores */
+.die { background: var(--die); color: #fff; border-radius: 28px; padding: 28px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.5); }
+.die h3 { margin: 0 0 12px; font-size: 15px; font-weight: 600; color: #ffffffb0; }
+.corerow { display: flex; gap: 8px; margin-bottom: 26px; min-height: 76px; flex-wrap: wrap; align-items: flex-start; }
+.core { flex: none; border-radius: 10px; background: #ffffff10; }
+.core.p { width: 76px; height: 76px; }
+.core.e { width: 52px; height: 52px; }
+.work { position: relative; display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; }
+.app { font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 99px; background: #fff; color: #000; transition: background .5s, color .5s; }
+.app.keep { background: var(--amber); }
+.app.away { background: #ffffff1f; color: #fff; }
+.switch { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+.switch button { all: unset; cursor: pointer; width: 58px; height: 32px; border-radius: 99px; background: #ffffff26; position: relative; transition: background .3s; }
+.switch button::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .3s cubic-bezier(.3,1.4,.5,1); }
+.switch button[aria-pressed="true"] { background: var(--core); }
+.switch button[aria-pressed="true"]::after { transform: translateX(26px); }
+.switch span { font-weight: 700; }
+
+/* four choices */
+.choices { margin: 40px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid var(--line); }
+.choice { padding: 26px 24px 8px 0; }
+.choice + .choice { padding-left: 24px; border-left: 1px solid var(--line); }
+.choice dt { font-size: clamp(34px, 4.4vw, 56px); font-weight: 800; letter-spacing: -.03em; line-height: 1; margin-bottom: 12px; font-variation-settings: "opsz" 72; }
+.choice dd { margin: 0; color: var(--muted); font-size: 16.5px; line-height: 1.45; }
+.c-boost dt { color: var(--amber); } .c-normal dt { color: var(--muted); } .c-yield dt { color: var(--core); } .c-eco dt { color: var(--mint); }
+
+/* shows its work */
+.log { background: var(--paper); border-radius: 22px; padding: 26px 28px; box-shadow: inset 0 0 0 1px var(--line); }
+.log p { margin: 0 0 14px; font-size: 18px; }
+.log p:last-child { margin: 0; }
+.log b { font-weight: 800; }
+.log time { display: block; font-size: 13.5px; color: var(--muted); margin-bottom: 2px; }
+
+/* install */
+.install { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; }
+.cmd { display: flex; align-items: center; gap: 12px; background: var(--die); color: #e8edf3; border-radius: 16px; padding: 16px 18px; font: 500 15px/1.4 ui-monospace, "SF Mono", Menlo, monospace; overflow-x: auto; }
+.cmd code { flex: 1; min-width: 0; white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
+.cmd button { all: unset; cursor: pointer; font: 700 14px var(--display); background: #ffffff1c; padding: 6px 14px; border-radius: 99px; }
+.cmd button:hover { background: #ffffff33; }
+ol.steps { padding-left: 1.2em; margin: 0 0 16px; } ol.steps li { margin-bottom: 8px; max-width: 32em; }
+footer { padding: 54px 0 80px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15.5px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 14px 32px; justify-content: space-between; }
+
+@media (max-width: 860px) {
+  .split, .install { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .choices { grid-template-columns: 1fr 1fr; }
+  .choice + .choice { border-left: 0; padding-left: 0; }
+  .choice { padding: 22px 12px 8px 0; border-top: 1px solid var(--line); }
+  .choices { border-top: 0; }
+  .bar .left span, .bar .right a:not(.get) { display: none; }
+  .notch.open { height: 440px; }
+  section { padding: 64px 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="left"><b>Coremium</b><span>Download</span><span>Source</span></div>
+  <div></div>
+  <div class="right"><a href="https://github.com/Cubinghackerz/Coremium">GitHub</a><a class="get" href="#install">Get Coremium</a></div>
+</header>
+
+<div class="notch" id="notch" role="button" tabindex="0" aria-expanded="false" aria-label="Try Coremium: open the notch demo">
+  <div class="ears"><span class="wand" aria-hidden="true">✦</span><span class="dot" id="dot"></span></div>
+  <div class="panel" aria-live="polite">
+    <div class="modes" id="modes">
+      <button aria-pressed="true">Automatic</button><button aria-pressed="false">Gaming</button><button aria-pressed="false">Creator</button><button aria-pressed="false">Coding</button><button aria-pressed="false">Local AI</button>
+    </div>
+    <div class="status"><span id="status">Automatically adapting to what you're doing</span></div>
+    <div class="why" id="why"><b>Try it.</b> Switch the app in front, or change what each app does.</div>
+    <div class="rows" id="rows"></div>
+    <div class="hint">This is a working demo of the real panel. Click outside to close.</div>
+  </div>
+</div>
+
+<main>
+  <div class="wrap hero">
+    <h1>Keep what matters smooth, without closing anything.</h1>
+    <p class="lead">Coremium lives in your Mac's notch. While you play, render, code or run a local model, it quietly moves everything else to the efficiency cores. You choose which apps get out of the way.</p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/Cubinghackerz/Coremium/releases/latest">Download for Mac</a>
+      <a class="btn ghost" href="https://github.com/Cubinghackerz/Coremium">Read the source</a>
+    </div>
+    <p class="fine">Free, open source, no account, no network access. macOS 13 or later, Apple Silicon and Intel.</p>
+  </div>
+
+  <section>
+    <div class="wrap split">
+      <div>
+        <h2>Your Mac has two kinds of cores. Apps rarely share them well.</h2>
+        <p>Performance cores are fast and power-hungry. Efficiency cores are calm and frugal. When a game and a dozen background apps all pile onto the fast cores, the game waits its turn.</p>
+        <p class="muted">Coremium points your background apps at the efficient ones while the app in front keeps the fast ones. When you're done, everything goes back to how macOS had it.</p>
+      </div>
+      <div class="die" aria-label="Illustration of apps moving between core types">
+        <h3>Performance cores</h3>
+        <div class="corerow" id="pcores"></div>
+        <h3>Efficiency cores</h3>
+        <div class="corerow" id="ecores"></div>
+        <div class="work" id="work"></div>
+        <div class="switch" style="margin-top:22px"><button id="sw" aria-pressed="false" aria-label="Turn Coremium on in the illustration"></button><span id="swlabel">Coremium off</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Four choices for every app.</h2>
+      <p class="muted">Coremium picks sensible defaults from what each app is. Change any of them whenever you like. Your choice always beats the mode.</p>
+      <dl class="choices">
+        <div class="choice c-boost"><dt>Boost</dt><dd>Protected. When you use it, everything else is kept out of its way. Your game, your editor, your render.</dd></div>
+        <div class="choice c-normal"><dt>Normal</dt><dd>Left alone. Coremium never touches it.</dd></div>
+        <div class="choice c-yield"><dt>Yield</dt><dd>Steps aside to the efficiency cores while something else is boosted. Chrome, chat, a sync app.</dd></div>
+        <div class="choice c-eco"><dt>Eco</dt><dd>Always on the efficiency cores, unless you're using it. Backups and things you never need fast.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <div>
+        <h2>It tells you why.</h2>
+        <p>Automatic mode watches what you're doing and says what it changed, so it never feels like a black box. Turn on Advanced for the numbers: per-core load, memory, process counts and which rule applies to each app.</p>
+        <p class="muted">Pause puts everything back to macOS defaults straight away.</p>
+      </div>
+      <div class="log" aria-label="Examples of decisions Coremium explains">
+        <p><time>Gaming mode activated</time>Roblox became active. Chrome and Discord moved to Yield, Spotify to Eco.</p>
+        <p><time>Back to normal</time>Nothing to protect right now. Every app runs at default priority.</p>
+        <p><time>Paused</time>macOS default scheduling restored. Nothing is being moved.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <div>
+        <h2>What it doesn't do.</h2>
+      </div>
+      <div>
+        <p>It never quits or freezes an app. It only touches your own user's apps, with no root helper and no network access.</p>
+        <p>macOS has no way to push an app above normal priority, so Boost works by clearing the way for it. If your Mac isn't overloaded, there is little to move.</p>
+        <p>It doesn't promise more frames, longer battery life or a cooler Mac, because it can't measure those. It shows what it can measure: how long a boost ran and how many processes it moved.</p>
+        <p class="muted">Quitting Coremium, or running its restore command, puts everything back.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <h2>Install it in a minute.</h2>
+      <div class="install">
+        <div>
+          <p><a class="btn" href="https://github.com/Cubinghackerz/Coremium/releases/latest">Download the disk image</a></p>
+          <ol class="steps">
+            <li>Open the downloaded Coremium disk image and drag Coremium onto Applications.</li>
+            <li>Open it. Coremium is signed without a paid Apple developer account, so macOS asks once: open System Settings, Privacy &amp; Security, and choose Open Anyway.</li>
+            <li>Follow the short tour, then hover the notch.</li>
+          </ol>
+          <p class="muted">Checksums are published with every release.</p>
+        </div>
+        <div>
+          <p>Prefer Terminal? This downloads the latest release, checks its checksum and installs it, with no warning from macOS.</p>
+          <div class="cmd"><code id="cmd">curl -fsSL https://raw.githubusercontent.com/Cubinghackerz/Coremium/master/scripts/install.sh | bash</code><button id="copy">Copy</button></div>
+          <p class="muted" style="margin-top:16px">Something stays slow? <code>/Applications/Coremium.app/Contents/MacOS/Coremium --restore-all</code> puts every app back.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Coremium is free and open source under the MIT license.</span>
+    <span><a href="https://github.com/Cubinghackerz/Coremium">GitHub</a> &nbsp; <a href="https://github.com/Cubinghackerz/Coremium/issues">Report a problem</a></span>
+    <span>Not affiliated with Apple. The Apple logo in the app is Apple's own system symbol, drawn by macOS.</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- notch demo ---- */
+  const apps = [
+    { id: 'game', name: 'Roblox', kind: 'Games', color: '#6f7cff', rule: 'boost', initial: 'boost' },
+    { id: 'chrome', name: 'Google Chrome', kind: 'Browsers', color: '#ef6a5b', rule: 'yield' },
+    { id: 'term', name: 'Terminal', kind: 'Developer tools', color: '#8d96a3', rule: 'normal' },
+    { id: 'spot', name: 'Spotify', kind: 'Media', color: '#2fcf6f', rule: 'eco' },
+  ];
+  let front = 'term', mode = 'Automatic';
+  const notch = $('#notch'), rowsEl = $('#rows');
+
+  function movedList() {
+    const boosted = apps.find(a => a.id === front && a.rule === 'boost');
+    return apps.filter(a => a.id !== front && (a.rule === 'eco' || (boosted && a.rule === 'yield')));
+  }
+  function render() {
+    const boosted = apps.find(a => a.id === front && a.rule === 'boost');
+    const moved = movedList();
+    rowsEl.innerHTML = '';
+    apps.forEach(a => {
+      const r = document.createElement('div');
+      r.className = 'row' + (moved.includes(a) ? ' moved' : '');
+      r.innerHTML = `<span class="ic" style="background:${a.color}"></span>
+        <span class="nm">${a.name}<small>${front === a.id ? 'In front' : a.kind}</small></span>
+        <span class="tag">Background</span>
+        <span class="chips">${['boost','normal','yield','eco'].map(k =>
+          `<button class="${k}" data-app="${a.id}" data-rule="${k}" aria-pressed="${a.rule === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</span>`;
+      r.querySelector('.nm').addEventListener('click', () => { front = a.id; render(); });
+      rowsEl.appendChild(r);
+    });
+    $('#dot').classList.toggle('on', !!boosted);
+    $('#status').textContent = boosted
+      ? `Protecting ${boosted.name} · ${moved.length * 6} background processes moved off the fast cores`
+      : (mode === 'Automatic' ? "Automatically adapting to what you're doing" : `${mode} mode. Waiting for a boost app.`);
+    const name = (list) => list.map(a => a.name).join(' and ');
+    const y = moved.filter(a => a.rule === 'yield'), e = moved.filter(a => a.rule === 'eco');
+    const parts = [];
+    if (y.length) parts.push(`${name(y)} moved to Yield`);
+    if (e.length) parts.push(`${name(e)} ${parts.length ? 'to' : 'moved to'} Eco`);
+    const frontApp = apps.find(a => a.id === front);
+    $('#why').innerHTML = boosted
+      ? `<b>${mode === 'Automatic' ? 'Gaming mode activated' : mode + ' mode'}.</b> ${boosted.name} became active. ${parts.join(' and ')}.`
+      : `<b>Back to normal.</b> ${frontApp.name} is in front and nothing needs protecting. Click Roblox to see Coremium step in.`;
+  }
+  rowsEl.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-rule]'); if (!b) return;
+    const app = apps.find(a => a.id === b.dataset.app);
+    app.rule = app.rule === b.dataset.rule ? 'normal' : b.dataset.rule;
+    render();
+  });
+  $('#modes').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    mode = b.textContent;
+    document.querySelectorAll('#modes button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    render();
+  });
+  const open = () => { notch.classList.add('open'); notch.setAttribute('aria-expanded', 'true'); };
+  const close = () => { notch.classList.remove('open'); notch.setAttribute('aria-expanded', 'false'); };
+  let hoverTimer;
+  notch.addEventListener('mouseenter', () => { hoverTimer = setTimeout(open, 250); });
+  notch.addEventListener('mouseleave', () => { clearTimeout(hoverTimer); if (!userPinned) close(); });
+  let userPinned = false;
+  notch.addEventListener('click', () => { userPinned = true; open(); });
+  notch.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { userPinned = true; open(); e.preventDefault(); } if (e.key === 'Escape') { userPinned = false; close(); } });
+  document.addEventListener('click', (e) => { if (!notch.contains(e.target)) { userPinned = false; close(); } });
+  render();
+
+  /* the one orchestrated moment: the notch opens once on load and shows the idea */
+  if (!reduce) {
+    setTimeout(() => {
+      if (userPinned) return;
+      open();
+      setTimeout(() => { if (!userPinned) { front = 'game'; render(); } }, 1500);
+      setTimeout(() => { if (!userPinned) { front = 'term'; render(); close(); } }, 6200);
+    }, 1400);
+  }
+
+  /* ---- cores illustration ---- */
+  const P = 5, E = 6;
+  for (let i = 0; i < P; i++) $('#pcores').insertAdjacentHTML('beforeend', '<div class="core p"></div>');
+  for (let i = 0; i < E; i++) $('#ecores').insertAdjacentHTML('beforeend', '<div class="core e"></div>');
+  const work = $('#work');
+  const mix = [['Game', 'keep'], ['Browser', ''], ['Chat', ''], ['Notes sync', ''], ['AI helper', ''], ['Mail', '']];
+  mix.forEach(([n, c]) => work.insertAdjacentHTML('beforeend', `<span class="app ${c}">${n}</span>`));
+  const sw = $('#sw');
+  sw.addEventListener('click', () => {
+    const on = sw.getAttribute('aria-pressed') !== 'true';
+    sw.setAttribute('aria-pressed', on);
+    $('#swlabel').textContent = on ? 'Coremium on: only the game keeps the fast cores' : 'Coremium off: everything competes for the fast cores';
+    work.querySelectorAll('.app').forEach(a => a.classList.toggle('away', on && !a.classList.contains('keep')));
+    document.querySelectorAll('#pcores .core').forEach((c, i) => {
+      c.style.background = on ? (i < 2 ? 'var(--amber)' : '#ffffff10') : (i < 5 ? 'var(--core)' : '#ffffff10');
+      c.style.opacity = on ? (i < 2 ? 1 : .5) : 1;
+    });
+    document.querySelectorAll('#ecores .core').forEach((c, i) => { c.style.background = on ? 'var(--mint)' : '#ffffff10'; c.style.opacity = on ? (.35 + (i % 3) * .2) : 1; });
+  });
+  document.querySelectorAll('#pcores .core').forEach(c => c.style.background = 'var(--core)');
+  $('#swlabel').textContent = 'Coremium off: everything competes for the fast cores';
+  $('#sw').nextElementSibling.style.fontSize = '15px';
+
+  /* ---- copy ---- */
+  $('#copy').addEventListener('click', async (e) => {
+    try { await navigator.clipboard.writeText($('#cmd').textContent); e.target.textContent = 'Copied'; setTimeout(() => e.target.textContent = 'Copy', 1600); } catch (_) {}
+  });
+})();
+</script>
+</body>
+</html>

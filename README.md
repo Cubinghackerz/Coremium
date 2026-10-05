@@ -74,7 +74,9 @@ common local-AI tools). Coremium reads your apps directly and watches your app f
 
 No paid Apple developer account is needed, so the app is **ad-hoc signed, not notarized**; macOS warns the first time.
 
-1. Download `Coremium-x.y.z.zip` from [Releases](../../releases), unzip, drag **Coremium** to `/Applications`.
+1. Download `Coremium-x.y.z.dmg` from [Releases](../../releases), open it and drag **Coremium** to Applications. Or in
+   Terminal (checks the checksum, no first-launch warning):
+   `curl -fsSL https://raw.githubusercontent.com/Cubinghackerz/Coremium/master/scripts/install.sh | bash`
 2. Open it. If macOS can't verify it: **System Settings › Privacy & Security › "Open Anyway"**, or in Terminal:
    `xattr -dr com.apple.quarantine /Applications/Coremium.app`
 3. Follow the welcome tour. Hover the notch (or click the menu-bar chip icon) to open the panel. While a game is in

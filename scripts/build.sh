@@ -15,5 +15,21 @@ APP="build/Release/Build/Products/Release/Coremium.app"
 codesign --verify --deep --strict "$APP"
 mkdir -p dist
 ditto -c -k --sequesterRsrc --keepParent "$APP" "dist/Coremium-$VERSION.zip"
-( cd dist && shasum -a 256 "Coremium-$VERSION.zip" | tee "Coremium-$VERSION.zip.sha256" )
-echo "Built dist/Coremium-$VERSION.zip (archs: $(lipo -archs "$APP/Contents/MacOS/Coremium"))"
+
+# Disk image: the app, a shortcut to /Applications, and a note about the first launch.
+STAGE="$(mktemp -d)"
+cp -R "$APP" "$STAGE/Coremium.app"
+ln -s /Applications "$STAGE/Applications"
+cat > "$STAGE/If macOS blocks it.txt" <<'NOTE'
+Coremium is free and open source, signed ad hoc (no paid Apple developer account), so macOS asks once.
+
+1. Drag Coremium onto Applications, then open it.
+2. If macOS says it can't verify the app: System Settings > Privacy & Security > "Open Anyway".
+   Or in Terminal:  xattr -dr com.apple.quarantine /Applications/Coremium.app
+
+Source and checksums: https://github.com/Cubinghackerz/Coremium
+NOTE
+hdiutil create -quiet -volname "Coremium" -srcfolder "$STAGE" -ov -format UDZO "dist/Coremium-$VERSION.dmg"
+rm -rf "$STAGE"
+( cd dist && shasum -a 256 "Coremium-$VERSION.zip" "Coremium-$VERSION.dmg" | tee "Coremium-$VERSION.sha256" )
+echo "Built dist/Coremium-$VERSION.zip and .dmg (archs: $(lipo -archs "$APP/Contents/MacOS/Coremium"))"

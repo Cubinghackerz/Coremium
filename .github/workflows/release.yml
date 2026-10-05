@@ -18,5 +18,6 @@ jobs:
         with:
           files: |
             dist/*.zip
+            dist/*.dmg
             dist/*.sha256
           generate_release_notes: true
