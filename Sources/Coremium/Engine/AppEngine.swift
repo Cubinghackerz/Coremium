@@ -446,8 +446,8 @@ final class AppEngine: ObservableObject {
             }
             if !moved.isEmpty { sentences.append(Self.movedSentence(moved)) }
         } else {
-            headline = "Back to normal"
-            sentences = ["Nothing to protect right now. Every app runs at default priority."]
+            headline = "Standing by"
+            sentences = ["No Boost is running, so nothing is being moved. Your app rules are ready."]
         }
         decisions.insert(Decision(date: Date(), headline: headline, detail: sentences.joined(separator: " ")), at: 0)
         if decisions.count > 30 { decisions.removeLast(decisions.count - 30) }

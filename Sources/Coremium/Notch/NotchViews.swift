@@ -438,7 +438,7 @@ private struct ProofStrip: View {
                     .background(Capsule().fill(CoremiumLogo.cyan))
             }
             .buttonStyle(.plain)
-            .help("Measured history and why Coremium made each decision.")
+            .help("Measured history and why Coremium made each decision. Performance cores (P-cores) are the fast ones; efficiency cores (E-cores) are the frugal ones.")
         }
         .padding(.horizontal, 10).padding(.vertical, 7)
         .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Color.white.opacity(0.06)))
@@ -446,14 +446,14 @@ private struct ProofStrip: View {
 
     private func todayText(_ day: DayStats) -> String {
         if day.boostedSeconds < 1 { return "Today: nothing needed protecting yet" }
-        return "Today: a boost ran for \(formatDuration(day.boostedSeconds)) · up to \(day.peakMovedProcesses) background processes moved off the fast cores"
+        return "Today: a boost ran for \(formatDuration(day.boostedSeconds)) · peak \(day.peakMovedProcesses) background processes moved off the performance cores"
     }
 
     private var nowText: String {
         let moved = engine.demotedCount == 0
-            ? "Nothing is being moved right now (a Boost app has to be in use)"
-            : "\(engine.demotedCount) processes moved to efficiency cores right now"
-        return "\(moved) · Coremium itself uses \(String(format: "%.1f", engine.ownCPU))% of one core"
+            ? "No Boost running, nothing moved"
+            : "\(engine.demotedCount) processes on efficiency cores now"
+        return "\(moved) · Coremium overhead \(String(format: "%.1f", engine.ownCPU))% of one core"
     }
 }
 
