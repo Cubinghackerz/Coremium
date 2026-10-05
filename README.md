@@ -73,8 +73,10 @@ common local-AI tools). Coremium reads your apps directly and watches your app f
 ## Windows (beta)
 
 A desktop version for Windows 10 and 11 lives in [`windows/`](windows/). It uses Windows efficiency mode instead of the
-notch, and is a **beta**: not yet tested by hand on a Windows PC. Download it from the
-[Windows beta release](../../releases?q=windows&expanded=true).
+notch, and is a **beta**: not yet tested by hand on a Windows PC. Install it from PowerShell (checks the checksum, no
+admin, no SmartScreen prompt):
+`irm https://raw.githubusercontent.com/Cubinghackerz/Coremium/master/scripts/install.ps1 | iex`
+or download it from the [Windows beta release](../../releases?q=windows&expanded=true).
 
 ## Install
 

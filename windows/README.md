@@ -14,6 +14,11 @@ cores; on other CPUs they simply get lower priority. Nothing is closed.
 tested by hand on a Windows PC. Signing through SignPath Foundation is set up (see `CODE_SIGNING_POLICY.md`) and activates once the project is approved;
 until then the executable is unsigned and SmartScreen warns the first time ("More info" › "Run anyway"). Reports are welcome.
 
+## Install
+In PowerShell: `irm https://raw.githubusercontent.com/Cubinghackerz/Coremium/master/scripts/install.ps1 | iex`
+It downloads the latest `windows-v*` release, verifies its SHA-256 checksum, installs to `%LOCALAPPDATA%\Programs\Coremium`
+(no admin), adds a Start menu shortcut and starts it. Run it again to update.
+
 ## Build
 ```bash
 dotnet test tests/Coremium.Core.Tests
