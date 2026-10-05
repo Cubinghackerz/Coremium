@@ -1,11 +1,9 @@
 "use client";
-import { Download } from "lucide-react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import Image from "next/image";
-import { useRef } from "react";
-import { GithubMark } from "@/components/icons";
-import { ButtonLink } from "@/components/ui/button";
-import { RELEASE, REPO } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
+import { CopyLine } from "@/components/install";
+import { INSTALL_CMD, INSTALL_CMD_WINDOWS, REPO } from "@/lib/utils";
 
 export function Hero() {
   const ref = useRef<HTMLDivElement>(null);
@@ -41,10 +39,14 @@ export function Hero() {
           style={{ animationDelay: "220ms" }}
           className="rise mt-10 flex flex-wrap items-center justify-center gap-3"
         >
-          <ButtonLink href={RELEASE} size="lg"><Download className="size-[18px]" aria-hidden /> Download for macOS</ButtonLink>
-          <ButtonLink href={REPO} size="lg" variant="ghost"><GithubMark className="size-[18px]" /> View on GitHub</ButtonLink>
+          <HeroInstall />
         </div>
-        <p className="mt-5 text-sm text-zinc-500">Free and open source. No account, no network access. macOS 13 or later.</p>
+        <p className="mt-5 text-sm text-zinc-500">
+          Free and open source. No account, no network access. Prefer a disk image or zip?{" "}
+          <a className="text-zinc-300 underline decoration-zinc-600 underline-offset-4 hover:decoration-white" href={`${REPO}/releases`}>GitHub Releases</a>
+          {" · "}
+          <a className="text-zinc-300 underline decoration-zinc-600 underline-offset-4 hover:decoration-white" href="#install">Why the terminal?</a>
+        </p>
       </div>
 
       <div ref={ref} className="relative mx-auto mt-20 max-w-5xl px-4 pb-24 md:mt-28 [perspective:1600px]">
@@ -62,5 +64,27 @@ export function Hero() {
         <p className="mt-6 text-center text-sm text-zinc-500">Coremium on a 14-inch MacBook Pro running macOS 27.</p>
       </div>
     </section>
+  );
+}
+
+/** The recommended install: one terminal command, picked for the visitor's OS (switchable). */
+function HeroInstall() {
+  const [os, setOs] = useState<"mac" | "windows">("mac");
+  useEffect(() => { if (/Windows/i.test(navigator.userAgent)) setOs("windows"); }, []);
+  return (
+    <div className="w-full max-w-2xl text-left">
+      <div className="mb-3 flex items-center justify-between gap-4 text-sm">
+        <span className="text-zinc-400">{os === "mac" ? "Paste into Terminal:" : "Paste into PowerShell (beta):"}</span>
+        <div className="flex rounded-full bg-white/[0.06] p-0.5 ring-1 ring-inset ring-white/10" role="group" aria-label="Operating system">
+          {(["mac", "windows"] as const).map((o) => (
+            <button key={o} type="button" aria-pressed={os === o} onClick={() => setOs(o)}
+              className={`rounded-full px-3 py-1 text-[13px] font-medium transition-colors ${os === o ? "bg-white text-black" : "text-zinc-400 hover:text-white"}`}>
+              {o === "mac" ? "macOS" : "Windows"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <CopyLine text={os === "mac" ? INSTALL_CMD : INSTALL_CMD_WINDOWS} label={os === "mac" ? "macOS install command" : "Windows install command"} />
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { INSTALL_CMD, INSTALL_CMD_WINDOWS, RELEASE, WINDOWS_RELEASES } from "@/lib/utils";
 
-function CopyLine({ text, label }: { text: string; label: string }) {
+export function CopyLine({ text, label }: { text: string; label: string }) {
   const [done, setDone] = useState(false);
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-white/[0.05] py-3 pl-5 pr-3 ring-1 ring-inset ring-white/12">
