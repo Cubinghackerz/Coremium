@@ -11,8 +11,8 @@ cores; on other CPUs they simply get lower priority. Nothing is closed.
   `%LOCALAPPDATA%\Coremium`. Quitting, pausing or `Coremium.exe --restore-all` puts everything back.
 
 **Beta:** built and unit-tested on macOS with the .NET Windows targeting pack and on GitHub's Windows runner, but not yet
-tested by hand on a Windows PC. The executable is not code-signed, so SmartScreen warns the first time
-("More info" › "Run anyway"). Reports are welcome.
+tested by hand on a Windows PC. Signing through SignPath Foundation is set up (see `CODE_SIGNING_POLICY.md`) and activates once the project is approved;
+until then the executable is unsigned and SmartScreen warns the first time ("More info" › "Run anyway"). Reports are welcome.
 
 ## Build
 ```bash

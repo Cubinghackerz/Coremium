@@ -18,6 +18,31 @@ jobs:
         with: { dotnet-version: "10.0.x" }
       - run: dotnet test tests/Coremium.Core.Tests
       - run: dotnet publish src/Coremium.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o dist/win-x64
+      # Code signing via SignPath Foundation (free for open source). Runs only once the repository variables and the
+      # SIGNPATH_API_TOKEN secret are set; until then the build stays unsigned. See CODE_SIGNING_POLICY.md.
+      - name: Upload unsigned exe for signing
+        id: unsigned
+        if: vars.SIGNPATH_ORGANIZATION_ID != ''
+        uses: actions/upload-artifact@v4
+        with: { name: coremium-windows-unsigned, path: windows/dist/win-x64/Coremium.exe }
+      - name: Sign with SignPath
+        if: vars.SIGNPATH_ORGANIZATION_ID != ''
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ startsWith(github.ref, 'refs/tags/windows-v') && vars.SIGNPATH_RELEASE_POLICY || vars.SIGNPATH_TEST_POLICY }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: windows/dist/signed
+      - name: Use the signed exe
+        if: vars.SIGNPATH_ORGANIZATION_ID != ''
+        shell: pwsh
+        run: |
+          Copy-Item dist/signed/Coremium.exe dist/win-x64/Coremium.exe -Force
+          Get-AuthenticodeSignature dist/win-x64/Coremium.exe | Format-List Status, SignerCertificate
       - name: Package
         shell: pwsh
         run: |
