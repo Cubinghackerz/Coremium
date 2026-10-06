@@ -42,7 +42,7 @@ struct ChipDie: View {
             .foregroundStyle(LinearGradient(colors: [Color(white: 0.98), Color(white: 0.62)], startPoint: .top, endPoint: .bottom))
             .padding(.horizontal, 22)
         }
-        .shadow(color: active ? Color.green.opacity(0.55) : Color.clear, radius: 14)
+        .shadow(color: active ? Theme.accent.opacity(0.55) : Color.clear, radius: 14)
         .animation(.easeInOut(duration: 0.4), value: active)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Chip: \(chip.brand)")
@@ -108,8 +108,7 @@ struct CoreGrid: View {
 
     private func tileColor(_ load: Double) -> Color {
         let clamped = min(max(load, 0), 1)
-        if clamped > 0.85 { return Color.orange }
-        return Color.green.opacity(0.14 + 0.86 * clamped)
+        return Color.white.opacity(0.08 + 0.87 * clamped)
     }
 }
 

@@ -1,28 +1,50 @@
+import AppKit
 import CoremiumCore
 import SwiftUI
 
+/// Lives for the whole app session, so closing the panel never loses or restarts a scan.
 @MainActor
 final class StorageModel: ObservableObject {
+    static let shared = StorageModel()
+
     @Published var items: [StorageItem] = []
     @Published var selected: Set<String> = []
-    @Published var scanning = false
+    @Published var pending: Set<StorageKind> = []
+    @Published var waitingForPermission = false
     @Published var scanned = false
     @Published var disk: DiskUsage? = DiskUsage.current()
     @Published var message = ""
-    @Published var expanded: Set<StorageKind> = []
+    @Published var reviewing = false
+    private var generation = 0
 
-    func scan() {
-        guard !scanning else { return }
-        scanning = true
+    var scanning: Bool { !pending.isEmpty }
+
+    /// Scans each kind on its own, so a slow folder (or a macOS permission prompt) never holds up the others.
+    func scan(_ kinds: [StorageKind] = StorageKind.standard) {
+        guard pending.isDisjoint(with: kinds) else { return }
+        generation += 1
+        let run = generation
         message = ""
+        waitingForPermission = false
+        items.removeAll { kinds.contains($0.kind) }
+        pending.formUnion(kinds)
+        for kind in kinds {
+            Task { @MainActor in
+                let found = await Task.detached(priority: .utility) {
+                    kind == .largeFiles ? StorageScanner.largeFiles() : StorageScanner.scan(kinds: [kind])
+                }.value
+                guard run == generation || kinds == [.largeFiles] else { return }
+                items.append(contentsOf: found)
+                items.sort { $0.bytes > $1.bytes }
+                // Safe-to-clear kinds start selected; your downloads always need a deliberate tick.
+                if [.appCaches, .logs, .developerBuilds].contains(kind) { selected.formUnion(found.map(\.id)) }
+                pending.remove(kind)
+                if pending.isEmpty { waitingForPermission = false; scanned = true; disk = DiskUsage.current() }
+            }
+        }
         Task { @MainActor in
-            let found = await Task.detached(priority: .utility) { StorageScanner.scan() }.value
-            items = found
-            // Nothing is pre-selected except safe-to-clear caches and logs; downloads always need a deliberate tick.
-            selected = Set(found.filter { $0.kind == .appCaches || $0.kind == .logs || $0.kind == .developerBuilds }.map(\.id))
-            disk = DiskUsage.current()
-            scanning = false
-            scanned = true
+            try? await Task.sleep(nanoseconds: 15_000_000_000)
+            if run == generation, !pending.isEmpty { waitingForPermission = true }
         }
     }
 
@@ -41,44 +63,51 @@ final class StorageModel: ObservableObject {
         for item in items where item.kind == kind { if on { selected.insert(item.id) } else { selected.remove(item.id) } }
     }
 
+    /// Caches that belong to an app that is running right now: moving them could upset it, so they are skipped.
+    var inUseCaches: [StorageItem] {
+        let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier?.lowercased() })
+        let names = Set(NSWorkspace.shared.runningApplications.compactMap { $0.localizedName?.lowercased() })
+        return selectedItems.filter { item in
+            guard item.kind == .appCaches else { return false }
+            let key = item.name.lowercased()
+            return running.contains(key) || names.contains(key) || running.contains { $0.hasPrefix(key + ".") || key.hasPrefix($0) }
+        }
+    }
+
     func clean() {
         let chosen = selectedItems
+        let skip = Set(inUseCaches.map(\.id))
+        reviewing = false
         Task { @MainActor in
-            let result = await Task.detached(priority: .userInitiated) { StorageCleaner.moveToTrash(chosen) }.value
-            let moved = Set(chosen.map(\.id)).subtracting(result.failed.compactMap { name in chosen.first { $0.name == name }?.id })
+            let result = await Task.detached(priority: .userInitiated) { StorageCleaner.moveToTrash(chosen, skip: skip) }.value
+            let failedNames = Set(result.failed)
+            let moved = Set(chosen.filter { !skip.contains($0.id) && !failedNames.contains($0.name) }.map(\.id))
             items.removeAll { moved.contains($0.id) }
             selected.subtract(moved)
             disk = DiskUsage.current()
-            message = "Moved \(formatBytes(result.movedBytes)) to the Trash (\(result.movedCount) item\(result.movedCount == 1 ? "" : "s")). "
-                + "Nothing is deleted until you empty the Trash, so you can put anything back."
-                + (result.failed.isEmpty ? "" : " Couldn't move: \(result.failed.joined(separator: ", ")).")
+            var text = "Moved \(formatBytes(result.movedBytes)) to the Trash. Nothing is deleted until you empty it."
+            if !skip.isEmpty { text += " Skipped \(skip.count) cache\(skip.count == 1 ? "" : "s") of running apps." }
+            if !result.failed.isEmpty { text += " Couldn't move \(result.failed.count)." }
+            message = text
         }
     }
 }
 
 extension StorageKind {
-    /// Muted, distinct hues that sit quietly on the black panel.
+    /// A grey ramp: each kind stays distinguishable on the ring without adding colour.
     var tint: Color {
         switch self {
-        case .appCaches: return Color(red: 0.42, green: 0.80, blue: 0.98)
-        case .logs: return Color(red: 0.66, green: 0.58, blue: 0.98)
-        case .developerBuilds: return Color(red: 0.96, green: 0.72, blue: 0.45)
-        case .oldDownloads: return Color(red: 0.95, green: 0.50, blue: 0.70)
-        case .trash: return Color(red: 0.58, green: 0.64, blue: 0.72)
-        }
-    }
-    var symbol: String {
-        switch self {
-        case .appCaches: return "shippingbox.fill"
-        case .logs: return "doc.text.fill"
-        case .developerBuilds: return "hammer.fill"
-        case .oldDownloads: return "arrow.down.circle.fill"
-        case .trash: return "trash.fill"
+        case .appCaches: return Color(white: 0.96)
+        case .developerBuilds: return Color(white: 0.78)
+        case .oldDownloads: return Color(white: 0.62)
+        case .logs: return Color(white: 0.48)
+        case .trash: return Color(white: 0.36)
+        case .largeFiles: return Color(white: 0.30)
         }
     }
 }
 
-/// The disk as one ring: each reclaimable kind is a coloured arc, the rest of what's used is grey, free space is dark.
+/// The disk as one ring: each reclaimable kind is an arc, the rest of what's used is a faint arc, free space is empty.
 private struct StorageRing: View {
     let disk: DiskUsage?
     let parts: [(StorageKind, Int64)]
@@ -88,28 +117,26 @@ private struct StorageRing: View {
 
     var body: some View {
         let total = Double(max(disk?.total ?? 1, 1))
-        let segments = arcs(total: total)
         ZStack {
-            Circle().stroke(Color.white.opacity(0.05), lineWidth: 14)
-            ForEach(segments.indices, id: \.self) { i in
-                let seg = segments[i]
-                Circle().trim(from: seg.from, to: max(seg.from, seg.to - 0.004))
-                    .stroke(seg.color.opacity(focus == nil || seg.kind == focus || seg.kind == nil ? 1 : 0.25),
-                            style: StrokeStyle(lineWidth: seg.kind == focus && focus != nil ? 17 : 14, lineCap: .butt))
+            Circle().stroke(Color.white.opacity(0.045), lineWidth: 12)
+            ForEach(Array(arcs(total: total).enumerated()), id: \.offset) { _, seg in
+                Circle().trim(from: seg.from, to: max(seg.from, seg.to - 0.003))
+                    .stroke(seg.color.opacity(focus == nil || seg.kind == focus || seg.kind == nil ? 1 : 0.22),
+                            style: StrokeStyle(lineWidth: seg.kind != nil && seg.kind == focus ? 15 : 12, lineCap: .butt))
                     .rotationEffect(.degrees(-90))
             }
             if scanning {
-                Circle().trim(from: 0, to: 0.18)
-                    .stroke(AngularGradient(colors: [.clear, .white.opacity(0.7)], center: .center), style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                Circle().trim(from: 0, to: 0.22)
+                    .stroke(AngularGradient(colors: [.clear, .white.opacity(0.85)], center: .center), style: StrokeStyle(lineWidth: 12, lineCap: .round))
                     .rotationEffect(.degrees(spin ? 270 : -90))
-                    .onAppear { withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) { spin = true } }
+                    .onAppear { withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) { spin = true } }
             }
-            VStack(spacing: 1) {
-                Text(disk.map { formatBytes($0.available) } ?? "–").font(.system(size: 19, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white).minimumScaleFactor(0.7).lineLimit(1)
-                Text(disk.map { "free of \(formatBytes($0.total))" } ?? "").font(.system(size: 9.5, design: .rounded)).foregroundColor(Theme.textDim)
+            VStack(spacing: 2) {
+                Text(disk.map { formatBytes($0.available) } ?? "–").font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .monospacedDigit().foregroundColor(.white).minimumScaleFactor(0.7).lineLimit(1)
+                Text("available").font(.system(size: 9.5, weight: .medium, design: .rounded)).foregroundColor(.white.opacity(0.45))
             }
-            .padding(.horizontal, 22)
+            .padding(.horizontal, 20)
         }
         .animation(.easeOut(duration: 0.6), value: parts.map(\.1))
         .animation(.easeOut(duration: 0.25), value: focus)
@@ -121,46 +148,46 @@ private struct StorageRing: View {
         guard let disk else { return [] }
         var result: [Arc] = []
         var cursor: CGFloat = 0
-        for (kind, bytes) in parts where bytes > 0 {
+        for (kind, bytes) in parts where bytes > 0 && kind != .largeFiles {
             let len = CGFloat(Double(bytes) / total)
             result.append(Arc(from: cursor, to: cursor + len, color: kind.tint, kind: kind))
             cursor += len
         }
         let other = CGFloat(Double(disk.used) / total) - cursor
-        if other > 0 { result.append(Arc(from: cursor, to: cursor + other, color: Color.white.opacity(0.22), kind: nil)) }
+        if other > 0 { result.append(Arc(from: cursor, to: cursor + other, color: Color.white.opacity(0.14), kind: nil)) }
         return result
     }
 }
 
 struct StorageTab: View {
     @ObservedObject var ui: NotchUIState
-    @StateObject private var model = StorageModel()
-    @State private var confirm = false
+    @ObservedObject private var model = StorageModel.shared
     @State private var focus: StorageKind?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 18) {
-                StorageRing(disk: model.disk, parts: StorageKind.allCases.map { ($0, model.bytes($0)) }, focus: focus, scanning: model.scanning)
-                    .frame(width: 138, height: 138)
-                VStack(spacing: 2) {
-                    ForEach(StorageKind.allCases, id: \.self) { kind in categoryRow(kind) }
-                    otherRow
+        ZStack {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .center, spacing: 20) {
+                    StorageRing(disk: model.disk, parts: StorageKind.allCases.map { ($0, model.bytes($0)) }, focus: focus, scanning: model.scanning)
+                        .frame(width: 132, height: 132)
+                    VStack(spacing: 1) {
+                        ForEach(StorageKind.standard, id: \.self) { kind in categoryRow(kind) }
+                        largeFilesRow
+                    }
                 }
+                detail
+                footer
             }
-            detail
-            footer
+            .blur(radius: model.reviewing ? 6 : 0)
+            .allowsHitTesting(!model.reviewing)
+            if model.reviewing { ReviewSheet(model: model).transition(.opacity.combined(with: .scale(scale: 0.98))) }
         }
+        .animation(.easeOut(duration: 0.2), value: model.reviewing)
         .onAppear { if !model.scanned && !model.scanning { model.scan() } }
-        // Open the biggest reclaimable category once a scan finishes, so the space below the ring is never empty.
         .onChange(of: model.scanning) { scanning in
             guard !scanning, focus == nil else { return }
-            focus = StorageKind.allCases.filter(\.cleanable).max { model.bytes($0) < model.bytes($1) }
+            focus = StorageKind.standard.filter(\.cleanable).max { model.bytes($0) < model.bytes($1) }
         }
-        .confirmationDialog("Move \(formatBytes(model.selectedBytes)) to the Trash?", isPresented: $confirm) {
-            Button("Move to Trash") { model.clean() }
-            Button("Cancel", role: .cancel) {}
-        } message: { Text("\(model.selectedItems.count) items. Nothing is deleted until you empty the Trash.") }
     }
 
     private func categoryRow(_ kind: StorageKind) -> some View {
@@ -173,79 +200,99 @@ struct StorageTab: View {
             if kind.cleanable {
                 Button { model.setAll(kind, on: !allOn) } label: {
                     Image(systemName: allOn ? "checkmark.circle.fill" : someOn ? "minus.circle.fill" : "circle")
-                        .font(.system(size: 13)).foregroundColor(someOn ? kind.tint : .white.opacity(0.28))
+                        .font(.system(size: 12.5)).foregroundColor(.white.opacity(someOn ? 0.95 : 0.25))
                 }
                 .buttonStyle(.plain).disabled(items.isEmpty)
                 .help(allOn ? "Leave all \(kind.title.lowercased()) out" : "Include all \(kind.title.lowercased())")
             } else {
-                Image(systemName: "lock.fill").font(.system(size: 10)).foregroundColor(.white.opacity(0.28)).frame(width: 13)
-                    .help("Coremium never empties the Trash.")
+                Image(systemName: "lock.fill").font(.system(size: 9.5)).foregroundColor(.white.opacity(0.25)).frame(width: 12.5)
+                    .help(kind.explanation)
             }
             Button { withAnimation(.easeOut(duration: 0.2)) { focus = focused ? nil : kind } } label: {
                 HStack(spacing: 8) {
-                    RoundedRectangle(cornerRadius: 2.5).fill(kind.tint).frame(width: 9, height: 9)
-                    Text(kind.title).font(.system(size: 12, weight: focused ? .semibold : .medium, design: .rounded))
-                        .foregroundColor(.white.opacity(focused ? 1 : 0.85))
+                    Circle().fill(kind.tint).frame(width: 7, height: 7)
+                    Text(kind.title).font(.system(size: 12, weight: focused ? .semibold : .regular, design: .rounded))
+                        .foregroundColor(.white.opacity(focused ? 1 : 0.8))
                     Spacer(minLength: 6)
-                    Text(model.scanned ? formatBytes(bytes) : "…").font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .monospacedDigit().foregroundColor(.white.opacity(bytes > 0 ? 0.9 : 0.35))
+                    Group {
+                        if model.pending.contains(kind) { ProgressView().controlSize(.mini) }
+                        else { Text(formatBytes(bytes)).monospacedDigit() }
+                    }
+                    .font(.system(size: 12, weight: .medium, design: .rounded)).foregroundColor(.white.opacity(bytes > 0 ? 0.9 : 0.3))
                     Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold))
-                        .foregroundColor(.white.opacity(focused ? 0.8 : 0.25)).rotationEffect(.degrees(focused ? 90 : 0))
+                        .foregroundColor(.white.opacity(focused ? 0.7 : 0.2)).rotationEffect(.degrees(focused ? 90 : 0))
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .help(kind.explanation)
         }
-        .padding(.horizontal, 10).padding(.vertical, 5.5)
-        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.white.opacity(focused ? 0.08 : 0)))
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.white.opacity(focused ? 0.07 : 0)))
     }
 
-    private var otherRow: some View {
-        let reclaim = StorageKind.allCases.reduce(Int64(0)) { $0 + model.bytes($1) }
-        let other = max(0, (model.disk?.used ?? 0) - reclaim)
-        return HStack(spacing: 8) {
-            Color.clear.frame(width: 13, height: 1)
-            RoundedRectangle(cornerRadius: 2.5).fill(Color.white.opacity(0.22)).frame(width: 9, height: 9)
-            Text("Everything else").font(.system(size: 12, design: .rounded)).foregroundColor(Theme.textDim)
-            Spacer(minLength: 6)
-            Text(formatBytes(other)).font(.system(size: 12, design: .rounded)).monospacedDigit().foregroundColor(Theme.textDim)
-            Color.clear.frame(width: 8, height: 1)
+    private var largeFilesRow: some View {
+        let found = model.items.filter { $0.kind == .largeFiles }
+        let focused = focus == .largeFiles
+        return HStack(spacing: 9) {
+            Image(systemName: "eye").font(.system(size: 9.5)).foregroundColor(.white.opacity(0.3)).frame(width: 12.5)
+                .help("Review only. Coremium never moves your own files.")
+            if found.isEmpty && !model.pending.contains(.largeFiles) {
+                Text("Large files").font(.system(size: 12, design: .rounded)).foregroundColor(.white.opacity(0.55))
+                Spacer()
+                Button("Find") { focus = .largeFiles; model.scan([.largeFiles]) }
+                    .buttonStyle(.plain).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundColor(.white)
+                    .help("Looks for files over 500 MB in Desktop, Documents, Movies and Downloads. macOS may ask for permission.")
+            } else {
+                Button { withAnimation(.easeOut(duration: 0.2)) { focus = focused ? nil : .largeFiles } } label: {
+                    HStack(spacing: 8) {
+                        Text("Large files").font(.system(size: 12, weight: focused ? .semibold : .regular, design: .rounded))
+                            .foregroundColor(.white.opacity(0.8))
+                        Spacer(minLength: 6)
+                        if model.pending.contains(.largeFiles) { ProgressView().controlSize(.mini) }
+                        else { Text(formatBytes(model.bytes(.largeFiles))).font(.system(size: 12, weight: .medium, design: .rounded)).monospacedDigit() }
+                        Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.white.opacity(focused ? 0.7 : 0.2)).rotationEffect(.degrees(focused ? 90 : 0))
+                    }.contentShape(Rectangle())
+                }.buttonStyle(.plain)
+            }
         }
-        .padding(.horizontal, 10).padding(.vertical, 4)
-        .help("Apps, documents, photos and the system. Coremium never touches these.")
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.white.opacity(focused ? 0.07 : 0)))
     }
 
     @ViewBuilder private var detail: some View {
-        if let kind = focus {
+        if model.waitingForPermission {
+            note("Still waiting on \(model.pending.map(\.title).sorted().joined(separator: ", ")). macOS may be showing a permission dialog behind other windows: allow it, or turn Coremium on in System Settings › Privacy & Security › Files and Folders.")
+        } else if let kind = focus {
             let items = model.items.filter { $0.kind == kind }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(kind.explanation).font(.system(size: 10.5, design: .rounded)).foregroundColor(Theme.textDim)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(kind.explanation).font(.system(size: 10.5, design: .rounded)).foregroundColor(.white.opacity(0.5))
                     .fixedSize(horizontal: false, vertical: true)
                 FlexScroll {
-                    VStack(spacing: 2) {
+                    VStack(spacing: 0) {
                         if items.isEmpty {
-                            Text(model.scanned ? "Nothing large here." : "Scanning…").font(.system(size: 11, design: .rounded))
-                                .foregroundColor(Theme.textDim).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 6)
+                            Text(model.pending.contains(kind) ? "Looking…" : "Nothing large here.").font(.system(size: 11, design: .rounded))
+                                .foregroundColor(.white.opacity(0.45)).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 6)
                         }
                         ForEach(items.prefix(80)) { item in itemRow(item) }
                     }
                 }
             }
-            .padding(10)
+            .padding(12)
             .frame(maxHeight: .infinity, alignment: .top)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.white.opacity(0.04)))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(kind.tint.opacity(0.18), lineWidth: 1))
-            .transition(.opacity)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.white.opacity(0.035)))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.white.opacity(0.07), lineWidth: 1))
         } else {
-            Text(model.scanned
-                 ? "Choose a category to see what's inside. Everything you clear goes to the Trash first, and documents are never touched."
-                 : "Looking at caches, logs, Xcode build files, old downloads and the Trash. Read-only; nothing changes until you choose. macOS may ask once to let Coremium look in Downloads and the Trash.")
-                .font(.system(size: 10.5, design: .rounded)).foregroundColor(Theme.textDim)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .padding(.horizontal, 2)
+            note(model.scanned ? "Choose a category to see what's inside." :
+                 "Reading caches, logs, Xcode build files, old downloads and the Trash. Read-only: nothing changes until you choose and confirm.")
         }
+    }
+
+    private func note(_ text: String) -> some View {
+        Text(text).font(.system(size: 10.5, design: .rounded)).foregroundColor(.white.opacity(0.5))
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding(.horizontal, 2)
     }
 
     private func itemRow(_ item: StorageItem) -> some View {
@@ -254,35 +301,99 @@ struct StorageTab: View {
             if item.kind.cleanable {
                 Button { model.toggle(item) } label: {
                     Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.system(size: 12))
-                        .foregroundColor(on ? item.kind.tint : .white.opacity(0.28))
+                        .foregroundColor(.white.opacity(on ? 0.95 : 0.25))
                 }.buttonStyle(.plain)
             }
             VStack(alignment: .leading, spacing: 0) {
-                Text(item.name).font(.system(size: 11.5, weight: .medium, design: .rounded)).lineLimit(1).truncationMode(.middle)
-                if ui.advanced {
+                Text(item.name).font(.system(size: 11.5, design: .rounded)).foregroundColor(.white.opacity(0.9)).lineLimit(1).truncationMode(.middle)
+                if ui.advanced || item.kind == .largeFiles {
                     Text(item.url.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")).font(.system(size: 9, design: .monospaced))
-                        .foregroundColor(Theme.textDim).lineLimit(1).truncationMode(.middle)
+                        .foregroundColor(.white.opacity(0.4)).lineLimit(1).truncationMode(.middle)
                 }
             }
             Spacer(minLength: 6)
-            Text(formatBytes(item.bytes)).font(.system(size: 11, design: .rounded)).monospacedDigit().foregroundColor(.white.opacity(0.7))
+            Text(formatBytes(item.bytes)).font(.system(size: 11, design: .rounded)).monospacedDigit().foregroundColor(.white.opacity(0.65))
             Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: {
-                Image(systemName: "magnifyingglass").font(.system(size: 9.5)).foregroundColor(.white.opacity(0.35))
+                Image(systemName: "arrow.up.forward.square").font(.system(size: 10)).foregroundColor(.white.opacity(0.35))
             }.buttonStyle(.plain).help("Show in Finder")
         }
-        .padding(.vertical, 3).padding(.horizontal, 4)
+        .padding(.vertical, 4).padding(.horizontal, 2)
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.white.opacity(0.04)).frame(height: 1) }
     }
 
     private var footer: some View {
         HStack(spacing: 10) {
-            Text(model.message.isEmpty ? (model.scanning ? "Scanning…" : "Selected: \(formatBytes(model.selectedBytes))") : model.message)
-                .font(.system(size: 10.5, design: .rounded)).foregroundColor(model.message.isEmpty ? Theme.textDim : Color(red: 0.45, green: 0.9, blue: 0.65))
+            Text(model.message.isEmpty
+                 ? (model.scanning ? "Scanning…" : "\(formatBytes(model.selectedBytes)) selected · goes to the Trash, never deleted")
+                 : model.message)
+                .font(.system(size: 10.5, design: .rounded)).foregroundColor(.white.opacity(model.message.isEmpty ? 0.5 : 0.85))
                 .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 4)
             Button { model.scan() } label: { Image(systemName: "arrow.clockwise").font(.system(size: 11, weight: .semibold)) }
                 .buttonStyle(GhostButtonStyle()).disabled(model.scanning).help("Scan again")
-            Button(model.selectedItems.isEmpty ? "Move to Trash" : "Move \(formatBytes(model.selectedBytes)) to Trash") { confirm = true }
-                .buttonStyle(PrimaryButtonStyle()).disabled(model.selectedItems.isEmpty || model.scanning).fixedSize()
+            Button("Review…") { model.reviewing = true }
+                .buttonStyle(PrimaryButtonStyle()).disabled(model.selectedItems.isEmpty).fixedSize()
+        }
+    }
+}
+
+/// The last step before anything moves: what, how much, and the warnings that matter. Nothing happens until confirmed.
+private struct ReviewSheet: View {
+    @ObservedObject var model: StorageModel
+
+    var body: some View {
+        let chosen = model.selectedItems
+        let inUse = model.inUseCaches
+        let downloads = chosen.filter { $0.kind == .oldDownloads }
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Move \(formatBytes(chosen.filter { item in !inUse.contains(item) }.reduce(0) { $0 + $1.bytes })) to the Trash?")
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(StorageKind.standard.filter(\.cleanable), id: \.self) { kind in
+                    let group = chosen.filter { $0.kind == kind }
+                    if !group.isEmpty {
+                        HStack {
+                            Circle().fill(kind.tint).frame(width: 6, height: 6)
+                            Text("\(kind.title) · \(group.count) item\(group.count == 1 ? "" : "s")").font(.system(size: 12, design: .rounded))
+                            Spacer()
+                            Text(formatBytes(group.reduce(0) { $0 + $1.bytes })).font(.system(size: 12, design: .rounded)).monospacedDigit()
+                        }
+                        .foregroundColor(.white.opacity(0.85))
+                    }
+                }
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                warning("Everything goes to the Trash. Nothing is deleted until you empty it, so you can put anything back.", icon: "arrow.uturn.backward")
+                if !downloads.isEmpty {
+                    warning("Includes \(downloads.count) of your downloads. Make sure you don't need them.", icon: "exclamationmark.triangle", strong: true)
+                }
+                if !inUse.isEmpty {
+                    warning("Skipping caches of apps that are open (\(inUse.prefix(3).map(\.name).joined(separator: ", "))\(inUse.count > 3 ? "…" : "")). Quit them first to clear those too.", icon: "pause.circle")
+                }
+                if chosen.contains(where: { $0.kind == .appCaches }) {
+                    warning("Apps rebuild their caches, so some may be slower the next time they open.", icon: "clock")
+                }
+            }
+            HStack {
+                Spacer()
+                Button("Cancel") { model.reviewing = false }.buttonStyle(GhostButtonStyle()).keyboardShortcut(.cancelAction)
+                Button("Move to Trash") { model.clean() }.buttonStyle(PrimaryButtonStyle())
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: 440)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color(white: 0.07)))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
+        .shadow(color: .black.opacity(0.6), radius: 30, y: 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func warning(_ text: String, icon: String, strong: Bool = false) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: icon).font(.system(size: 11)).frame(width: 14)
+                .foregroundColor(strong ? Theme.warn : .white.opacity(0.5))
+            Text(text).font(.system(size: 11.5, design: .rounded)).foregroundColor(.white.opacity(strong ? 0.95 : 0.65))
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

@@ -46,7 +46,7 @@ struct TrustCard: View {
                 SectionLabel(text: "Safe by design")
                 ForEach(items, id: \.1) { item in
                     HStack(alignment: .top, spacing: 9) {
-                        Image(systemName: item.0).font(.system(size: 12)).foregroundColor(.green).frame(width: 18)
+                        Image(systemName: item.0).font(.system(size: 12)).foregroundColor(Theme.accent).frame(width: 18)
                         if compact {
                             Text(item.1).font(.system(size: 11.5, weight: .semibold, design: .rounded)).foregroundColor(.white)
                             Spacer(minLength: 0)

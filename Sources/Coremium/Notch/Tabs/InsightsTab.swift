@@ -30,22 +30,22 @@ struct InsightsTab: View {
                     Text("Measured on this Mac. Never leaves it.").font(.system(size: 10, design: .rounded)).foregroundColor(Theme.textDim)
                 }
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8, alignment: .top), count: 3), spacing: 8) {
-                    CompactStat(symbol: "bolt.fill", tint: .orange, title: "Boost sessions", value: "\(total.sessions)",
+                    CompactStat(symbol: "bolt.fill", tint: Theme.accent, title: "Boost sessions", value: "\(total.sessions)",
                                 help: "Times Coremium protected a game, creative app, dev tool or AI job.", raw: nil)
-                    CompactStat(symbol: "timer", tint: .green, title: "Boost time", value: formatDuration(total.boostedSeconds),
+                    CompactStat(symbol: "timer", tint: Theme.accent, title: "Boost time", value: formatDuration(total.boostedSeconds),
                                 help: "How long a boost was running.", raw: advanced ? String(format: "%.0f s", total.boostedSeconds) : nil)
-                    CompactStat(symbol: "leaf.fill", tint: .mint, title: "Moved to eco cores", value: String(format: "%.1f core-min", total.movedCoreSeconds / 60),
+                    CompactStat(symbol: "leaf.fill", tint: Theme.accent, title: "Moved to eco cores", value: String(format: "%.1f core-min", total.movedCoreSeconds / 60),
                                 help: "CPU work that ran on the efficiency cores because Coremium moved it there. Measured.",
                                 raw: advanced ? String(format: "%.0f core-seconds", total.movedCoreSeconds) : nil)
-                    CompactStat(symbol: "battery.100.bolt", tint: .cyan, title: "Energy saved (est.)",
+                    CompactStat(symbol: "battery.100.bolt", tint: Theme.accent, title: "Energy saved (est.)",
                                 value: wh < 0.05 ? "< 0.1 Wh" : String(format: "≈ %.1f Wh", wh),
                                 help: "A rough estimate: assumes each core's worth of moved work saves about \(EnergyEstimate.assumedWattsSavedPerCore) W. Real power can't be measured without admin rights.",
                                 raw: advanced ? String(format: "%.2f Wh = %.1f W/core x %.0f core-s", wh, EnergyEstimate.assumedWattsSavedPerCore, total.movedCoreSeconds) : nil)
-                    CompactStat(symbol: "thermometer.medium", tint: total.hotSeconds > 0 ? .red : .green, title: "Hot during boosts",
+                    CompactStat(symbol: "thermometer.medium", tint: total.hotSeconds > 0 ? .red : Theme.accent, title: "Hot during boosts",
                                 value: total.hotSeconds > 0 ? formatDuration(total.hotSeconds) : "Never",
                                 help: "Time macOS reported the Mac as hot during a boost. Exact temperature can't be measured without admin rights.",
                                 raw: advanced ? String(format: "%.0f s", total.hotSeconds) : nil)
-                    CompactStat(symbol: "square.stack.3d.up.fill", tint: .purple, title: "Most moved at once", value: "\(total.peakMovedProcesses)",
+                    CompactStat(symbol: "square.stack.3d.up.fill", tint: Theme.accent, title: "Most moved at once", value: "\(total.peakMovedProcesses)",
                                 help: "Peak number of background processes moved aside together.", raw: nil)
                 }
                 if range != .today { DailyChart(engine: engine, days: range.days, weekly: range == .week) }
@@ -116,7 +116,7 @@ private struct DailyChart: View {
                         VStack(spacing: 5) {
                             RoundedRectangle(cornerRadius: weekly ? 8 : 4, style: .continuous)
                                 .fill(cell.minutes < 1 ? Color.white.opacity(0.07)
-                                      : CoremiumLogo.cyan.opacity(0.25 + 0.75 * min(cell.minutes / scale, 1)))
+                                      : Theme.accent.opacity(0.25 + 0.75 * min(cell.minutes / scale, 1)))
                                 .frame(height: weekly ? 34 : 22)
                             Text(weekly ? cell.date.formatted(.dateTime.weekday(.narrow)) : (index % 5 == 0 ? cell.date.formatted(.dateTime.day()) : " "))
                                 .font(.system(size: 9.5, design: .rounded)).foregroundColor(Theme.textDim)

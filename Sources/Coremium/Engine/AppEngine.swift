@@ -302,7 +302,7 @@ final class AppEngine: ObservableObject {
         let seconds = min(now.timeIntervalSince(lastTickAt), 60)
         lastTickAt = now
         refreshSystemState()
-        if needsLiveStats {
+        if needsLiveStats || sessionActive {
             cpuLoads = loadSampler.sample()
             memory = MemoryInfo.current()
         }

@@ -34,7 +34,7 @@ struct GuideTab: View {
                             }
                         }
                         Text("Automatic vs Yield: Automatic is a mode that picks the profile. Yield is a choice for one app: \"step aside when something else is boosted\".")
-                            .font(.system(size: 10.5, design: .rounded)).foregroundColor(CoremiumLogo.cyan)
+                            .font(.system(size: 10.5, design: .rounded)).foregroundColor(Theme.accent)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -67,7 +67,7 @@ struct GuideTab: View {
 
     private func tip(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 7) {
-            Image(systemName: "circle.fill").font(.system(size: 4)).foregroundColor(CoremiumLogo.cyan).padding(.top, 5)
+            Image(systemName: "circle.fill").font(.system(size: 4)).foregroundColor(Theme.accent).padding(.top, 5)
             Text(text).font(.system(size: 11, design: .rounded)).foregroundColor(Theme.textDim).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -88,6 +88,8 @@ struct SettingsTab: View {
                                    isOn: $ui.advanced)
                         SettingRow(title: "Show indicators in the notch", detail: "The mode icon and status dot beside the notch. Turn off to keep the notch looking untouched; hover it or use the menu-bar icon as usual.",
                                    isOn: $ui.showIndicators)
+                        SettingRow(title: "Show decisions in the notch", detail: "Each change Coremium makes drops out of the notch for three seconds. Clicks pass straight through it.",
+                                   isOn: $ui.decisionToasts)
                         SettingRow(title: "Open at login", detail: "Start quietly at login so your apps are protected from the start.",
                                    isOn: Binding(get: { engine.launchAtLogin }, set: { engine.setLaunchAtLogin($0) }))
                         SettingRow(title: "Pause Coremium", detail: "Puts every app back to full speed until you turn this off.", isOn: $engine.paused)

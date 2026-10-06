@@ -78,8 +78,33 @@ final class NotchController: NSObject {
             self.panel.ignoresMouseEvents = focused && !self.ui.expanded
         }.store(in: &cancellables)
 
+        // Each new decision drops out of the notch for a moment, Dynamic Island style. Click-through, never blocks you.
+        engine.$decisions.dropFirst().compactMap(\.first).removeDuplicates { $0.id == $1.id }
+            .sink { [weak self] decision in self?.showToast(decision) }.store(in: &cancellables)
+
         applyFrame(expanded: false)
         panel.orderFrontRegardless()
+    }
+
+    private var toastWork: DispatchWorkItem?
+
+    private func showToast(_ decision: Decision) {
+        guard enabled, !ui.expanded, ui.showIndicators, ui.decisionToasts, decision.headline != "Standing by" || ui.toast != nil else { return }
+        toastWork?.cancel()
+        ui.toast = decision
+        panel.ignoresMouseEvents = true
+        applyFrame(expanded: false)
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.ui.toast = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                guard !self.ui.expanded, self.ui.toast == nil else { return }
+                self.applyFrame(expanded: false)
+                self.panel.ignoresMouseEvents = self.engine.boostAppFocused
+            }
+        }
+        toastWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.4, execute: work)
     }
 
     // MARK: - Public
@@ -158,9 +183,11 @@ final class NotchController: NSObject {
     }
 
     private func applyFrame(expanded: Bool) {
+        let toasting = !expanded && ui.toast != nil
         let size = expanded
             ? NotchLayout.expandedSize
-            : CGSize(width: ui.geometry.collapsedWidth, height: ui.geometry.notchHeight)
+            : CGSize(width: ui.geometry.collapsedWidth + (toasting ? NotchLayout.toastExtra.width : 0),
+                     height: ui.geometry.notchHeight + (toasting ? NotchLayout.toastExtra.height : 0))
         let frame = screen.frame
         let rect = NSRect(x: frame.midX - size.width / 2, y: frame.maxY - size.height, width: size.width, height: size.height)
         panel.setFrame(rect, display: true)

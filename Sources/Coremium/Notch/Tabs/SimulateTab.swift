@@ -36,13 +36,13 @@ struct SimulateTab: View {
     @ObservedObject var engine: AppEngine
     let advanced: Bool
     @StateObject private var sim = SimulatorState()
-    private static let palette: [Color] = [.orange, .cyan, .pink, .mint, .yellow]
+    private static let palette: [Color] = [Theme.accent, Theme.accent, Theme.accent, Theme.accent, Theme.warn]
 
     var body: some View {
         FlexScroll {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    Tag(text: "Illustration, not a measurement", color: .yellow)
+                    Tag(text: "Illustration, not a measurement", color: Theme.warn)
                     Spacer()
                 }
                 controls
@@ -62,7 +62,7 @@ struct SimulateTab: View {
                     Text(scenario.title).font(.system(size: 11, weight: .semibold, design: .rounded))
                         .padding(.horizontal, 10).padding(.vertical, 5)
                         .foregroundColor(selected ? .black : .white.opacity(0.8))
-                        .background(Capsule().fill(selected ? CoremiumLogo.cyan : Color.white.opacity(0.08)))
+                        .background(Capsule().fill(selected ? Theme.accent : Color.white.opacity(0.08)))
                 }
                 .buttonStyle(.plain)
             }
@@ -70,7 +70,7 @@ struct SimulateTab: View {
             Toggle(isOn: $sim.coremiumOn) {
                 Text(sim.coremiumOn ? "Coremium on" : "Coremium off").font(.system(size: 11.5, weight: .semibold, design: .rounded)).lineLimit(1)
             }
-            .toggleStyle(.switch).tint(.green).fixedSize()
+            .toggleStyle(.switch).tint(Theme.accent).fixedSize()
         }
     }
 
@@ -90,7 +90,7 @@ struct SimulateTab: View {
                             Circle().fill(Self.palette[app.id % Self.palette.count]).frame(width: 7, height: 7)
                             Text(app.name + (advanced ? String(format: " %.1f", app.demand) : "")).font(.system(size: 10, design: .rounded))
                                 .lineLimit(1)
-                            if app.isBoost { Image(systemName: "bolt.fill").font(.system(size: 8)).foregroundColor(.orange) }
+                            if app.isBoost { Image(systemName: "bolt.fill").font(.system(size: 8)).foregroundColor(Theme.accent) }
                         }
                     }
                     Spacer(minLength: 0)
@@ -105,7 +105,7 @@ struct SimulateTab: View {
             HStack {
                 Text(title).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundColor(.white)
                 Spacer()
-                Text(subtitle).font(.system(size: 10, design: .rounded)).foregroundColor(warn ? .orange : Theme.textDim)
+                Text(subtitle).font(.system(size: 10, design: .rounded)).foregroundColor(warn ? Theme.accent : Theme.textDim)
             }
             HStack(spacing: 5) {
                 ForEach(ids.indices, id: \.self) { core in
@@ -134,7 +134,7 @@ struct SimulateTab: View {
                             Spacer()
                             Text(sim.coremiumOn ? "Steady" : (sim.hitches > 3 ? "Stuttering" : "Mostly fine"))
                                 .font(.system(size: 11, weight: .bold, design: .rounded))
-                                .foregroundColor(sim.coremiumOn ? .green : (sim.hitches > 3 ? .orange : .yellow))
+                                .foregroundColor(sim.coremiumOn ? Theme.accent : (sim.hitches > 3 ? Theme.accent : Theme.warn))
                         }
                         SimFrameGraph(frames: sim.frames, good: sim.coremiumOn).frame(height: 96)
                         HStack(spacing: 8) {
@@ -177,7 +177,7 @@ private struct SimCoreTile: View {
                 }
                 .padding(2)
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .strokeBorder(warn ? Color.orange.opacity(0.9) : Color.white.opacity(0.08), lineWidth: warn ? 1.5 : 1)
+                    .strokeBorder(warn ? Theme.accent.opacity(0.9) : Color.white.opacity(0.08), lineWidth: warn ? 1.5 : 1)
             }
         }
         .frame(height: 40)
@@ -212,13 +212,13 @@ private struct SimFrameGraph: View {
             fill.addLine(to: CGPoint(x: size.width, y: size.height))
             fill.addLine(to: CGPoint(x: offset, y: size.height))
             fill.closeSubpath()
-            let tint: Color = good ? .green : .orange
+            let tint: Color = good ? Theme.accent : Theme.accent
             context.fill(fill, with: .linearGradient(Gradient(colors: [tint.opacity(0.28), tint.opacity(0.02)]),
                                                      startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
             context.stroke(path, with: .color(tint), style: StrokeStyle(lineWidth: 1.5, lineJoin: .round))
             for (index, ms) in frames.enumerated() where ms > 40 {
                 context.fill(Path(ellipseIn: CGRect(x: offset + CGFloat(index) * step - 2.5, y: y(ms) - 2.5, width: 5, height: 5)),
-                             with: .color(.red))
+                             with: .color(Theme.warn))
             }
         }
         .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.black.opacity(0.35)))

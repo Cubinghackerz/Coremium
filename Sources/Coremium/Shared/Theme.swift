@@ -6,6 +6,9 @@ enum Theme {
     static let card = Color.white.opacity(0.055)
     static let border = Color.white.opacity(0.09)
     static let textDim = Color.white.opacity(0.55)
+    /// Monochrome: white is the only accent. One muted amber is kept for warnings, because a warning must stand out.
+    static let accent = Color.white
+    static let warn = Color(red: 0.93, green: 0.78, blue: 0.52)
 }
 
 struct Card<Content: View>: View {
@@ -58,7 +61,7 @@ struct FlexScroll<Content: View>: View {
 /// A small coloured tag.
 struct Tag: View {
     let text: String
-    var color: Color = .cyan
+    var color: Color = Theme.accent
     var body: some View {
         Text(text)
             .font(.system(size: 10, weight: .bold, design: .rounded))
@@ -70,13 +73,13 @@ struct Tag: View {
 }
 
 struct PrimaryButtonStyle: ButtonStyle {
-    var tint: Color = CoremiumLogo.cyan
+    var tint: Color = Theme.accent
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 13, weight: .semibold, design: .rounded))
             .foregroundColor(.black)
             .padding(.horizontal, 18).padding(.vertical, 9)
-            .background(Capsule().fill(LinearGradient(colors: [tint, tint.opacity(0.75)], startPoint: .top, endPoint: .bottom)))
+            .background(Capsule().fill(tint))
             .opacity(configuration.isPressed ? 0.8 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
     }
@@ -112,25 +115,11 @@ struct SettingRow: View {
                 }
             }
             Spacer(minLength: 12)
-            Toggle("", isOn: $isOn).labelsHidden().toggleStyle(.switch).tint(CoremiumLogo.cyan)
+            Toggle("", isOn: $isOn).labelsHidden().toggleStyle(.switch).tint(Color(white: 0.85))
         }
     }
 }
 
 extension AppCategory {
-    var tint: Color {
-        switch self {
-        case .game: return .green
-        case .creative: return .purple
-        case .developer: return .blue
-        case .localAI: return .indigo
-        case .browser: return .orange
-        case .communication: return .pink
-        case .ai: return .cyan
-        case .media: return .red
-        case .productivity: return .yellow
-        case .system: return Color(white: 0.6)
-        case .other: return Color(white: 0.5)
-        }
-    }
+    var tint: Color { Color(white: 0.72) }
 }

@@ -64,3 +64,20 @@ final class StorageTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: home.appendingPathComponent("Library/Caches/com.big.app").path))
     }
 }
+
+final class StorageLargeFileTests: XCTestCase {
+    func testLargeFilesAreReviewOnlyAndFound() throws {
+        let home = FileManager.default.temporaryDirectory.appendingPathComponent("coremium-large-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: home) }
+        let dir = home.appendingPathComponent("Documents/Projects")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        FileManager.default.createFile(atPath: dir.appendingPathComponent("big.bin").path, contents: Data(count: 3_000_000))
+        FileManager.default.createFile(atPath: dir.appendingPathComponent("small.bin").path, contents: Data(count: 1_000))
+        let found = StorageScanner.largeFiles(home: home, minimumBytes: 2_000_000)
+        XCTAssertEqual(found.map(\.name), ["big.bin"])
+        XCTAssertFalse(StorageKind.largeFiles.cleanable)
+        let result = StorageCleaner.moveToTrash(found, home: home)
+        XCTAssertEqual(result.movedCount, 0, "Coremium never moves your own files")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: dir.appendingPathComponent("big.bin").path))
+    }
+}

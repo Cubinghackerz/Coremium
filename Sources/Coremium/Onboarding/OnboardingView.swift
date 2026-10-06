@@ -45,7 +45,7 @@ struct OnboardingView: View {
             Spacer()
             HStack(spacing: 6) {
                 ForEach(0...lastStep, id: \.self) { index in
-                    Capsule().fill(index == step ? CoremiumLogo.cyan : Color.white.opacity(0.2)).frame(width: index == step ? 20 : 6, height: 6)
+                    Capsule().fill(index == step ? Theme.accent : Color.white.opacity(0.2)).frame(width: index == step ? 20 : 6, height: 6)
                 }
             }
             Spacer()
@@ -78,9 +78,9 @@ private struct Welcome: View {
     var body: some View {
         VStack(spacing: 14) {
             Spacer(minLength: 0)
-            CoremiumLogo().frame(width: 92, height: 92).shadow(color: CoremiumLogo.blue.opacity(0.45), radius: 22)
+            CoremiumLogo().frame(width: 92, height: 92).shadow(color: Theme.accent.opacity(0.45), radius: 22)
             Text("Welcome to Coremium").font(.system(size: 28, weight: .bold, design: .rounded)).foregroundColor(.white)
-            Text(Pitch.headline).font(.system(size: 15, weight: .semibold, design: .rounded)).foregroundColor(CoremiumLogo.cyan)
+            Text(Pitch.headline).font(.system(size: 15, weight: .semibold, design: .rounded)).foregroundColor(Theme.accent)
                 .multilineTextAlignment(.center)
             Text(Pitch.subline).font(.system(size: 12.5, design: .rounded)).foregroundColor(Theme.textDim)
                 .multilineTextAlignment(.center).frame(maxWidth: 520).fixedSize(horizontal: false, vertical: true)
@@ -97,14 +97,14 @@ private struct HowItWorks: View {
             Spacer(minLength: 0)
             StepHeader(title: "Two kinds of cores", subtitle: "Fast performance cores and frugal efficiency cores. Normally every app piles onto the fast ones. Coremium sends the apps you aren't using to the efficient ones.")
             HStack(spacing: 14) {
-                zone("Performance cores", "Fast, power-hungry", .orange,
+                zone("Performance cores", "Fast, power-hungry", Theme.accent,
                      moved ? [("gamecontroller.fill", "Game")] : [("gamecontroller.fill", "Game"), ("globe", "Browser"), ("bubble.left.fill", "Chat"), ("sparkles", "AI")])
                 Image(systemName: "arrow.right").font(.system(size: 18, weight: .bold)).foregroundColor(Theme.textDim)
-                zone("Efficiency cores", "Calm, frugal", .mint,
+                zone("Efficiency cores", "Calm, frugal", Theme.accent,
                      moved ? [("globe", "Browser"), ("bubble.left.fill", "Chat"), ("sparkles", "AI")] : [])
             }
             Text(moved ? "With Coremium the game has the fast cores to itself." : "Without Coremium everything competes for the fast cores.")
-                .font(.system(size: 12.5, weight: .semibold, design: .rounded)).foregroundColor(moved ? .green : .orange)
+                .font(.system(size: 12.5, weight: .semibold, design: .rounded)).foregroundColor(moved ? Theme.accent : Theme.accent)
             Spacer(minLength: 0)
         }
         .onAppear {
@@ -173,7 +173,7 @@ private struct PickMode: View {
                         VStack(spacing: 5) {
                             Image(systemName: mode.symbol).font(.system(size: 16, weight: .semibold)).foregroundColor(selected ? .black : mode.tint)
                             Text(mode.label).font(.system(size: 12, weight: .bold, design: .rounded)).foregroundColor(selected ? .black : .white)
-                            if mode == .automatic { Tag(text: "Recommended", color: selected ? .black : .cyan) }
+                            if mode == .automatic { Tag(text: "Recommended", color: selected ? .black : Theme.accent) }
                         }
                         .frame(maxWidth: .infinity, minHeight: 66)
                         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(selected ? mode.tint : Color.white.opacity(0.06)))

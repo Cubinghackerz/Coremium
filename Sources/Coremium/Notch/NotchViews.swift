@@ -26,6 +26,7 @@ struct NotchGeometry: Equatable {
 }
 
 enum NotchLayout {
+    static let toastExtra = CGSize(width: 300, height: 34)
     static let expandedSize = CGSize(width: 780, height: 488)
 }
 
@@ -76,6 +77,12 @@ final class NotchUIState: ObservableObject {
         didSet { defaults.set(advanced, forKey: "advancedMode") }
     }
     /// Show the mode icon and status dot beside the notch. Off = the notch looks untouched ("hidden in plain sight").
+    /// A decision Coremium just made, shown briefly as a pill under the notch.
+    @Published var toast: Decision?
+    /// Let decisions drop out of the notch for a moment while the panel is closed.
+    @Published var decisionToasts: Bool {
+        didSet { defaults.set(decisionToasts, forKey: "decisionToasts") }
+    }
     @Published var showIndicators: Bool {
         didSet { defaults.set(showIndicators, forKey: "showIndicators") }
     }
@@ -87,6 +94,7 @@ final class NotchUIState: ObservableObject {
         self.geometry = geometry
         advanced = defaults.bool(forKey: "advancedMode")
         showIndicators = defaults.object(forKey: "showIndicators") as? Bool ?? true
+        decisionToasts = defaults.object(forKey: "decisionToasts") as? Bool ?? true
         onboardingCompleted = defaults.bool(forKey: "onboardingCompleted")
     }
 
@@ -131,25 +139,16 @@ struct NotchShape: Shape {
 }
 
 extension PerformanceMode {
-    var tint: Color {
-        switch self {
-        case .automatic: return .cyan
-        case .balanced: return Color(white: 0.7)
-        case .gaming: return .green
-        case .professional: return .purple
-        case .coding: return .blue
-        case .localAI: return .indigo
-        }
-    }
+    var tint: Color { Theme.accent }
 }
 
 extension AppRule {
     var tint: Color {
         switch self {
-        case .boost: return .orange
-        case .normal: return Color(white: 0.6)
-        case .auto: return .cyan
-        case .efficiency: return .mint
+        case .boost: return Color(white: 1.0)
+        case .normal: return Color(white: 0.62)
+        case .auto: return Color(white: 0.86)
+        case .efficiency: return Color(white: 0.74)
         }
     }
 
@@ -177,8 +176,9 @@ struct NotchRootView: View {
 
     var body: some View {
         let geometry = ui.geometry
-        let width = ui.expanded ? NotchLayout.expandedSize.width : geometry.collapsedWidth
-        let height = ui.expanded ? NotchLayout.expandedSize.height : geometry.notchHeight
+        let toasting = !ui.expanded && ui.toast != nil
+        let width = ui.expanded ? NotchLayout.expandedSize.width : geometry.collapsedWidth + (toasting ? NotchLayout.toastExtra.width : 0)
+        let height = ui.expanded ? NotchLayout.expandedSize.height : geometry.notchHeight + (toasting ? NotchLayout.toastExtra.height : 0)
         ZStack(alignment: .top) {
             NotchShape(bottomRadius: ui.expanded ? 34 : (geometry.hasNotch ? 12 : 10)).fill(Color.black)
             if ui.expanded {
@@ -192,13 +192,25 @@ struct NotchRootView: View {
                 .padding(.top, geometry.notchHeight + 2)
                 .transition(.opacity)
             } else {
-                CollapsedView(engine: engine, geometry: geometry, visible: ui.showIndicators).transition(.opacity)
+                VStack(spacing: 0) {
+                    CollapsedView(engine: engine, geometry: geometry, visible: ui.showIndicators)
+                        .frame(height: geometry.notchHeight)
+                    if let toast = ui.toast {
+                        (Text(toast.headline + ". ").fontWeight(.semibold).foregroundColor(.white)
+                            + Text(toast.detail).foregroundColor(.white.opacity(0.6)))
+                            .font(.system(size: 11.5, design: .rounded)).lineLimit(1).truncationMode(.tail)
+                            .padding(.horizontal, 22).frame(height: NotchLayout.toastExtra.height - 6)
+                            .transition(.opacity.combined(with: .offset(y: -6)))
+                    }
+                }
+                .transition(.opacity)
             }
         }
         .frame(width: width, height: height, alignment: .top)
         .clipShape(NotchShape(bottomRadius: ui.expanded ? 34 : (geometry.hasNotch ? 12 : 10)))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(.spring(response: 0.4, dampingFraction: 0.82), value: ui.expanded)
+        .animation(.spring(response: 0.45, dampingFraction: 0.8), value: ui.toast)
         .preferredColorScheme(.dark)
     }
 }
@@ -213,8 +225,35 @@ private struct CollapsedView: View {
     }
 
     @ViewBuilder private var indicators: some View {
+        if engine.sessionActive && !engine.paused && geometry.hasNotch { boostEars } else { idleEars }
+    }
+
+    /// During a boost the notch becomes a tiny live meter: performance-core load on the left, apps moved aside on the right.
+    private var boostEars: some View {
+        let loads = engine.cpuLoads
+        let perf = engine.chip.performanceCPUs.prefix(6).map { $0 < loads.count ? loads[$0] : 0 }
+        return HStack(spacing: 0) {
+            HStack(alignment: .bottom, spacing: 2) {
+                ForEach(Array(perf.enumerated()), id: \.offset) { _, load in
+                    Capsule().fill(Color.white.opacity(0.35 + 0.65 * load))
+                        .frame(width: 2.5, height: max(3, 14 * CGFloat(load)))
+                }
+            }
+            .frame(width: NotchGeometry.earWidth, height: 16, alignment: .bottom)
+            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: perf)
+            .help("Performance cores, live")
+            Spacer().frame(width: geometry.notchWidth)
+            Text("\(engine.demotedCount)")
+                .font(.system(size: 10.5, weight: .semibold, design: .rounded)).monospacedDigit()
+                .foregroundColor(.white.opacity(0.9))
+                .frame(width: NotchGeometry.earWidth)
+                .help("Background processes moved to the efficiency cores")
+        }
+    }
+
+    @ViewBuilder private var idleEars: some View {
         let mode = engine.rules.mode
-        let dot: Color = engine.paused ? Color(white: 0.4) : (engine.sessionActive ? .green : Color(white: 0.35))
+        let dot: Color = engine.paused ? Color(white: 0.4) : (engine.sessionActive ? Theme.accent : Color(white: 0.35))
         if geometry.hasNotch {
             HStack(spacing: 0) {
                 Image(systemName: engine.paused ? "pause.fill" : mode.symbol)
@@ -223,7 +262,7 @@ private struct CollapsedView: View {
                     .frame(width: NotchGeometry.earWidth)
                 Spacer().frame(width: geometry.notchWidth)
                 Circle().fill(dot).frame(width: 7, height: 7)
-                    .shadow(color: engine.sessionActive ? Color.green.opacity(0.8) : .clear, radius: 4)
+                    .shadow(color: engine.sessionActive ? Theme.accent.opacity(0.8) : .clear, radius: 4)
                     .frame(width: NotchGeometry.earWidth)
             }
         } else {
@@ -325,7 +364,7 @@ private struct StatusLine: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
-                Circle().fill(engine.sessionActive && !engine.paused ? Color.green : Color(white: 0.4)).frame(width: 6, height: 6)
+                Circle().fill(engine.sessionActive && !engine.paused ? Theme.accent : Color(white: 0.4)).frame(width: 6, height: 6)
                 Text(engine.statusLine)
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundColor(.white.opacity(0.9)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
@@ -346,7 +385,7 @@ private struct StatusLine: View {
             ForEach(engine.warnings, id: \.self) { warning in
                 Label(warning, systemImage: "exclamationmark.triangle.fill")
                     .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundColor(.yellow.opacity(0.9)).lineLimit(1)
+                    .foregroundColor(Theme.warn.opacity(0.9)).lineLimit(1)
             }
         }
     }
@@ -390,7 +429,7 @@ private struct TabBar: View {
                 }
                 .padding(.horizontal, 9).padding(.vertical, 5)
                 .foregroundColor(ui.advanced ? .black : .white.opacity(0.65))
-                .background(Capsule().fill(ui.advanced ? CoremiumLogo.cyan : Color.white.opacity(0.08)))
+                .background(Capsule().fill(ui.advanced ? Theme.accent : Color.white.opacity(0.08)))
                 .contentShape(Capsule())
             }
             .buttonStyle(.plain)
@@ -435,7 +474,7 @@ private struct ProofStrip: View {
     var body: some View {
         let today = engine.today
         HStack(alignment: .center, spacing: 10) {
-            Image(systemName: "checkmark.seal.fill").font(.system(size: 14)).foregroundColor(CoremiumLogo.cyan)
+            Image(systemName: "checkmark.seal.fill").font(.system(size: 14)).foregroundColor(Theme.accent)
             VStack(alignment: .leading, spacing: 2) {
                 Text(todayText(today)).font(.system(size: 10.5, weight: .semibold, design: .rounded)).foregroundColor(.white.opacity(0.9))
                     .lineLimit(1).minimumScaleFactor(0.8)
@@ -445,7 +484,7 @@ private struct ProofStrip: View {
             Button { ui.tab = .insights } label: {
                 Text("Details").font(.system(size: 10, weight: .semibold, design: .rounded))
                     .padding(.horizontal, 9).padding(.vertical, 4).foregroundColor(.black)
-                    .background(Capsule().fill(CoremiumLogo.cyan))
+                    .background(Capsule().fill(Theme.accent))
             }
             .buttonStyle(.plain)
             .help("Measured history and why Coremium made each decision. Performance cores (P-cores) are the fast ones; efficiency cores (E-cores) are the frugal ones.")
@@ -497,7 +536,7 @@ private struct ListHeader: View {
                 }
                 .padding(.horizontal, 9).padding(.vertical, 4)
                 .foregroundColor(engine.paused ? .black : .white.opacity(0.65))
-                .background(Capsule().fill(engine.paused ? Color.yellow : Color.white.opacity(0.08)))
+                .background(Capsule().fill(engine.paused ? Theme.warn : Color.white.opacity(0.08)))
             }
             .buttonStyle(.plain)
             .help(engine.paused ? "Resume moving apps aside." : "Pause Coremium: puts every app back to macOS default scheduling right away.")
@@ -560,7 +599,7 @@ struct AppRowView: View {
             if !installed, row.gpu >= 5 {
                 Label(advanced ? "GPU \(Int(row.gpu))%" : "GPU heavy", systemImage: "square.stack.3d.up.fill")
                     .font(.system(size: 9.5, weight: .semibold, design: .rounded))
-                    .foregroundColor(.purple.opacity(0.9)).lineLimit(1).fixedSize()
+                    .foregroundColor(Theme.accent.opacity(0.9)).lineLimit(1).fixedSize()
                     .help("Using about \(Int(row.gpu))% of the GPU's time. macOS has no public way to lower another app's GPU priority, so Coremium shows it instead.")
             }
             if !installed, row.demoted || row.cpu >= 10 {
@@ -568,7 +607,7 @@ struct AppRowView: View {
                 let word = AppEngine.loadWord(row.cpu, moved: row.demoted)
                 Label(word, systemImage: row.demoted ? "leaf.fill" : "gauge.with.dots.needle.33percent")
                     .font(.system(size: 9.5, weight: .semibold, design: .rounded))
-                    .foregroundColor(row.demoted ? .mint : .white.opacity(0.5)).lineLimit(1).fixedSize()
+                    .foregroundColor(.white.opacity(row.demoted ? 0.9 : 0.5)).lineLimit(1).fixedSize()
                     .help(row.demoted
                           ? "Moved to the efficiency cores so it stays out of the way. Using about \(coresText(row.cpu))."
                           : "Using about \(coresText(row.cpu)) of CPU. One core is 100%; your Mac has \(ProcessInfo.processInfo.activeProcessorCount).")

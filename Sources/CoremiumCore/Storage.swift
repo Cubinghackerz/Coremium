@@ -2,7 +2,11 @@ import Foundation
 
 /// What a group of reclaimable files is, in words people use.
 public enum StorageKind: String, CaseIterable, Sendable {
-    case appCaches, logs, developerBuilds, oldDownloads, trash
+    case appCaches, logs, developerBuilds, oldDownloads, trash, largeFiles
+
+    /// Scanned automatically. Large files need a deliberate click, because macOS asks before Coremium may look in
+    /// Desktop and Documents.
+    public static let standard: [StorageKind] = [.appCaches, .logs, .developerBuilds, .oldDownloads, .trash]
 
     public var title: String {
         switch self {
@@ -11,6 +15,7 @@ public enum StorageKind: String, CaseIterable, Sendable {
         case .developerBuilds: return "Xcode build files"
         case .oldDownloads: return "Old downloads"
         case .trash: return "Trash"
+        case .largeFiles: return "Large files"
         }
     }
 
@@ -21,11 +26,12 @@ public enum StorageKind: String, CaseIterable, Sendable {
         case .developerBuilds: return "Xcode's intermediate build products. Xcode recreates them on the next build."
         case .oldDownloads: return "Files in Downloads you haven't touched for 90 days. Check them before clearing."
         case .trash: return "Already in the Trash. Coremium never empties it: use Finder's Empty Trash when you're sure."
+        case .largeFiles: return "Your biggest files in Desktop, Documents, Movies and Downloads. Review only: Coremium never moves your documents. Open them in Finder to decide."
         }
     }
 
-    /// Items here can be moved to the Trash by Coremium.
-    public var cleanable: Bool { self != .trash }
+    /// Items here can be moved to the Trash by Coremium. Trash and your own large files are review-only.
+    public var cleanable: Bool { self != .trash && self != .largeFiles }
 }
 
 public struct StorageItem: Identifiable, Hashable, Sendable {
@@ -58,6 +64,7 @@ public enum StorageRoots {
         case .developerBuilds: return home.appendingPathComponent("Library/Developer/Xcode/DerivedData")
         case .oldDownloads: return home.appendingPathComponent("Downloads")
         case .trash: return home.appendingPathComponent(".Trash")
+        case .largeFiles: return home
         }
     }
 
@@ -90,10 +97,10 @@ public enum StorageScanner {
     }
 
     /// Reads every kind's folder (one level deep), sizes the entries in parallel, largest first. Read-only.
-    public static func scan(home: URL = URL(fileURLWithPath: NSHomeDirectory()), minimumBytes: Int64 = 1_000_000,
-                            oldDownloadsDays: Int = 90, now: Date = Date()) -> [StorageItem] {
+    public static func scan(home: URL = URL(fileURLWithPath: NSHomeDirectory()), kinds: [StorageKind] = StorageKind.standard,
+                            minimumBytes: Int64 = 1_000_000, oldDownloadsDays: Int = 90, now: Date = Date()) -> [StorageItem] {
         var candidates: [(URL, StorageKind)] = []
-        for kind in StorageKind.allCases {
+        for kind in kinds where kind != .largeFiles {
             let root = StorageRoots.root(for: kind, home: home)
             guard let children = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: [.contentModificationDateKey, .isSymbolicLinkKey], options: []) else { continue }
             for child in children where child.lastPathComponent != ".DS_Store" {
@@ -116,6 +123,28 @@ public enum StorageScanner {
     }
 }
 
+extension StorageScanner {
+    /// Files of at least `minimumBytes` in the user's own folders, largest first. Skips hidden files, app bundles and
+    /// Library. Stops after `limit` seconds so it can never hang the panel.
+    public static func largeFiles(home: URL = URL(fileURLWithPath: NSHomeDirectory()), minimumBytes: Int64 = 500_000_000,
+                                  limit: TimeInterval = 20, maxResults: Int = 100) -> [StorageItem] {
+        let deadline = Date().addingTimeInterval(limit)
+        let keys: Set<URLResourceKey> = [.isRegularFileKey, .totalFileAllocatedSizeKey, .isSymbolicLinkKey]
+        var found: [StorageItem] = []
+        for folder in ["Desktop", "Documents", "Movies", "Downloads"] {
+            guard let walker = FileManager.default.enumerator(at: home.appendingPathComponent(folder), includingPropertiesForKeys: Array(keys),
+                                                              options: [.skipsHiddenFiles, .skipsPackageDescendants], errorHandler: { _, _ in true }) else { continue }
+            for case let url as URL in walker {
+                if Date() > deadline { break }
+                guard let v = try? url.resourceValues(forKeys: keys), v.isRegularFile == true, v.isSymbolicLink != true,
+                      let size = v.totalFileAllocatedSize, Int64(size) >= minimumBytes else { continue }
+                found.append(StorageItem(url: url, name: url.lastPathComponent, kind: .largeFiles, bytes: Int64(size)))
+            }
+        }
+        return Array(found.sorted { $0.bytes > $1.bytes }.prefix(maxResults))
+    }
+}
+
 public struct CleanResult: Equatable, Sendable {
     public var movedBytes: Int64 = 0
     public var movedCount = 0
@@ -125,9 +154,10 @@ public struct CleanResult: Equatable, Sendable {
 public enum StorageCleaner {
     /// Moves items to the Trash (never deletes permanently), skipping anything that is not on the allowed list.
     @discardableResult
-    public static func moveToTrash(_ items: [StorageItem], home: URL = URL(fileURLWithPath: NSHomeDirectory())) -> CleanResult {
+    public static func moveToTrash(_ items: [StorageItem], home: URL = URL(fileURLWithPath: NSHomeDirectory()),
+                                   skip: Set<String> = []) -> CleanResult {
         var result = CleanResult()
-        for item in items {
+        for item in items where !skip.contains(item.id) {
             guard item.kind.cleanable, StorageRoots.isCleanable(item.url, home: home) else { result.failed.append(item.name); continue }
             do {
                 try FileManager.default.trashItem(at: item.url, resultingItemURL: nil)
