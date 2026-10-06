@@ -10,6 +10,8 @@ quietly moves everything else to the efficiency cores. Nothing is quit; the app 
 - **Modes:** Automatic, Balanced, Gaming, Creator, Coding, Local AI. Automatic switches by itself.
 - **Four choices per app:** Boost, Normal, Yield, Eco. Your choice always beats the mode.
 - **Advanced mode:** per-core load %, memory, swap and pressure, process counts, PIDs, timers, and why each rule applies.
+- **Storage:** see what's filling your disk (app caches, logs, Xcode build files, old downloads, the Trash) and move what you
+  choose to the Trash. Read-only scan, nothing is ever deleted for good, documents are never touched.
 - **Insights:** what Coremium actually did (measured), why it made each decision, and what it costs.
 - **Simulate:** an animated illustration of the idea (clearly labelled as such).
 - **Learns locally:** suggests "Yield" for apps that hog the CPU while you play, and "Boost" for apps you work hard in.

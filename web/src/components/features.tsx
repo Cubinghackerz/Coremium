@@ -166,7 +166,7 @@ export function Features() {
               <Title sub="Turn on Advanced when you want the numbers. Nothing is hidden, and nothing leaves your Mac.">Want the numbers? They&apos;re there.</Title>
             </div>
             <ul className="grid grid-cols-2 gap-x-6 gap-y-3 text-[15px] text-zinc-300">
-              {["Per-core load, performance and efficiency", "Memory, swap and pressure", "Process counts and PIDs", "Why each rule applies to each app", "Time a boost ran, and how many processes moved", "Coremium's own CPU cost"].map((t) => (
+              {["Per-core load, performance and efficiency", "Memory, swap and pressure", "Process counts and PIDs", "Why each rule applies to each app", "Time a boost ran, and how many processes moved", "Coremium's own CPU cost", "A Storage tab: what fills your disk, cleared to the Trash only"].map((t) => (
                 <li key={t} className="flex gap-3">
                   <SlidersHorizontal className="mt-1 size-4 shrink-0 text-perf" aria-hidden />
                   {t}

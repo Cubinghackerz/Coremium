@@ -35,7 +35,7 @@ enum ListTab: String, CaseIterable {
 }
 
 enum NotchTab: String, CaseIterable, Identifiable {
-    case apps, insights, simulate, guide, settings
+    case apps, insights, storage, simulate, guide, settings
 
     var id: String { rawValue }
 
@@ -43,6 +43,7 @@ enum NotchTab: String, CaseIterable, Identifiable {
         switch self {
         case .apps: return "Apps"
         case .insights: return "Insights"
+        case .storage: return "Storage"
         case .simulate: return "Simulate"
         case .guide: return "Guide"
         case .settings: return "Settings"
@@ -53,6 +54,7 @@ enum NotchTab: String, CaseIterable, Identifiable {
         switch self {
         case .apps: return "square.grid.2x2.fill"
         case .insights: return "chart.bar.xaxis"
+        case .storage: return "internaldrive.fill"
         case .simulate: return "waveform.path.ecg"
         case .guide: return "book.fill"
         case .settings: return "gearshape.fill"
@@ -256,6 +258,7 @@ private struct ExpandedView: View {
                     case .insights: InsightsTab(engine: engine, advanced: ui.advanced)
                     case .simulate: SimulateTab(engine: engine, advanced: ui.advanced)
                     case .guide: GuideTab()
+                    case .storage: StorageTab(ui: ui)
                     case .settings: SettingsTab(engine: engine, ui: ui)
                     }
                 }

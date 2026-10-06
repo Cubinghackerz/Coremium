@@ -26,14 +26,17 @@
 		557803BE47E81EB995596FBB /* Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F47353D77D3294AB2131D351 /* Pitch.swift */; };
 		6690F54A6016421F65A2F6C1 /* CoremiumCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; };
 		775761E4275598427C54A361 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68C498138F008AAB199BFD0E /* Theme.swift */; };
+		79A4F2961D1296CF633EA3D5 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE41AA1A660DFDC1BC953888 /* Storage.swift */; };
 		7AA508EBA07B72E298F7C7D9 /* PriorityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721D5BF78DEB8ED6703ACA05 /* PriorityController.swift */; };
 		850FA0E0E0C14B0977E860B1 /* SimulationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3EB970F97AFD250CBFB9DD /* SimulationModel.swift */; };
+		8A57579135610D94F0420E68 /* StorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EEF2A2B9D957B78B923A118 /* StorageTests.swift */; };
 		8F5B200DF1E996BF610AB368 /* LoginItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96AD8A6A88E7B0242E4D6B16 /* LoginItem.swift */; };
 		999D7924CB35C71719B23344 /* MemoryInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5FA2C0F769434294C3E673 /* MemoryInfo.swift */; };
 		9DAA5E87863F2E1F9F6EBDEB /* GuideSettingsTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4089A208D9CA75523E578BF5 /* GuideSettingsTabs.swift */; };
 		9E0D8CCD25B2D7C72A3EC8F9 /* CoremiumCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; };
 		A10B41D16EAC8D29AF727408 /* RuleEvaluatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40FF670FF732AEBF2D4C9E3 /* RuleEvaluatorTests.swift */; };
 		B33826C2865CC11E48B31279 /* CPUUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */; };
+		BBB80049DF60DEC42762BC2F /* StorageTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03CB2CF8FDF58877B558BCC /* StorageTab.swift */; };
 		BC02B2238434A0E88D991661 /* SimulateTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117964755BEFC6405FDF61D4 /* SimulateTab.swift */; };
 		C17B847C873E005EFE80A953 /* PriorityControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */; };
 		CE79312E123D3B6B6156055E /* CoremiumCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -106,6 +109,7 @@
 		7552B972EA996FB64E8CDDE7 /* NotchViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchViews.swift; sourceTree = "<group>"; };
 		76CDB468E43C9B492273FE56 /* Rules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rules.swift; sourceTree = "<group>"; };
 		7B5FA2C0F769434294C3E673 /* MemoryInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryInfo.swift; sourceTree = "<group>"; };
+		7EEF2A2B9D957B78B923A118 /* StorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageTests.swift; sourceTree = "<group>"; };
 		81C504EBB7C8B704B50D79EB /* Coremium.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Coremium.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8745E69813751D5C8666CB2A /* UsageStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStats.swift; sourceTree = "<group>"; };
 		8918F561A8BD5DFB26DB662F /* Logo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logo.swift; sourceTree = "<group>"; };
@@ -116,6 +120,7 @@
 		96AD8A6A88E7B0242E4D6B16 /* LoginItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItem.swift; sourceTree = "<group>"; };
 		9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CoremiumCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1128FFA5823DE1E4B93ADEA /* InsightsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsTab.swift; sourceTree = "<group>"; };
+		B03CB2CF8FDF58877B558BCC /* StorageTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageTab.swift; sourceTree = "<group>"; };
 		B8BD4A06953CCB5C93E17576 /* AppCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCategory.swift; sourceTree = "<group>"; };
 		BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriorityControllerTests.swift; sourceTree = "<group>"; };
 		CEE5FB10CF173B7182E046D9 /* WorkloadLearner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkloadLearner.swift; sourceTree = "<group>"; };
@@ -123,6 +128,7 @@
 		D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUUsage.swift; sourceTree = "<group>"; };
 		E0CBB82F7AF85C03A232C477 /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
 		EC27AA7F326534EA95F4C333 /* GPUTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPUTests.swift; sourceTree = "<group>"; };
+		EE41AA1A660DFDC1BC953888 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
 		EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessSnapshot.swift; sourceTree = "<group>"; };
 		F309A4DA628E12B56BC5F326 /* CoremiumApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoremiumApp.swift; sourceTree = "<group>"; };
 		F47353D77D3294AB2131D351 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
@@ -225,6 +231,7 @@
 				EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */,
 				76CDB468E43C9B492273FE56 /* Rules.swift */,
 				6A3EB970F97AFD250CBFB9DD /* SimulationModel.swift */,
+				EE41AA1A660DFDC1BC953888 /* Storage.swift */,
 				8745E69813751D5C8666CB2A /* UsageStats.swift */,
 				CEE5FB10CF173B7182E046D9 /* WorkloadLearner.swift */,
 			);
@@ -245,6 +252,7 @@
 				4089A208D9CA75523E578BF5 /* GuideSettingsTabs.swift */,
 				A1128FFA5823DE1E4B93ADEA /* InsightsTab.swift */,
 				117964755BEFC6405FDF61D4 /* SimulateTab.swift */,
+				B03CB2CF8FDF58877B558BCC /* StorageTab.swift */,
 			);
 			path = Tabs;
 			sourceTree = "<group>";
@@ -290,6 +298,7 @@
 				BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */,
 				8B3B76185923C36837CC39DE /* ProductTests.swift */,
 				D40FF670FF732AEBF2D4C9E3 /* RuleEvaluatorTests.swift */,
+				7EEF2A2B9D957B78B923A118 /* StorageTests.swift */,
 				0E5DB2C289C689AF2656F9F8 /* SystemInfoTests.swift */,
 			);
 			path = CoremiumCoreTests;
@@ -457,6 +466,7 @@
 				557803BE47E81EB995596FBB /* Pitch.swift in Sources */,
 				E28C0C9A1278178913928C85 /* SettingsStore.swift in Sources */,
 				BC02B2238434A0E88D991661 /* SimulateTab.swift in Sources */,
+				BBB80049DF60DEC42762BC2F /* StorageTab.swift in Sources */,
 				775761E4275598427C54A361 /* Theme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -475,6 +485,7 @@
 				3EB36F20FD3B7593AA13E853 /* ProcessSnapshot.swift in Sources */,
 				53A0DDEBA898632FF608586D /* Rules.swift in Sources */,
 				850FA0E0E0C14B0977E860B1 /* SimulationModel.swift in Sources */,
+				79A4F2961D1296CF633EA3D5 /* Storage.swift in Sources */,
 				53AC5016A4911BE1502AA2D5 /* UsageStats.swift in Sources */,
 				E7CFFA7C31633A9D11BB2829 /* WorkloadLearner.swift in Sources */,
 			);
@@ -489,6 +500,7 @@
 				C17B847C873E005EFE80A953 /* PriorityControllerTests.swift in Sources */,
 				12AF2F9FEDD167B33AB008CD /* ProductTests.swift in Sources */,
 				A10B41D16EAC8D29AF727408 /* RuleEvaluatorTests.swift in Sources */,
+				8A57579135610D94F0420E68 /* StorageTests.swift in Sources */,
 				E427C8AB38A49A1AE5A61B3F /* SystemInfoTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
