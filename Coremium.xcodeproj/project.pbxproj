@@ -13,6 +13,7 @@
 		09B2B241C20A7746988566BC /* CPULoad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F43C71BBC7D82F445BC7A9 /* CPULoad.swift */; };
 		0C2E3AA3B463807A604C96AC /* CoremiumApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F309A4DA628E12B56BC5F326 /* CoremiumApp.swift */; };
 		12AF2F9FEDD167B33AB008CD /* ProductTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3B76185923C36837CC39DE /* ProductTests.swift */; };
+		17CF754B5289DCD8E66E51E4 /* V2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4408F17B51F32CA38949D73 /* V2Tests.swift */; };
 		275AA604790BEF4CC07EEBD5 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504047CD87248E1B1180B990 /* OnboardingView.swift */; };
 		3DBC2101E51AA1DA8A7C5A3F /* NotchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CBB82F7AF85C03A232C477 /* NotchController.swift */; };
 		3EB36F20FD3B7593AA13E853 /* ProcessSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */; };
@@ -24,12 +25,15 @@
 		53A0DDEBA898632FF608586D /* Rules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76CDB468E43C9B492273FE56 /* Rules.swift */; };
 		53AC5016A4911BE1502AA2D5 /* UsageStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8745E69813751D5C8666CB2A /* UsageStats.swift */; };
 		557803BE47E81EB995596FBB /* Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F47353D77D3294AB2131D351 /* Pitch.swift */; };
+		61D22354D379EEE018CD81A7 /* UpdateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967B9E60735B749128D1E083 /* UpdateTests.swift */; };
 		6690F54A6016421F65A2F6C1 /* CoremiumCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; };
 		775761E4275598427C54A361 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68C498138F008AAB199BFD0E /* Theme.swift */; };
 		79A4F2961D1296CF633EA3D5 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE41AA1A660DFDC1BC953888 /* Storage.swift */; };
 		7AA508EBA07B72E298F7C7D9 /* PriorityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721D5BF78DEB8ED6703ACA05 /* PriorityController.swift */; };
+		845C948DD6FD824AD273DD9F /* Updates.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D1AA783C7BD49D7FD852CA /* Updates.swift */; };
 		850FA0E0E0C14B0977E860B1 /* SimulationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A3EB970F97AFD250CBFB9DD /* SimulationModel.swift */; };
 		8A57579135610D94F0420E68 /* StorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EEF2A2B9D957B78B923A118 /* StorageTests.swift */; };
+		8D1063DC962024E014D5F01E /* Automation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8FB40D33F8E0108BC3CBEF /* Automation.swift */; };
 		8F5B200DF1E996BF610AB368 /* LoginItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96AD8A6A88E7B0242E4D6B16 /* LoginItem.swift */; };
 		999D7924CB35C71719B23344 /* MemoryInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5FA2C0F769434294C3E673 /* MemoryInfo.swift */; };
 		9DAA5E87863F2E1F9F6EBDEB /* GuideSettingsTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4089A208D9CA75523E578BF5 /* GuideSettingsTabs.swift */; };
@@ -38,10 +42,13 @@
 		B33826C2865CC11E48B31279 /* CPUUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */; };
 		BBB80049DF60DEC42762BC2F /* StorageTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B03CB2CF8FDF58877B558BCC /* StorageTab.swift */; };
 		BC02B2238434A0E88D991661 /* SimulateTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117964755BEFC6405FDF61D4 /* SimulateTab.swift */; };
+		BF979818FFEF75C095C24D26 /* SystemTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 710F6A4415CFDD108686C48D /* SystemTab.swift */; };
 		C17B847C873E005EFE80A953 /* PriorityControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */; };
+		CA3582F7A38E3D6030D15A53 /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB0755C3842D348B8AC1783 /* Updater.swift */; };
 		CE79312E123D3B6B6156055E /* CoremiumCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D1ED3215BB5D524D2F4C22BF /* GPUTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC27AA7F326534EA95F4C333 /* GPUTests.swift */; };
 		E28C0C9A1278178913928C85 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677FEFB85D25A87B5BBC84DD /* SettingsStore.swift */; };
+		E2FC3BF93E08F3A14D90DBDD /* LaunchAgents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B64C9459B9D57CFD04AA17A0 /* LaunchAgents.swift */; };
 		E427C8AB38A49A1AE5A61B3F /* SystemInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5DB2C289C689AF2656F9F8 /* SystemInfoTests.swift */; };
 		E580F8782832A2FF2E67BC7E /* CoremiumCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E7CFFA7C31633A9D11BB2829 /* WorkloadLearner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE5FB10CF173B7182E046D9 /* WorkloadLearner.swift */; };
@@ -104,6 +111,8 @@
 		677FEFB85D25A87B5BBC84DD /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		68C498138F008AAB199BFD0E /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		6A3EB970F97AFD250CBFB9DD /* SimulationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationModel.swift; sourceTree = "<group>"; };
+		6DB0755C3842D348B8AC1783 /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
+		710F6A4415CFDD108686C48D /* SystemTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemTab.swift; sourceTree = "<group>"; };
 		721D5BF78DEB8ED6703ACA05 /* PriorityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriorityController.swift; sourceTree = "<group>"; };
 		72ACDCFF4DC391226F593C42 /* CoremiumCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CoremiumCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7552B972EA996FB64E8CDDE7 /* NotchViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchViews.swift; sourceTree = "<group>"; };
@@ -117,10 +126,14 @@
 		8BF484F8AE8F3321971B7D9F /* GPUStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPUStats.swift; sourceTree = "<group>"; };
 		8FB0A42591D57283FC98E9A0 /* AppEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEngine.swift; sourceTree = "<group>"; };
 		958A109951102BDFD94D7305 /* ChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipView.swift; sourceTree = "<group>"; };
+		967B9E60735B749128D1E083 /* UpdateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateTests.swift; sourceTree = "<group>"; };
 		96AD8A6A88E7B0242E4D6B16 /* LoginItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItem.swift; sourceTree = "<group>"; };
 		9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CoremiumCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F8FB40D33F8E0108BC3CBEF /* Automation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Automation.swift; sourceTree = "<group>"; };
 		A1128FFA5823DE1E4B93ADEA /* InsightsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsTab.swift; sourceTree = "<group>"; };
 		B03CB2CF8FDF58877B558BCC /* StorageTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageTab.swift; sourceTree = "<group>"; };
+		B4408F17B51F32CA38949D73 /* V2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = V2Tests.swift; sourceTree = "<group>"; };
+		B64C9459B9D57CFD04AA17A0 /* LaunchAgents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAgents.swift; sourceTree = "<group>"; };
 		B8BD4A06953CCB5C93E17576 /* AppCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCategory.swift; sourceTree = "<group>"; };
 		BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriorityControllerTests.swift; sourceTree = "<group>"; };
 		CEE5FB10CF173B7182E046D9 /* WorkloadLearner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkloadLearner.swift; sourceTree = "<group>"; };
@@ -133,6 +146,7 @@
 		F309A4DA628E12B56BC5F326 /* CoremiumApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoremiumApp.swift; sourceTree = "<group>"; };
 		F47353D77D3294AB2131D351 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
 		F728B106F6E1345C43C7124A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F8D1AA783C7BD49D7FD852CA /* Updates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updates.swift; sourceTree = "<group>"; };
 		F9F43C71BBC7D82F445BC7A9 /* CPULoad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPULoad.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -184,6 +198,7 @@
 		30D6BA14D3043B9AB08786FB /* App */ = {
 			isa = PBXGroup;
 			children = (
+				9F8FB40D33F8E0108BC3CBEF /* Automation.swift */,
 				F309A4DA628E12B56BC5F326 /* CoremiumApp.swift */,
 			);
 			path = App;
@@ -226,12 +241,14 @@
 				F9F43C71BBC7D82F445BC7A9 /* CPULoad.swift */,
 				D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */,
 				8BF484F8AE8F3321971B7D9F /* GPUStats.swift */,
+				B64C9459B9D57CFD04AA17A0 /* LaunchAgents.swift */,
 				7B5FA2C0F769434294C3E673 /* MemoryInfo.swift */,
 				721D5BF78DEB8ED6703ACA05 /* PriorityController.swift */,
 				EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */,
 				76CDB468E43C9B492273FE56 /* Rules.swift */,
 				6A3EB970F97AFD250CBFB9DD /* SimulationModel.swift */,
 				EE41AA1A660DFDC1BC953888 /* Storage.swift */,
+				F8D1AA783C7BD49D7FD852CA /* Updates.swift */,
 				8745E69813751D5C8666CB2A /* UsageStats.swift */,
 				CEE5FB10CF173B7182E046D9 /* WorkloadLearner.swift */,
 			);
@@ -242,6 +259,7 @@
 			isa = PBXGroup;
 			children = (
 				8FB0A42591D57283FC98E9A0 /* AppEngine.swift */,
+				6DB0755C3842D348B8AC1783 /* Updater.swift */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -253,6 +271,7 @@
 				A1128FFA5823DE1E4B93ADEA /* InsightsTab.swift */,
 				117964755BEFC6405FDF61D4 /* SimulateTab.swift */,
 				B03CB2CF8FDF58877B558BCC /* StorageTab.swift */,
+				710F6A4415CFDD108686C48D /* SystemTab.swift */,
 			);
 			path = Tabs;
 			sourceTree = "<group>";
@@ -300,6 +319,8 @@
 				D40FF670FF732AEBF2D4C9E3 /* RuleEvaluatorTests.swift */,
 				7EEF2A2B9D957B78B923A118 /* StorageTests.swift */,
 				0E5DB2C289C689AF2656F9F8 /* SystemInfoTests.swift */,
+				967B9E60735B749128D1E083 /* UpdateTests.swift */,
+				B4408F17B51F32CA38949D73 /* V2Tests.swift */,
 			);
 			path = CoremiumCoreTests;
 			sourceTree = "<group>";
@@ -453,6 +474,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				066C8AE504BA64D6382D8ECE /* AppEngine.swift in Sources */,
+				8D1063DC962024E014D5F01E /* Automation.swift in Sources */,
 				421361F07B4991BA64AF0240 /* ChipView.swift in Sources */,
 				0C2E3AA3B463807A604C96AC /* CoremiumApp.swift in Sources */,
 				4A440635B9A8016C00F7CBFB /* FullscreenFix.swift in Sources */,
@@ -467,7 +489,9 @@
 				E28C0C9A1278178913928C85 /* SettingsStore.swift in Sources */,
 				BC02B2238434A0E88D991661 /* SimulateTab.swift in Sources */,
 				BBB80049DF60DEC42762BC2F /* StorageTab.swift in Sources */,
+				BF979818FFEF75C095C24D26 /* SystemTab.swift in Sources */,
 				775761E4275598427C54A361 /* Theme.swift in Sources */,
+				CA3582F7A38E3D6030D15A53 /* Updater.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,12 +504,14 @@
 				B33826C2865CC11E48B31279 /* CPUUsage.swift in Sources */,
 				F7B35295764C5A9BC32B1BA3 /* ChipInfo.swift in Sources */,
 				01201C968546AD946C0D11D6 /* GPUStats.swift in Sources */,
+				E2FC3BF93E08F3A14D90DBDD /* LaunchAgents.swift in Sources */,
 				999D7924CB35C71719B23344 /* MemoryInfo.swift in Sources */,
 				7AA508EBA07B72E298F7C7D9 /* PriorityController.swift in Sources */,
 				3EB36F20FD3B7593AA13E853 /* ProcessSnapshot.swift in Sources */,
 				53A0DDEBA898632FF608586D /* Rules.swift in Sources */,
 				850FA0E0E0C14B0977E860B1 /* SimulationModel.swift in Sources */,
 				79A4F2961D1296CF633EA3D5 /* Storage.swift in Sources */,
+				845C948DD6FD824AD273DD9F /* Updates.swift in Sources */,
 				53AC5016A4911BE1502AA2D5 /* UsageStats.swift in Sources */,
 				E7CFFA7C31633A9D11BB2829 /* WorkloadLearner.swift in Sources */,
 			);
@@ -502,6 +528,8 @@
 				A10B41D16EAC8D29AF727408 /* RuleEvaluatorTests.swift in Sources */,
 				8A57579135610D94F0420E68 /* StorageTests.swift in Sources */,
 				E427C8AB38A49A1AE5A61B3F /* SystemInfoTests.swift in Sources */,
+				61D22354D379EEE018CD81A7 /* UpdateTests.swift in Sources */,
+				17CF754B5289DCD8E66E51E4 /* V2Tests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -585,7 +613,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = NO;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 2.0.0;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -630,7 +658,7 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 2.0.0;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;

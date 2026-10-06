@@ -26,6 +26,27 @@ struct AppRow: Identifiable, Equatable {
     var gpu = 0.0
 }
 
+/// An app using a lot of memory, for the memory guard.
+struct MemoryHog: Identifiable, Equatable {
+    var id: Int32 { pid }
+    let pid: Int32
+    let name: String
+    let bundleID: String?
+    let bytes: UInt64
+}
+
+/// Running totals for the session report card.
+private struct SessionTally {
+    let start: Date
+    var appName = ""
+    var mode = ""
+    var peakMoved = 0
+    var movedCoreSeconds = 0.0
+    var gpuSeconds = 0.0
+    var worstPressure = "normal"
+    let swapAtStart: UInt64
+}
+
 /// One thing Coremium decided, in plain words ("Coding mode activated: Terminal became active. Chrome moved to Yield.").
 struct Decision: Identifiable, Equatable {
     let id = UUID()
@@ -75,6 +96,13 @@ final class AppEngine: ObservableObject {
     @Published private(set) var memory = MemoryInfo.current()
     @Published private(set) var tickMs = 0.0
     /// Device-wide GPU utilization (%), and the renderer/tiler split for Advanced. Nil until first measured.
+    /// The boosted app whose own rules are in force right now, and whether chips edit those rules or everyone's.
+    @Published private(set) var boostBundleID: String?
+    @Published var ruleScopeIsGame = false
+    @Published private(set) var memoryHogs: [MemoryHog] = []
+    @Published private(set) var latestReport: SessionReport?
+    @Published private(set) var swapGrowth: UInt64 = 0
+    private var tally: SessionTally?
     @Published private(set) var gpuDevicePercent: Int?
     @Published private(set) var gpuDetail = ""
     private let gpuSampler = GPUSampler()
@@ -191,7 +219,23 @@ final class AppEngine: ObservableObject {
     /// Choosing the rule that is already set removes the override (back to "follow the mode").
     func toggleOverride(_ bundleID: String?, _ rule: AppRule) {
         guard let bundleID else { return }
+        if ruleScopeIsGame, let game = boostBundleID {
+            var map = rules.gameRules[game] ?? [:]
+            map[bundleID] = map[bundleID] == rule ? nil : rule
+            rules.gameRules[game] = map.isEmpty ? nil : map
+            return
+        }
         setOverride(bundleID, rules.rules[bundleID] == rule ? nil : rule)
+    }
+
+    /// The boost app in front, or a boost app busy in the background, by your general rules.
+    private func boostBundle(apps: [AppProcess], front: Int32?, cpu: [Int32: Double], categories: [String: AppCategory]) -> String? {
+        let profile = RuleEvaluator.activeProfile(apps: apps, frontmostPid: front, rules: rules, cpuByAppPid: cpu, categories: categories)
+        func isBoost(_ app: AppProcess) -> Bool {
+            rules.effectiveRule(bundleID: app.bundleID, category: app.bundleID.flatMap { categories[$0] } ?? .other, profile: profile) == .boost
+        }
+        if let app = apps.first(where: { $0.pid == front }), isBoost(app) { return app.bundleID }
+        return apps.first { isBoost($0) && (cpu[$0.pid] ?? 0) > rules.boostBusyPercent }?.bundleID
     }
 
     /// Puts every app Coremium slowed back to full speed right now.
@@ -366,9 +410,13 @@ final class AppEngine: ObservableObject {
             return
         }
 
-        let profile = RuleEvaluator.activeProfile(apps: apps, frontmostPid: front, rules: rules,
+        // Per-game rules: while a boost app is in charge, its own rules win over your general ones.
+        let game = boostBundle(apps: apps, front: front, cpu: cpu, categories: categories)
+        if boostBundleID != game { boostBundleID = game; if game == nil { ruleScopeIsGame = false } }
+        let effRules = rules.merged(forBoost: game)
+        let profile = RuleEvaluator.activeProfile(apps: apps, frontmostPid: front, rules: effRules,
                                                   cpuByAppPid: cpu, categories: categories)
-        let boostNow = RuleEvaluator.boostTriggered(apps: apps, frontmostPid: front, rules: rules,
+        let boostNow = RuleEvaluator.boostTriggered(apps: apps, frontmostPid: front, rules: effRules,
                                                     cpuByAppPid: cpu, categories: categories)
         let wasActive = sessionActive
         if boostNow {
@@ -378,9 +426,9 @@ final class AppEngine: ObservableObject {
             endSessionIfNeeded()
         }
 
-        let input = EvaluationInput(snapshot: snapshot, apps: apps, frontmostPid: front, rules: rules,
+        let input = EvaluationInput(snapshot: snapshot, apps: apps, frontmostPid: front, rules: effRules,
                                     sessionActive: sessionActive, cpuByAppPid: cpu, categories: categories,
-                                    ownUid: getuid(), ownPid: ownPid)
+                                    ownUid: getuid(), ownPid: ownPid, onBattery: powerSource == .battery)
         controller.apply(target: RuleEvaluator.pidsToDemote(input), snapshot: snapshot)
 
         activeProfile = profile
@@ -389,7 +437,7 @@ final class AppEngine: ObservableObject {
         var frontIsBoost = false
         for (index, app) in apps.enumerated() {
             let cat = app.bundleID.flatMap { categories[$0] } ?? .other
-            guard rules.effectiveRule(bundleID: app.bundleID, category: cat, profile: profile) == .boost else { continue }
+            guard effRules.effectiveRule(bundleID: app.bundleID, category: cat, profile: profile) == .boost else { continue }
             if app.pid == front { frontIsBoost = true; boostName = running[index].localizedName }
             else if boostName == nil, (cpu[app.pid] ?? 0) > rules.boostBusyPercent { boostName = running[index].localizedName }
         }
@@ -398,10 +446,38 @@ final class AppEngine: ObservableObject {
 
         // Evidence: real measurements only. Work that ran on the efficiency cores because Coremium moved it there.
         let movedPercent = controller.demotedPids.reduce(0.0) { $0 + (perPid[$1] ?? 0) }
+        let backgroundGPU = apps.filter { $0.pid != front }.reduce(0) { $0 + (gpu[$1.pid] ?? 0) } / 100 * seconds
+        if sessionActive, var t = tally {
+            if t.appName.isEmpty, let boostName { t.appName = boostName }
+            t.mode = profile.mode.label
+            t.peakMoved = max(t.peakMoved, demotedCount)
+            t.movedCoreSeconds += movedPercent / 100 * seconds
+            t.gpuSeconds += backgroundGPU
+            let order = ["normal", "warning", "critical"]
+            let now = memory.pressure.rawValue
+            if (order.firstIndex(of: now) ?? 0) > (order.firstIndex(of: t.worstPressure) ?? 0) { t.worstPressure = now }
+            tally = t
+            let growth = memory.swapUsedBytes > t.swapAtStart ? memory.swapUsedBytes - t.swapAtStart : 0
+            if swapGrowth != growth { swapGrowth = growth }
+        }
+        // Memory guard: who is using the most memory (only measured while someone can see it or a boost runs).
+        if needsLiveStats || sessionActive {
+            var hogs: [MemoryHog] = []
+            for (index, app) in apps.enumerated() {
+                let bytes = (tree[app.pid] ?? [app.pid]).reduce(UInt64(0)) { $0 + (ProcessCPUSampler.footprint(of: $1) ?? 0) }
+                if bytes > 300_000_000 {
+                    hogs.append(MemoryHog(pid: app.pid, name: running[index].localizedName ?? app.bundleID ?? "App", bundleID: app.bundleID, bytes: bytes))
+                }
+            }
+            let top = Array(hogs.sorted { $0.bytes > $1.bytes }.prefix(6))
+            if top.map(\.bytes).map { $0 / 50_000_000 } != memoryHogs.map(\.bytes).map({ $0 / 50_000_000 }) || top.map(\.pid) != memoryHogs.map(\.pid) {
+                memoryHogs = top
+            }
+        }
         usage.record(at: now, seconds: seconds, sessionActive: sessionActive, mode: profile.mode,
                      movedCoreSeconds: movedPercent / 100 * seconds, movedProcesses: demotedCount,
                      hot: thermal == .serious || thermal == .critical, sessionStarted: !wasActive && sessionActive,
-                     backgroundGPUSeconds: apps.filter { $0.pid != front }.reduce(0) { $0 + (gpu[$1.pid] ?? 0) } / 100 * seconds)
+                     backgroundGPUSeconds: backgroundGPU)
 
         // Learning: what each app does when it is in front and when it is in the background during a session.
         for (index, app) in apps.enumerated() {
@@ -412,14 +488,16 @@ final class AppEngine: ObservableObject {
         if now.timeIntervalSince(lastSuggestionAt) > 30 { refreshSuggestions() }
         if now.timeIntervalSince(lastPersistAt) > 60 { persistHistory() }
 
-        publishRows(running: running, snapshot: snapshot, cpu: cpu, categories: categories, profile: profile, front: front, trees: tree)
+        publishRows(running: running, snapshot: snapshot, cpu: cpu, categories: categories, profile: profile, front: front, trees: tree,
+                    rules: effRules)
         tickMs = Date().timeIntervalSince(now) * 1000
         if wasActive != sessionActive { reschedule() }
     }
 
     private func publishRows(running: [NSRunningApplication], snapshot: ProcessSnapshot, cpu: [Int32: Double],
                              categories: [String: AppCategory], profile: ModeProfile, front: Int32?,
-                             trees: [Int32: [Int32]]) {
+                             trees: [Int32: [Int32]], rules: RuleSet? = nil) {
+        let rules = rules ?? self.rules
         let demoted = controller.demotedPids
         var list: [AppRow] = running.map { app in
             let id = app.bundleIdentifier
@@ -427,7 +505,8 @@ final class AppEngine: ObservableObject {
             let effective = rules.effectiveRule(bundleID: id, category: cat, profile: profile)
             let pids = trees[app.processIdentifier] ?? []
             var source = "default"
-            if let id, rules.rules[id] != nil { source = "your choice" }
+            if let id, let game = boostBundleID, self.rules.gameRules[game]?[id] != nil { source = "for \(boostAppName ?? "this game")" }
+            else if let id, rules.rules[id] != nil { source = "your choice" }
             else if let id, rules.protectedBundleIDs.contains(id) { source = "protected" }
             else if effective != .normal { source = "\(profile.mode.label) mode" }
             return AppRow(id: id ?? "pid:\(app.processIdentifier)", name: app.localizedName ?? id ?? "Unknown",
@@ -504,6 +583,9 @@ final class AppEngine: ObservableObject {
     private func startSession() {
         sessionActive = true
         sessionStartedAt = Date()
+        memory = MemoryInfo.current()
+        tally = SessionTally(start: Date(), swapAtStart: memory.swapUsedBytes)
+        swapGrowth = 0
         guard rules.keepDisplayAwakeDuringBoost, !assertionHeld else { return }
         let result = IOPMAssertionCreateWithName("PreventUserIdleDisplaySleep" as CFString,
                                                  IOPMAssertionLevel(kIOPMAssertionLevelOn),
@@ -515,6 +597,16 @@ final class AppEngine: ObservableObject {
         guard sessionActive else { return }
         sessionActive = false
         sessionStartedAt = nil
+        if let t = tally, Date().timeIntervalSince(t.start) >= 60 {
+            let report = SessionReport(start: t.start, end: Date(), appName: t.appName.isEmpty ? "Boost" : t.appName, mode: t.mode,
+                                       peakMovedProcesses: t.peakMoved, movedCoreSeconds: t.movedCoreSeconds,
+                                       backgroundGPUSeconds: t.gpuSeconds, worstPressure: t.worstPressure,
+                                       swapGrowthBytes: swapGrowth)
+            usage.add(report)
+            latestReport = report
+        }
+        tally = nil
+        swapGrowth = 0
         releaseAssertion()
     }
 
@@ -608,6 +700,9 @@ final class AppEngine: ObservableObject {
         if powerSource == .battery { list.append("On battery: plug in for full speed") }
         if lowPower { list.append("Low Power Mode is on") }
         if thermal == .serious || thermal == .critical { list.append("Mac is hot: macOS is limiting performance") }
+        if sessionActive, swapGrowth > 512_000_000 {
+            list.append("Swap grew \(ByteCountFormatter.string(fromByteCount: Int64(swapGrowth), countStyle: .memory)) this boost: hide or quit a memory-heavy app (System tab)")
+        }
         return list
     }
 

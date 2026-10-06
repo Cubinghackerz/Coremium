@@ -8,6 +8,6 @@ Free code signing for the Windows version is provided by [SignPath.io](https://a
 - **Team roles:**
   - Committers and reviewers: [Cubinghackerz](https://github.com/Cubinghackerz)
   - Approvers (approve each signing request): [Cubinghackerz](https://github.com/Cubinghackerz)
-- **Privacy:** Coremium makes no network connections and collects no data. Settings, history and its crash-recovery file
+- **Privacy:** Coremium collects no data. Its only network request is the macOS version's daily check of GitHub for a newer release (it can be turned off in Settings; the Windows version makes none). Settings, history and its crash-recovery file
   stay on your computer in `%LOCALAPPDATA%\Coremium` (Windows) or `~/Library/Application Support/Coremium` (macOS).
 - **Source:** MIT-licensed, at https://github.com/Cubinghackerz/Coremium.

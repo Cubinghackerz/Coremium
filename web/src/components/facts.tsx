@@ -1,7 +1,7 @@
 const rows: [string, string, string][] = [
   ["Closes apps", "Never", "It only changes how the system schedules them. Quit Coremium and everything is restored."],
   ["Touches", "Your own apps", "Only processes owned by your user. No root helper, no system processes."],
-  ["Network", "None", "No telemetry, no update check, no account."],
+  ["Network", "One update check a day", "Asks GitHub whether a newer version exists. No telemetry, no account. Turn it off in Settings."],
   ["Cost to run", "About 0.1% of one core", "Measured idle on an M3 Pro, about 34 MB of memory. It rises while the panel is open."],
   ["Price", "Free, MIT license", "Read the source and build it yourself."],
   ["Runs on", "macOS 13 and later", "Apple Silicon and Intel. Tested on macOS 27 with an M3 Pro so far. A Windows 10 and 11 beta is also available."],

@@ -36,7 +36,7 @@ struct TrustCard: View {
         ("arrow.uturn.backward.circle.fill", "Fully reversible", "Undone when you quit, and again at the next start if the app ever crashes."),
         ("xmark.circle.fill", "Never closes or kills anything", "Apps keep running; they just use the efficient cores while you're busy elsewhere."),
         ("gearshape.2.fill", "Uses macOS's own scheduling", "The same built-in priority control as the taskpolicy tool. No hacks, no drivers, no admin password."),
-        ("lock.shield.fill", "Private", "No accounts, no network access. Settings and history stay on this Mac."),
+        ("lock.shield.fill", "Private", "No accounts, no telemetry. Settings and history stay on this Mac; the only request out is a daily update check you can turn off."),
         ("chevron.left.forwardslash.chevron.right", "Open source", "MIT licensed. Read exactly what it does."),
     ]
 

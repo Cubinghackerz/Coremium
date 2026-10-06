@@ -12,6 +12,15 @@ public final class ProcessCPUSampler {
 
     public init() {}
 
+    /// Memory the process is responsible for (what Activity Monitor calls "Memory"), or nil if not readable.
+    public static func footprint(of pid: Int32) -> UInt64? {
+        var info = rusage_info_v4()
+        let result = withUnsafeMutablePointer(to: &info) { pointer in
+            pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { proc_pid_rusage(pid, RUSAGE_INFO_V4, $0) }
+        }
+        return result == 0 ? info.ri_phys_footprint : nil
+    }
+
     /// Total CPU time (user + system) of `pid` in nanoseconds, or nil if not readable.
     public func cpuNanos(of pid: Int32) -> UInt64? {
         var info = rusage_info_v4()

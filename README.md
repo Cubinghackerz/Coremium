@@ -10,6 +10,17 @@ quietly moves everything else to the efficiency cores. Nothing is quit; the app 
 - **Modes:** Automatic, Balanced, Gaming, Creator, Coding, Local AI. Automatic switches by itself.
 - **Four choices per app:** Boost, Normal, Yield, Eco. Your choice always beats the mode.
 - **Advanced mode:** per-core load %, memory, swap and pressure, process counts, PIDs, timers, and why each rule applies.
+- **Memory guard (System tab):** pressure, swap, and the apps using the most memory, with Hide and Quit (you choose; it asks
+  first). Warns when swap grows during a boost.
+- **Startup helpers (System tab):** the background helpers in your LaunchAgents folder, each with a reversible on/off switch.
+- **Session reports:** when a boost ends, a measured summary drops out of the notch; Insights keeps recent ones as
+  shareable image cards.
+- **Rules per game:** while a game is boosted, switch the chips to "This game only" so Discord can be Eco for Roblox but
+  Normal otherwise.
+- **Battery-aware:** unplugged, apps working hard in the background move to the efficiency cores even without a boost.
+- **Automation:** `coremium://mode/gaming`, `coremium://pause`, `coremium://open/storage`, `Coremium --mode coding` from
+  Terminal, and Shortcuts actions (Set Coremium mode, Pause, Resume).
+- **Updates:** a daily check for a newer version, installed in one click after the download's checksum is verified.
 - **Live notch:** during a boost the notch ears become a tiny live meter (performance-core load on the left, apps moved
   aside on the right), and each decision drops out of the notch for three seconds. Clicks pass through; turn it off in Settings.
 - **Storage:** see what's filling your disk (app caches, logs, Xcode build files, old downloads, the Trash) and move what you
@@ -18,7 +29,7 @@ quietly moves everything else to the efficiency cores. Nothing is quit; the app 
 - **Simulate:** an animated illustration of the idea (clearly labelled as such).
 - **Learns locally:** suggests "Yield" for apps that hog the CPU while you play, and "Boost" for apps you work hard in.
 - **Fullscreen fix** for the macOS 27 fullscreen stutter on 120 Hz MacBooks (optional).
-- Welcome tour and guide built in. Free, open source (MIT), no account, no network access.
+- Welcome tour and guide built in. Free, open source (MIT), no account, no telemetry. Its only network request is a daily update check you can turn off.
 
 > Not affiliated with Apple. The Apple logo on the chip is Apple's own system symbol, drawn by macOS at runtime to
 > indicate Apple Silicon. Coremium doesn't ship it.

@@ -7,6 +7,17 @@ enum CoremiumMain {
     static func main() {
         // Emergency recovery: `Coremium.app/Contents/MacOS/Coremium --restore-all` puts every app Coremium slowed back
         // to full speed and exits without showing any UI.
+        // Command line: `Coremium --mode gaming`, `--pause`, `--resume`, `--open storage`. Forwarded as a coremium:// link.
+        let cli = CommandLine.arguments
+        for (flag, route) in [("--mode", "mode"), ("--open", "open"), ("--pause", "pause"), ("--resume", "resume")] {
+            guard let index = cli.firstIndex(of: flag) else { continue }
+            let value = (route == "mode" || route == "open") ? cli.dropFirst(index + 1).first.map { "/" + $0 } ?? "" : ""
+            if let url = URL(string: "coremium://\(route)\(value)") {
+                NSWorkspace.shared.open(url)
+                print("Coremium: sent \(url.absoluteString)")
+            }
+            exit(0)
+        }
         if CommandLine.arguments.contains("--restore-all") {
             let controller = PriorityController(ledger: DemotionLedger(url: SettingsStore.ledgerURL))
             let count = controller.demotedPids.count
@@ -53,11 +64,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             signalSources.append(source)
         }
 
+        Updater.shared.start()
+        Automation.engine = engine
+        Automation.notch = notch
+
         // First launch: open the welcome tour in the notch.
         if !notch.ui.onboardingCompleted { showTour() }
     }
 
     func applicationWillTerminate(_ notification: Notification) { engine.shutdown() }
+
+    /// coremium://mode/gaming and friends (also used by `Coremium --mode` and Shortcuts).
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls { Automation.handle(url) }
+    }
 
     private func showTour() {
         notch.ui.showingOnboarding = true
@@ -102,11 +122,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                   engine.rules.fullscreenFixEnabled, #selector(toggleFullscreenFix))
         addToggle(menu, "Open at login", engine.launchAtLogin, #selector(toggleLogin))
         menu.addItem(.separator())
+        if let info = Updater.shared.available {
+            menu.addItem(withTitle: "Update to Coremium \(info.version)…", action: #selector(update), keyEquivalent: "").target = self
+        }
         menu.addItem(withTitle: "Welcome tour", action: #selector(tour), keyEquivalent: "").target = self
         menu.addItem(withTitle: "Restore all apps now", action: #selector(restoreAll), keyEquivalent: "").target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Coremium", action: #selector(quit), keyEquivalent: "q").target = self
     }
+
+    @objc private func update() { Updater.shared.install() }
 
     private func addToggle(_ menu: NSMenu, _ title: String, _ on: Bool, _ action: Selector) {
         let entry = NSMenuItem(title: title, action: action, keyEquivalent: "")

@@ -7,7 +7,7 @@ const items: [string, string][] = [
   ["What does Yield mean?", "Yield is a choice for one app: step aside to the efficiency cores while something else is boosted. Eco keeps an app on the efficiency cores all the time unless you're using it. Boost protects an app, and Normal leaves it alone."],
   ["Can it raise my game above normal priority?", "No. macOS has no public way to do that without root. Boost works by protecting the app and moving the others aside."],
   ["Does it work on Intel Macs and older macOS?", "It is built for macOS 13 and later, Apple Silicon and Intel. Intel Macs have no efficiency cores, so moved apps simply get lower priority. So far it has only been tested on macOS 27 with an M3 Pro, and reports are welcome."],
-  ["What data does it collect?", "None. There is no network access, no account and no telemetry. Its history of how long boosts ran stays on your Mac in ~/Library/Application Support/Coremium."],
+  ["What data does it collect?", "None. There is no account and no telemetry. The Mac app's only network request is a once-a-day check for a new version on GitHub, which you can turn off in Settings. Its history of how long boosts ran stays on your Mac in ~/Library/Application Support/Coremium."],
   ["What if something stays slow?", "Quit Coremium from its menu-bar icon, or run /Applications/Coremium.app/Contents/MacOS/Coremium --restore-all in Terminal. Both put every app back."],
 ];
 

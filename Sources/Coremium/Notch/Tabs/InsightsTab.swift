@@ -49,6 +49,7 @@ struct InsightsTab: View {
                                 help: "Peak number of background processes moved aside together.", raw: nil)
                 }
                 if range != .today { DailyChart(engine: engine, days: range.days, weekly: range == .week) }
+                SessionReports(reports: Array(engine.usage.reports.suffix(4).reversed()))
                 DecisionLog(decisions: engine.decisions)
                 Text("Coremium doesn't claim lower temperature or longer battery life, because it can't measure them.")
                     .font(.system(size: 10, design: .rounded)).foregroundColor(Theme.textDim).fixedSize(horizontal: false, vertical: true)
@@ -155,5 +156,84 @@ struct DecisionLog: View {
                 }
             }
         }
+    }
+}
+
+/// The last few boost sessions, each copyable as an image to share.
+struct SessionReports: View {
+    let reports: [SessionReport]
+    @State private var copied: Date?
+
+    var body: some View {
+        Card(padding: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                SectionLabel(text: "Recent sessions")
+                if reports.isEmpty {
+                    Text("A report appears here after each boost of a minute or more.").font(.system(size: 11, design: .rounded)).foregroundColor(Theme.textDim)
+                }
+                ForEach(reports) { report in
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(report.appName) · \(formatDuration(report.duration))").font(.system(size: 12, weight: .semibold, design: .rounded))
+                            Text(report.summary.components(separatedBy: " · ").dropFirst(2).joined(separator: " · "))
+                                .font(.system(size: 10.5, design: .rounded)).foregroundColor(Theme.textDim).lineLimit(1)
+                        }
+                        Spacer()
+                        Button(copied == report.start ? "Copied" : "Copy image") { copy(report) }
+                            .buttonStyle(.plain).font(.system(size: 10.5, weight: .semibold, design: .rounded)).foregroundColor(.white.opacity(0.75))
+                            .help("Copies a report card image you can paste anywhere.")
+                    }
+                }
+            }
+        }
+    }
+
+    @MainActor private func copy(_ report: SessionReport) {
+        let renderer = ImageRenderer(content: ReportCard(report: report))
+        renderer.scale = 2
+        guard let image = renderer.nsImage else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.writeObjects([image])
+        copied = report.start
+    }
+}
+
+/// A shareable, measured summary of one session.
+struct ReportCard: View {
+    let report: SessionReport
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 10) {
+                CoremiumLogo().frame(width: 30, height: 30)
+                Text("Coremium").font(.system(size: 16, weight: .semibold, design: .rounded))
+                Spacer()
+                Text(report.end.formatted(date: .abbreviated, time: .shortened)).font(.system(size: 12, design: .rounded)).foregroundColor(.white.opacity(0.5))
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(report.appName).font(.system(size: 34, weight: .bold, design: .rounded))
+                Text("\(report.mode) session · \(formatDuration(report.duration))").font(.system(size: 15, design: .rounded)).foregroundColor(.white.opacity(0.6))
+            }
+            HStack(spacing: 12) {
+                tile("\(report.peakMovedProcesses)", "background processes moved aside", Theme.eco)
+                tile(String(format: "%.1f", report.movedCoreSeconds / 60), "core-minutes kept off the fast cores", Theme.yield)
+                tile(report.worstPressure.capitalized, "memory pressure", report.worstPressure == "normal" ? Theme.good : Theme.warn)
+            }
+            Text("Measured on this Mac. Nothing was closed.").font(.system(size: 11, design: .rounded)).foregroundColor(.white.opacity(0.4))
+        }
+        .padding(28)
+        .frame(width: 620)
+        .foregroundColor(.white)
+        .background(RoundedRectangle(cornerRadius: 26, style: .continuous).fill(Color(white: 0.05)))
+        .environment(\.colorScheme, .dark)
+    }
+
+    private func tile(_ value: String, _ label: String, _ tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(value).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundColor(tint)
+            Text(label).font(.system(size: 11.5, design: .rounded)).foregroundColor(.white.opacity(0.6)).fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14).frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.06)))
     }
 }

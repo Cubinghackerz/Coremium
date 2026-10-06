@@ -88,6 +88,10 @@ struct SettingsTab: View {
                                    isOn: $ui.advanced)
                         SettingRow(title: "Show indicators in the notch", detail: "The mode icon and status dot beside the notch. Turn off to keep the notch looking untouched; hover it or use the menu-bar icon as usual.",
                                    isOn: $ui.showIndicators)
+                        SettingRow(title: "Check for updates", detail: "Once a day Coremium asks GitHub if there's a newer version and offers to install it. This is its only network access.",
+                                   isOn: Binding(get: { Updater.shared.enabled }, set: { Updater.shared.enabled = $0; if $0 { Updater.shared.check() } }))
+                        SettingRow(title: "Save battery when unplugged", detail: "On battery, apps working hard in the background move to the efficiency cores even without a boost.",
+                                   isOn: $engine.rules.saveBatteryWhenUnplugged)
                         SettingRow(title: "Show decisions in the notch", detail: "Each change Coremium makes drops out of the notch for three seconds. Clicks pass straight through it.",
                                    isOn: $ui.decisionToasts)
                         SettingRow(title: "Open at login", detail: "Start quietly at login so your apps are protected from the start.",

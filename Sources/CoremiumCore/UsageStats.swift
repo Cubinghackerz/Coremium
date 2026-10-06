@@ -34,10 +34,58 @@ public struct DayStats: Codable, Equatable, Sendable {
 }
 
 /// Daily totals, saved as JSON.
+/// What one boost session did, measured. Shown as a report card when the session ends.
+public struct SessionReport: Codable, Equatable, Sendable, Identifiable {
+    public var id: Date { start }
+    public var start: Date
+    public var end: Date
+    public var appName: String
+    public var mode: String
+    public var peakMovedProcesses: Int
+    public var movedCoreSeconds: Double
+    public var backgroundGPUSeconds: Double
+    /// Worst memory pressure seen: "normal", "warning" or "critical".
+    public var worstPressure: String
+    /// Swap growth during the session, in bytes (0 if it shrank).
+    public var swapGrowthBytes: UInt64
+
+    public init(start: Date, end: Date, appName: String, mode: String, peakMovedProcesses: Int, movedCoreSeconds: Double,
+                backgroundGPUSeconds: Double, worstPressure: String, swapGrowthBytes: UInt64) {
+        self.start = start; self.end = end; self.appName = appName; self.mode = mode
+        self.peakMovedProcesses = peakMovedProcesses; self.movedCoreSeconds = movedCoreSeconds
+        self.backgroundGPUSeconds = backgroundGPUSeconds; self.worstPressure = worstPressure; self.swapGrowthBytes = swapGrowthBytes
+    }
+
+    public var duration: Double { end.timeIntervalSince(start) }
+
+    /// One line for the notch: "Roblox · 42 min · 23 apps' processes moved aside · memory stayed normal".
+    public var summary: String {
+        var parts = [appName, formatDuration(duration)]
+        if peakMovedProcesses > 0 { parts.append("up to \(peakMovedProcesses) background processes moved aside") }
+        parts.append(worstPressure == "normal" ? "memory stayed normal" : "memory pressure reached \(worstPressure)")
+        return parts.joined(separator: " · ")
+    }
+}
+
 public struct UsageLedger: Codable, Equatable, Sendable {
     public var days: [String: DayStats] = [:]
+    /// The most recent boost sessions, newest last.
+    public var reports: [SessionReport] = []
 
     public init() {}
+
+    private enum CodingKeys: String, CodingKey { case days, reports }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        days = try c.decodeIfPresent([String: DayStats].self, forKey: .days) ?? [:]
+        reports = try c.decodeIfPresent([SessionReport].self, forKey: .reports) ?? []
+    }
+
+    public mutating func add(_ report: SessionReport, keepLast: Int = 30) {
+        reports.append(report)
+        if reports.count > keepLast { reports.removeFirst(reports.count - keepLast) }
+    }
 
     public static func dayKey(_ date: Date, calendar: Calendar = .current) -> String {
         let c = calendar.dateComponents([.year, .month, .day], from: date)

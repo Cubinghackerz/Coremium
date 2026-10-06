@@ -140,3 +140,20 @@ final class RuleEvaluatorTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(RuleSet.self, from: data), RuleSet.defaults)
     }
 }
+
+extension RuleEvaluatorTests {
+    func testOnBatteryHeavyBackgroundAppsStepAsideWithoutABoost() {
+        var r = rules()
+        r.mode = .balanced
+        r.rules["com.apple.TextEdit"] = nil
+        var i = input(front: 500, session: false, rules: r)
+        i.cpuByAppPid = [600: 80]
+        i.onBattery = true
+        XCTAssertTrue(RuleEvaluator.pidsToDemote(i).contains(600), "heavy normal app moves aside on battery")
+        i.onBattery = false
+        XCTAssertFalse(RuleEvaluator.pidsToDemote(i).contains(600))
+        i.onBattery = true
+        i.rules.saveBatteryWhenUnplugged = false
+        XCTAssertFalse(RuleEvaluator.pidsToDemote(i).contains(600))
+    }
+}

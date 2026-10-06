@@ -36,7 +36,7 @@ enum ListTab: String, CaseIterable {
 }
 
 enum NotchTab: String, CaseIterable, Identifiable {
-    case apps, insights, storage, simulate, guide, settings
+    case apps, insights, storage, system, simulate, guide, settings
 
     var id: String { rawValue }
 
@@ -45,6 +45,7 @@ enum NotchTab: String, CaseIterable, Identifiable {
         case .apps: return "Apps"
         case .insights: return "Insights"
         case .storage: return "Storage"
+        case .system: return "System"
         case .simulate: return "Simulate"
         case .guide: return "Guide"
         case .settings: return "Settings"
@@ -56,6 +57,7 @@ enum NotchTab: String, CaseIterable, Identifiable {
         case .apps: return "square.grid.2x2.fill"
         case .insights: return "chart.bar.xaxis"
         case .storage: return "internaldrive.fill"
+        case .system: return "memorychip.fill"
         case .simulate: return "waveform.path.ecg"
         case .guide: return "book.fill"
         case .settings: return "gearshape.fill"
@@ -290,6 +292,7 @@ private struct ExpandedView: View {
             VStack(alignment: .leading, spacing: 10) {
                 ModeBar(engine: engine)
                 StatusLine(engine: engine, advanced: ui.advanced)
+                UpdateBanner()
                 TabBar(ui: ui)
                 Group {
                     switch ui.tab {
@@ -298,6 +301,7 @@ private struct ExpandedView: View {
                     case .simulate: SimulateTab(engine: engine, advanced: ui.advanced)
                     case .guide: GuideTab()
                     case .storage: StorageTab(ui: ui)
+                    case .system: SystemTab(engine: engine, ui: ui)
                     case .settings: SettingsTab(engine: engine, ui: ui)
                     }
                 }
@@ -510,6 +514,16 @@ private struct ListHeader: View {
     @ObservedObject var engine: AppEngine
     @ObservedObject var ui: NotchUIState
 
+    private func scopeButton(_ title: String, game: Bool) -> some View {
+        let on = engine.ruleScopeIsGame == game
+        return Button { engine.ruleScopeIsGame = game } label: {
+            Text(title).font(.system(size: 10, weight: .semibold, design: .rounded)).lineLimit(1)
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .foregroundColor(on ? .black : .white.opacity(0.6))
+                .background(Capsule().fill(on ? Theme.boost : Color.clear))
+        }.buttonStyle(.plain)
+    }
+
     var body: some View {
         HStack(spacing: 6) {
             ForEach(ListTab.allCases, id: \.self) { tab in
@@ -521,6 +535,14 @@ private struct ListHeader: View {
                         .background(Capsule().fill(ui.listTab == tab ? Color.white.opacity(0.16) : Color.clear))
                 }
                 .buttonStyle(.plain)
+            }
+            if ui.listTab == .running, engine.boostBundleID != nil {
+                HStack(spacing: 2) {
+                    scopeButton("Everyone", game: false)
+                    scopeButton("\(engine.boostAppName ?? "This game") only", game: true)
+                }
+                .padding(2).background(Capsule().fill(Color.white.opacity(0.06)))
+                .help("Choose whether the Boost / Yield / Eco chips change your general rules or only the rules used while this app is boosted.")
             }
             Spacer()
             // The "found N apps" summary only belongs where you are looking at installed apps.
@@ -692,5 +714,30 @@ enum IconCache {
         image.size = NSSize(width: 44, height: 44)
         cache[path] = image
         return image
+    }
+}
+
+/// Shown when a newer Coremium is on GitHub. Installing verifies the download's checksum and relaunches.
+struct UpdateBanner: View {
+    @ObservedObject private var updater = Updater.shared
+
+    var body: some View {
+        if let info = updater.available {
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.down.circle.fill").foregroundColor(Theme.yield)
+                Text(updater.state.isEmpty ? "Coremium \(info.version) is available." : updater.state)
+                    .font(.system(size: 11, weight: .semibold, design: .rounded)).lineLimit(1)
+                Spacer(minLength: 6)
+                Button("What's new") { NSWorkspace.shared.open(info.pageURL) }
+                    .buttonStyle(.plain).font(.system(size: 10.5, weight: .semibold, design: .rounded)).foregroundColor(.white.opacity(0.7))
+                Button("Update now") { updater.install() }
+                    .buttonStyle(.plain).font(.system(size: 10.5, weight: .bold, design: .rounded))
+                    .padding(.horizontal, 10).padding(.vertical, 4).foregroundColor(.black)
+                    .background(Capsule().fill(Theme.yield))
+                    .disabled(!updater.state.isEmpty && !updater.state.hasPrefix("Update failed"))
+            }
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.yield.opacity(0.1)))
+        }
     }
 }

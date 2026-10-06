@@ -82,6 +82,14 @@ final class NotchController: NSObject {
         engine.$decisions.dropFirst().compactMap(\.first).removeDuplicates { $0.id == $1.id }
             .sink { [weak self] decision in self?.showToast(decision) }.store(in: &cancellables)
 
+        engine.$latestReport.compactMap { $0 }.removeDuplicates()
+            .sink { [weak self] r in self?.showToast(Decision(date: r.end, headline: "Session report", detail: r.summary)) }
+            .store(in: &cancellables)
+        Updater.shared.$available.compactMap { $0 }.removeDuplicates()
+            .sink { [weak self] info in self?.showToast(Decision(date: Date(), headline: "Coremium \(info.version) is available",
+                                                                  detail: "Open the panel to update.")) }
+            .store(in: &cancellables)
+
         applyFrame(expanded: false)
         panel.orderFrontRegardless()
     }

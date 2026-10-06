@@ -42,7 +42,7 @@ export function Hero() {
           <HeroInstall />
         </div>
         <p className="mt-5 text-sm text-zinc-500">
-          Free and open source. No account, no network access. Prefer a disk image or zip?{" "}
+          Free and open source. No account, no telemetry. Prefer a disk image or zip?{" "}
           <a className="text-zinc-300 underline decoration-zinc-600 underline-offset-4 hover:decoration-white" href={`${REPO}/releases`}>GitHub Releases</a>
           {" · "}
           <a className="text-zinc-300 underline decoration-zinc-600 underline-offset-4 hover:decoration-white" href="#install">Why the terminal?</a>

@@ -40,6 +40,10 @@ public struct RuleSet: Codable, Equatable, Sendable {
     public var graceSeconds: Double
     public var fullscreenFixEnabled: Bool
     public var keepDisplayAwakeDuringBoost: Bool
+    /// Rules that apply only while a particular app is boosted: boost app bundle id → (app bundle id → rule).
+    public var gameRules: [String: [String: AppRule]] = [:]
+    /// On battery, apps working hard in the background move to the efficiency cores even without a boost.
+    public var saveBatteryWhenUnplugged = true
 
     public init(mode: PerformanceMode = .automatic, rules: [String: AppRule] = [:],
                 protectedBundleIDs: Set<String> = RuleSet.defaultProtected, demoteHeavyApps: Bool = false,
@@ -59,7 +63,8 @@ public struct RuleSet: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case mode, rules, protectedBundleIDs, demoteHeavyApps, heavyThresholdPercent, boostWhenBusy,
-             boostBusyPercent, graceSeconds, fullscreenFixEnabled, keepDisplayAwakeDuringBoost
+             boostBusyPercent, graceSeconds, fullscreenFixEnabled, keepDisplayAwakeDuringBoost, gameRules,
+             saveBatteryWhenUnplugged
     }
 
     public init(from decoder: Decoder) throws {
@@ -76,6 +81,16 @@ public struct RuleSet: Codable, Equatable, Sendable {
         fullscreenFixEnabled = try c.decodeIfPresent(Bool.self, forKey: .fullscreenFixEnabled) ?? d.fullscreenFixEnabled
         keepDisplayAwakeDuringBoost = try c.decodeIfPresent(Bool.self, forKey: .keepDisplayAwakeDuringBoost)
             ?? d.keepDisplayAwakeDuringBoost
+        gameRules = try c.decodeIfPresent([String: [String: AppRule]].self, forKey: .gameRules) ?? [:]
+        saveBatteryWhenUnplugged = try c.decodeIfPresent(Bool.self, forKey: .saveBatteryWhenUnplugged) ?? true
+    }
+
+    /// The rules in force while `boostApp` is boosted: its own rules win over your general ones.
+    public func merged(forBoost boostApp: String?) -> RuleSet {
+        guard let boostApp, let extra = gameRules[boostApp], !extra.isEmpty else { return self }
+        var copy = self
+        copy.rules.merge(extra) { _, game in game }
+        return copy
     }
 
     /// The explicit per-app override, or `.normal` if there is none.
@@ -132,10 +147,13 @@ public struct EvaluationInput: Sendable {
     public var categories: [String: AppCategory]
     public var ownUid: UInt32
     public var ownPid: Int32
+    /// Running on battery: heavy background apps step aside even without a boost (if the rule set allows it).
+    public var onBattery: Bool
 
     public init(snapshot: ProcessSnapshot, apps: [AppProcess], frontmostPid: Int32?, rules: RuleSet,
                 sessionActive: Bool, cpuByAppPid: [Int32: Double] = [:], categories: [String: AppCategory] = [:],
-                ownUid: UInt32, ownPid: Int32) {
+                ownUid: UInt32, ownPid: Int32, onBattery: Bool = false) {
+        self.onBattery = onBattery
         self.snapshot = snapshot
         self.apps = apps
         self.frontmostPid = frontmostPid
@@ -210,8 +228,10 @@ public enum RuleEvaluator {
             case .efficiency: demote = true
             case .auto: demote = input.sessionActive
             case .normal:
-                demote = input.sessionActive && rules.demoteHeavyApps && app.bundleID != nil
-                    && (input.cpuByAppPid[app.pid] ?? 0) > rules.heavyThresholdPercent
+                let heavy = app.bundleID != nil && (input.cpuByAppPid[app.pid] ?? 0) > rules.heavyThresholdPercent
+                let explicitNormal = app.bundleID.map { rules.rules[$0] == .normal } ?? false
+                demote = heavy && !explicitNormal
+                    && ((input.sessionActive && rules.demoteHeavyApps) || (input.onBattery && rules.saveBatteryWhenUnplugged))
             }
             guard demote else { continue }
             for pid in snapshot.tree(of: app.pid) where !shielded.contains(pid) && pid > 1 {
