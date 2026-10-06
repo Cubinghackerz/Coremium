@@ -22,6 +22,8 @@ struct AppRow: Identifiable, Equatable {
     var demotedProcesses = 0
     /// Why this rule applies: "your choice", "mode: Gaming", "protected" or "default".
     var source = ""
+    /// Share of GPU time (percent), measured only while the panel is open or a boost runs.
+    var gpu = 0.0
 }
 
 /// One thing Coremium decided, in plain words ("Coding mode activated: Terminal became active. Chrome moved to Yield.").
@@ -72,6 +74,11 @@ final class AppEngine: ObservableObject {
     @Published private(set) var suggestions: [Suggestion] = []
     @Published private(set) var memory = MemoryInfo.current()
     @Published private(set) var tickMs = 0.0
+    /// Device-wide GPU utilization (%), and the renderer/tiler split for Advanced. Nil until first measured.
+    @Published private(set) var gpuDevicePercent: Int?
+    @Published private(set) var gpuDetail = ""
+    private let gpuSampler = GPUSampler()
+    private var gpuByApp: [Int32: Double] = [:]
     /// Coremium's own CPU use (percent of one core): the cost of the optimiser itself.
     @Published private(set) var ownCPU = 0.0
     /// Newest first. Explains every change of profile or of which apps were moved aside.
@@ -334,6 +341,20 @@ final class AppEngine: ObservableObject {
         var cpu: [Int32: Double] = [:]
         for app in apps { cpu[app.pid] = (tree[app.pid] ?? []).reduce(0) { $0 + (perPid[$1] ?? 0) } }
 
+        // GPU: only measured when someone can see it or a boost is running, so idle stays cheap.
+        var gpu: [Int32: Double] = [:]
+        if needsLiveStats || sessionActive {
+            let reading = GPUStats.read()
+            let perPidGPU = gpuSampler.percentages(from: reading)
+            for app in apps { gpu[app.pid] = (tree[app.pid] ?? [app.pid]).reduce(0) { $0 + (perPidGPU[$1] ?? 0) } }
+            if gpuDevicePercent != reading.devicePercent { gpuDevicePercent = reading.devicePercent }
+            let detail = "renderer \(reading.rendererPercent ?? 0)% · tiler \(reading.tilerPercent ?? 0)%"
+            if gpuDetail != detail { gpuDetail = detail }
+        } else {
+            gpuSampler.reset()
+        }
+        gpuByApp = gpu
+
         if paused {
             controller.restoreAll(snapshot: snapshot)
             endSessionIfNeeded()
@@ -379,7 +400,8 @@ final class AppEngine: ObservableObject {
         let movedPercent = controller.demotedPids.reduce(0.0) { $0 + (perPid[$1] ?? 0) }
         usage.record(at: now, seconds: seconds, sessionActive: sessionActive, mode: profile.mode,
                      movedCoreSeconds: movedPercent / 100 * seconds, movedProcesses: demotedCount,
-                     hot: thermal == .serious || thermal == .critical, sessionStarted: !wasActive && sessionActive)
+                     hot: thermal == .serious || thermal == .critical, sessionStarted: !wasActive && sessionActive,
+                     backgroundGPUSeconds: apps.filter { $0.pid != front }.reduce(0) { $0 + (gpu[$1.pid] ?? 0) } / 100 * seconds)
 
         // Learning: what each app does when it is in front and when it is in the background during a session.
         for (index, app) in apps.enumerated() {
@@ -414,7 +436,8 @@ final class AppEngine: ObservableObject {
                           effective: effective,
                           demoted: demoted.contains(app.processIdentifier), cpu: (cpu[app.processIdentifier] ?? 0).rounded(),
                           pid: app.processIdentifier, processes: pids.count,
-                          demotedProcesses: pids.filter { demoted.contains($0) }.count, source: source)
+                          demotedProcesses: pids.filter { demoted.contains($0) }.count, source: source,
+                          gpu: (gpuByApp[app.processIdentifier] ?? 0).rounded())
         }
         // Stable order (boost apps first, then A-Z) so rows never jump around under the cursor.
         func rank(_ rule: AppRule?) -> Int { rule == .boost ? 0 : 1 }
@@ -429,6 +452,7 @@ final class AppEngine: ObservableObject {
         let moved = list.filter { $0.demoted }.sorted { $0.name.lowercased() < $1.name.lowercased() }
         let key = paused ? "paused"
             : "\(profile.mode.rawValue)|\(sessionActive)|" + moved.map { "\($0.id):\($0.effective?.rawValue ?? "")" }.joined(separator: ",")
+              + "|" + list.filter { $0.pid != front && $0.gpu >= 10 }.map(\.id).sorted().joined(separator: ",")
         guard key != lastDecisionKey else { return }
         lastDecisionKey = key
 
@@ -445,6 +469,9 @@ final class AppEngine: ObservableObject {
                 sentences.append("\(busy) is busy in the background.")
             }
             if !moved.isEmpty { sentences.append(Self.movedSentence(moved)) }
+            // GPU has no public priority control on macOS, so Coremium names who is using it instead of guessing.
+            let gpuHeavy = list.filter { $0.pid != front && $0.gpu >= 10 }.sorted { $0.gpu > $1.gpu }.prefix(2)
+            for app in gpuHeavy { sentences.append("\(app.name) is using \(Int(app.gpu))% of the GPU in the background.") }
         } else {
             headline = "Standing by"
             sentences = [rules.mode == .automatic

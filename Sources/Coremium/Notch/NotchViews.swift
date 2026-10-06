@@ -554,6 +554,12 @@ struct AppRowView: View {
                     .foregroundColor(.white.opacity(0.6)).lineLimit(1).fixedSize()
                     .help("CPU use, where 100% is one core fully busy. \(coresText(row.cpu)).")
             }
+            if !installed, row.gpu >= 5 {
+                Label(advanced ? "GPU \(Int(row.gpu))%" : "GPU heavy", systemImage: "square.stack.3d.up.fill")
+                    .font(.system(size: 9.5, weight: .semibold, design: .rounded))
+                    .foregroundColor(.purple.opacity(0.9)).lineLimit(1).fixedSize()
+                    .help("Using about \(Int(row.gpu))% of the GPU's time. macOS has no public way to lower another app's GPU priority, so Coremium shows it instead.")
+            }
             if !installed, row.demoted || row.cpu >= 10 {
                 // An outcome first ("Background", "Heavy"), the technical figure in the tooltip.
                 let word = AppEngine.loadWord(row.cpu, moved: row.demoted)

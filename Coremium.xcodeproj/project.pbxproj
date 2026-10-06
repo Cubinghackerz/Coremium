@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01201C968546AD946C0D11D6 /* GPUStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BF484F8AE8F3321971B7D9F /* GPUStats.swift */; };
 		04A02B8BA38AFC9CBE0E9EF3 /* InsightsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1128FFA5823DE1E4B93ADEA /* InsightsTab.swift */; };
 		066C8AE504BA64D6382D8ECE /* AppEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FB0A42591D57283FC98E9A0 /* AppEngine.swift */; };
 		09B2B241C20A7746988566BC /* CPULoad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F43C71BBC7D82F445BC7A9 /* CPULoad.swift */; };
@@ -36,6 +37,7 @@
 		BC02B2238434A0E88D991661 /* SimulateTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117964755BEFC6405FDF61D4 /* SimulateTab.swift */; };
 		C17B847C873E005EFE80A953 /* PriorityControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */; };
 		CE79312E123D3B6B6156055E /* CoremiumCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D1ED3215BB5D524D2F4C22BF /* GPUTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC27AA7F326534EA95F4C333 /* GPUTests.swift */; };
 		E28C0C9A1278178913928C85 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677FEFB85D25A87B5BBC84DD /* SettingsStore.swift */; };
 		E427C8AB38A49A1AE5A61B3F /* SystemInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5DB2C289C689AF2656F9F8 /* SystemInfoTests.swift */; };
 		E580F8782832A2FF2E67BC7E /* CoremiumCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -108,6 +110,7 @@
 		8745E69813751D5C8666CB2A /* UsageStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStats.swift; sourceTree = "<group>"; };
 		8918F561A8BD5DFB26DB662F /* Logo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logo.swift; sourceTree = "<group>"; };
 		8B3B76185923C36837CC39DE /* ProductTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductTests.swift; sourceTree = "<group>"; };
+		8BF484F8AE8F3321971B7D9F /* GPUStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPUStats.swift; sourceTree = "<group>"; };
 		8FB0A42591D57283FC98E9A0 /* AppEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEngine.swift; sourceTree = "<group>"; };
 		958A109951102BDFD94D7305 /* ChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipView.swift; sourceTree = "<group>"; };
 		96AD8A6A88E7B0242E4D6B16 /* LoginItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItem.swift; sourceTree = "<group>"; };
@@ -119,6 +122,7 @@
 		D40FF670FF732AEBF2D4C9E3 /* RuleEvaluatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleEvaluatorTests.swift; sourceTree = "<group>"; };
 		D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUUsage.swift; sourceTree = "<group>"; };
 		E0CBB82F7AF85C03A232C477 /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
+		EC27AA7F326534EA95F4C333 /* GPUTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPUTests.swift; sourceTree = "<group>"; };
 		EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessSnapshot.swift; sourceTree = "<group>"; };
 		F309A4DA628E12B56BC5F326 /* CoremiumApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoremiumApp.swift; sourceTree = "<group>"; };
 		F47353D77D3294AB2131D351 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
@@ -215,6 +219,7 @@
 				4D5B1855A2E5BDD1536AA1CF /* ChipInfo.swift */,
 				F9F43C71BBC7D82F445BC7A9 /* CPULoad.swift */,
 				D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */,
+				8BF484F8AE8F3321971B7D9F /* GPUStats.swift */,
 				7B5FA2C0F769434294C3E673 /* MemoryInfo.swift */,
 				721D5BF78DEB8ED6703ACA05 /* PriorityController.swift */,
 				EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */,
@@ -280,6 +285,7 @@
 		D45F522FAF7E0D359B3E26BB /* CoremiumCoreTests */ = {
 			isa = PBXGroup;
 			children = (
+				EC27AA7F326534EA95F4C333 /* GPUTests.swift */,
 				239DCD5C408553FAE0C66AAA /* ModeTests.swift */,
 				BABEE6444EEE94E6572196B9 /* PriorityControllerTests.swift */,
 				8B3B76185923C36837CC39DE /* ProductTests.swift */,
@@ -463,6 +469,7 @@
 				09B2B241C20A7746988566BC /* CPULoad.swift in Sources */,
 				B33826C2865CC11E48B31279 /* CPUUsage.swift in Sources */,
 				F7B35295764C5A9BC32B1BA3 /* ChipInfo.swift in Sources */,
+				01201C968546AD946C0D11D6 /* GPUStats.swift in Sources */,
 				999D7924CB35C71719B23344 /* MemoryInfo.swift in Sources */,
 				7AA508EBA07B72E298F7C7D9 /* PriorityController.swift in Sources */,
 				3EB36F20FD3B7593AA13E853 /* ProcessSnapshot.swift in Sources */,
@@ -477,6 +484,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1ED3215BB5D524D2F4C22BF /* GPUTests.swift in Sources */,
 				414F9CDEC5459AD43C09C526 /* ModeTests.swift in Sources */,
 				C17B847C873E005EFE80A953 /* PriorityControllerTests.swift in Sources */,
 				12AF2F9FEDD167B33AB008CD /* ProductTests.swift in Sources */,

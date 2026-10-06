@@ -33,6 +33,13 @@ game and cause hitches; moving them to the efficiency cores removes that content
 there is nothing to fix. Coremium shows only what it can measure: how long it protected your app, how many processes it
 moved, its own CPU cost, and a plain-words log of each decision. It makes no battery, temperature or speed-up claims.
 
+**GPU.** macOS has no public way to give one app GPU priority or to slow another app's GPU work. Coremium measures
+instead: device GPU load and each app's share of GPU time (read from the system registry, no admin rights), shows
+"GPU heavy" on rows, and names heavy background users in its decision line. We tested whether the background priority
+band reduces GPU contention with a Metal frame-loop (`bench/gpu-contention.swift`): it did not (median frame time
+2.1 ms with a GPU hog at normal priority, 2.4 ms with the hog in the background band, no hitches in either), so
+Coremium does not pretend it does.
+
 Coremium does **not**: touch other users' or system processes (no root helper), control clock speed, measure power or
 exact temperature (so it never claims longer battery life or lower temperature; the energy figure in Insights is a
 labelled estimate), attribute helper services macOS starts for an app (e.g. Safari web content), or quit/suspend anything.

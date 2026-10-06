@@ -136,7 +136,9 @@ struct ChipPanel: View {
     private func basicStats(_ chip: ChipInfo) -> some View {
         VStack(spacing: 5) {
             stat("cpu", "\(chip.performanceCores)P + \(chip.efficiencyCores)E cores")
-            if let gpu = chip.gpuCores { stat("square.stack.3d.up", "\(gpu)-core GPU") }
+            if let gpu = chip.gpuCores {
+                stat("square.stack.3d.up", "\(gpu)-core GPU" + (engine.gpuDevicePercent.map { " · \($0)% busy" } ?? ""))
+            }
             stat("memorychip", ByteCountFormatter.string(fromByteCount: Int64(chip.memoryBytes), countStyle: .memory))
             if chip.performanceL2Bytes > 0 {
                 stat("internaldrive", "L2 \(megabytes(chip.performanceL2Bytes)) P · \(megabytes(chip.efficiencyL2Bytes)) E")
@@ -166,6 +168,7 @@ struct ChipPanel: View {
             number("Swap used", memory.swapUsedBytes < 1_048_576 ? "0 MB" : "\(memory.swapUsedBytes / 1_048_576) MB")
             number("Cores", "\(chip.performanceCores)P+\(chip.efficiencyCores)E · \(chip.gpuCores.map { "\($0) GPU" } ?? "no GPU info")")
             number("L2", "\(megabytes(chip.performanceL2Bytes)) P · \(megabytes(chip.efficiencyL2Bytes)) E")
+            if let device = engine.gpuDevicePercent { number("GPU", "\(device)% · \(engine.gpuDetail)") }
             number("Thermal", thermalName)
             number("Power", engine.powerSource == .battery ? "battery" : "AC\(engine.lowPower ? " · low-power" : "")")
             number("Moved", "\(engine.ledgerCount) procs")

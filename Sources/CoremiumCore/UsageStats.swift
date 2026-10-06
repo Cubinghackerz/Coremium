@@ -14,8 +14,23 @@ public struct DayStats: Codable, Equatable, Sendable {
     public var hotSeconds = 0.0
     /// Seconds per mode (raw value of the profile in force).
     public var secondsByMode: [String: Double] = [:]
+    /// GPU time (seconds) used by apps in the background while a boost was running. Measured from the IORegistry.
+    public var backgroundGPUSeconds = 0.0
 
     public init(day: String) { self.day = day }
+
+    // Tolerant decoding: fields added in later versions must not wipe older history.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        day = try c.decode(String.self, forKey: .day)
+        sessions = try c.decodeIfPresent(Int.self, forKey: .sessions) ?? 0
+        boostedSeconds = try c.decodeIfPresent(Double.self, forKey: .boostedSeconds) ?? 0
+        movedCoreSeconds = try c.decodeIfPresent(Double.self, forKey: .movedCoreSeconds) ?? 0
+        peakMovedProcesses = try c.decodeIfPresent(Int.self, forKey: .peakMovedProcesses) ?? 0
+        hotSeconds = try c.decodeIfPresent(Double.self, forKey: .hotSeconds) ?? 0
+        secondsByMode = try c.decodeIfPresent([String: Double].self, forKey: .secondsByMode) ?? [:]
+        backgroundGPUSeconds = try c.decodeIfPresent(Double.self, forKey: .backgroundGPUSeconds) ?? 0
+    }
 }
 
 /// Daily totals, saved as JSON.
@@ -32,7 +47,7 @@ public struct UsageLedger: Codable, Equatable, Sendable {
     /// Adds one engine tick covering `seconds` of wall-clock time.
     public mutating func record(at date: Date, seconds: Double, sessionActive: Bool, mode: PerformanceMode,
                                 movedCoreSeconds: Double, movedProcesses: Int, hot: Bool, sessionStarted: Bool,
-                                calendar: Calendar = .current) {
+                                backgroundGPUSeconds: Double = 0, calendar: Calendar = .current) {
         guard seconds > 0, seconds <= 60 else { return }
         let key = Self.dayKey(date, calendar: calendar)
         var day = days[key] ?? DayStats(day: key)
@@ -41,6 +56,7 @@ public struct UsageLedger: Codable, Equatable, Sendable {
             day.boostedSeconds += seconds
             day.secondsByMode[mode.rawValue, default: 0] += seconds
             if hot { day.hotSeconds += seconds }
+            day.backgroundGPUSeconds += max(0, backgroundGPUSeconds)
         }
         day.movedCoreSeconds += max(0, movedCoreSeconds)
         day.peakMovedProcesses = max(day.peakMovedProcesses, movedProcesses)

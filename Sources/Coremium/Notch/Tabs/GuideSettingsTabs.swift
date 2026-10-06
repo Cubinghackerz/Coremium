@@ -45,6 +45,7 @@ struct GuideTab: View {
                         tip("Advanced shows the numbers: per-core load, memory, process counts, timers and why each rule applies.")
                         tip("Fullscreen fix keeps an invisible 2-pixel window on screen so macOS composites normally. It cures fullscreen stutter on 120 Hz MacBooks, mostly on macOS 27.")
                         tip("Coremium can't push the fast cores past what macOS allows: Boost works by clearing the way. It only affects your own apps, can't see helper services macOS starts for an app, and can't measure power or exact temperature.")
+                        tip("GPU: macOS has no public way to lower another app's GPU priority, so Coremium shows who is using the GPU (\"GPU heavy\") and says so in its decisions instead of guessing.")
                         tip("If your Mac isn't overloaded there's nothing to fix, and Coremium will simply have little to move.")
                     }
                 }
