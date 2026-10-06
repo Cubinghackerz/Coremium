@@ -97,14 +97,14 @@ private struct HowItWorks: View {
             Spacer(minLength: 0)
             StepHeader(title: "Two kinds of cores", subtitle: "Fast performance cores and frugal efficiency cores. Normally every app piles onto the fast ones. Coremium sends the apps you aren't using to the efficient ones.")
             HStack(spacing: 14) {
-                zone("Performance cores", "Fast, power-hungry", Theme.accent,
+                zone("Performance cores", "Fast, power-hungry", Theme.yield,
                      moved ? [("gamecontroller.fill", "Game")] : [("gamecontroller.fill", "Game"), ("globe", "Browser"), ("bubble.left.fill", "Chat"), ("sparkles", "AI")])
                 Image(systemName: "arrow.right").font(.system(size: 18, weight: .bold)).foregroundColor(Theme.textDim)
-                zone("Efficiency cores", "Calm, frugal", Theme.accent,
+                zone("Efficiency cores", "Calm, frugal", Theme.eco,
                      moved ? [("globe", "Browser"), ("bubble.left.fill", "Chat"), ("sparkles", "AI")] : [])
             }
             Text(moved ? "With Coremium the game has the fast cores to itself." : "Without Coremium everything competes for the fast cores.")
-                .font(.system(size: 12.5, weight: .semibold, design: .rounded)).foregroundColor(moved ? Theme.accent : Theme.accent)
+                .font(.system(size: 12.5, weight: .semibold, design: .rounded)).foregroundColor(moved ? Theme.good : Theme.warn)
             Spacer(minLength: 0)
         }
         .onAppear {

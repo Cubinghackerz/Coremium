@@ -42,7 +42,7 @@
       <TextBlock Text="{Binding CoresText}" Margin="0,6,0,0" Foreground="{StaticResource Dim}" FontSize="13" TextWrapping="Wrap"/>
       <Grid Margin="0,18,0,0" Height="8">
         <Border CornerRadius="4" Background="#1AFFFFFF"/>
-        <Border x:Name="LoadBar" CornerRadius="4" Background="{StaticResource Perf}" HorizontalAlignment="Left" Width="0"/>
+        <Border x:Name="LoadBar" CornerRadius="4" Background="{StaticResource Yield}" HorizontalAlignment="Left" Width="0"/>
       </Grid>
       <TextBlock Text="{Binding LoadText}" Margin="0,6,0,0" Foreground="{StaticResource Dim}" FontSize="12.5"/>
       <TextBlock Text="{Binding MemoryText}" Margin="0,14,0,0" FontSize="13.5"/>
@@ -160,7 +160,7 @@
                                 <DataTrigger Binding="{Binding State}" Value="implied"><Setter Property="BorderBrush" Value="#B0FFFFFF"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="White"/></DataTrigger>
                                 <MultiDataTrigger><MultiDataTrigger.Conditions><Condition Binding="{Binding State}" Value="chosen"/><Condition Binding="{Binding Label}" Value="Boost"/></MultiDataTrigger.Conditions><Setter Property="Background" Value="{StaticResource Boost}"/><Setter Property="Foreground" Value="Black"/></MultiDataTrigger>
                                 <MultiDataTrigger><MultiDataTrigger.Conditions><Condition Binding="{Binding State}" Value="chosen"/><Condition Binding="{Binding Label}" Value="Normal"/></MultiDataTrigger.Conditions><Setter Property="Background" Value="#C8C8C8"/><Setter Property="Foreground" Value="Black"/></MultiDataTrigger>
-                                <MultiDataTrigger><MultiDataTrigger.Conditions><Condition Binding="{Binding State}" Value="chosen"/><Condition Binding="{Binding Label}" Value="Yield"/></MultiDataTrigger.Conditions><Setter Property="Background" Value="{StaticResource Perf}"/><Setter Property="Foreground" Value="Black"/></MultiDataTrigger>
+                                <MultiDataTrigger><MultiDataTrigger.Conditions><Condition Binding="{Binding State}" Value="chosen"/><Condition Binding="{Binding Label}" Value="Yield"/></MultiDataTrigger.Conditions><Setter Property="Background" Value="{StaticResource Yield}"/><Setter Property="Foreground" Value="Black"/></MultiDataTrigger>
                                 <MultiDataTrigger><MultiDataTrigger.Conditions><Condition Binding="{Binding State}" Value="chosen"/><Condition Binding="{Binding Label}" Value="Eco"/></MultiDataTrigger.Conditions><Setter Property="Background" Value="{StaticResource Mint}"/><Setter Property="Foreground" Value="Black"/></MultiDataTrigger>
                               </Style.Triggers>
                             </Style>

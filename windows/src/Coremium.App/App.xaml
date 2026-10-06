@@ -11,8 +11,10 @@
     <SolidColorBrush x:Key="Faint" Color="#5B616B"/>
     <SolidColorBrush x:Key="Perf" Color="#F3F4F6"/>
     <SolidColorBrush x:Key="Eff" Color="#9AA0A8"/>
-    <SolidColorBrush x:Key="Boost" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="Mint" Color="#C9CDD3"/>
+    <SolidColorBrush x:Key="Boost" Color="#F5BD6B"/>
+    <SolidColorBrush x:Key="Yield" Color="#7DCCF7"/>
+    <SolidColorBrush x:Key="Good" Color="#73DB9E"/>
+    <SolidColorBrush x:Key="Mint" Color="#8CE0BF"/>
     <FontFamily x:Key="UI">Segoe UI Variable Text, Segoe UI</FontFamily>
     <FontFamily x:Key="Display">Segoe UI Variable Display, Segoe UI</FontFamily>
 

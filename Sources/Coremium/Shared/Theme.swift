@@ -9,6 +9,12 @@ enum Theme {
     /// Monochrome: white is the only accent. One muted amber is kept for warnings, because a warning must stand out.
     static let accent = Color.white
     static let warn = Color(red: 0.93, green: 0.78, blue: 0.52)
+    // Colour only where it carries meaning: protected/active, the per-app choices, GPU, efficiency cores.
+    static let good = Color(red: 0.45, green: 0.86, blue: 0.62)      // active, protected, "steady"
+    static let boost = Color(red: 0.96, green: 0.74, blue: 0.42)     // Boost
+    static let yield = Color(red: 0.49, green: 0.80, blue: 0.97)     // Yield, performance cores
+    static let eco = Color(red: 0.55, green: 0.88, blue: 0.75)       // Eco, apps moved to efficiency cores
+    static let gpu = Color(red: 0.77, green: 0.70, blue: 0.99)       // GPU
 }
 
 struct Card<Content: View>: View {

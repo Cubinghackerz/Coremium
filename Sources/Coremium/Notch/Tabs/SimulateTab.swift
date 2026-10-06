@@ -36,7 +36,7 @@ struct SimulateTab: View {
     @ObservedObject var engine: AppEngine
     let advanced: Bool
     @StateObject private var sim = SimulatorState()
-    private static let palette: [Color] = [Theme.accent, Theme.accent, Theme.accent, Theme.accent, Theme.warn]
+    private static let palette: [Color] = [Theme.boost, Theme.yield, Theme.gpu, Theme.eco, Theme.warn]
 
     var body: some View {
         FlexScroll {
@@ -90,7 +90,7 @@ struct SimulateTab: View {
                             Circle().fill(Self.palette[app.id % Self.palette.count]).frame(width: 7, height: 7)
                             Text(app.name + (advanced ? String(format: " %.1f", app.demand) : "")).font(.system(size: 10, design: .rounded))
                                 .lineLimit(1)
-                            if app.isBoost { Image(systemName: "bolt.fill").font(.system(size: 8)).foregroundColor(Theme.accent) }
+                            if app.isBoost { Image(systemName: "bolt.fill").font(.system(size: 8)).foregroundColor(Theme.boost) }
                         }
                     }
                     Spacer(minLength: 0)
@@ -105,7 +105,7 @@ struct SimulateTab: View {
             HStack {
                 Text(title).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundColor(.white)
                 Spacer()
-                Text(subtitle).font(.system(size: 10, design: .rounded)).foregroundColor(warn ? Theme.accent : Theme.textDim)
+                Text(subtitle).font(.system(size: 10, design: .rounded)).foregroundColor(warn ? Theme.warn : Theme.textDim)
             }
             HStack(spacing: 5) {
                 ForEach(ids.indices, id: \.self) { core in
@@ -134,7 +134,7 @@ struct SimulateTab: View {
                             Spacer()
                             Text(sim.coremiumOn ? "Steady" : (sim.hitches > 3 ? "Stuttering" : "Mostly fine"))
                                 .font(.system(size: 11, weight: .bold, design: .rounded))
-                                .foregroundColor(sim.coremiumOn ? Theme.accent : (sim.hitches > 3 ? Theme.accent : Theme.warn))
+                                .foregroundColor(sim.coremiumOn ? Theme.good : Theme.warn)
                         }
                         SimFrameGraph(frames: sim.frames, good: sim.coremiumOn).frame(height: 96)
                         HStack(spacing: 8) {
@@ -177,7 +177,7 @@ private struct SimCoreTile: View {
                 }
                 .padding(2)
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .strokeBorder(warn ? Theme.accent.opacity(0.9) : Color.white.opacity(0.08), lineWidth: warn ? 1.5 : 1)
+                    .strokeBorder(warn ? Theme.warn.opacity(0.9) : Color.white.opacity(0.08), lineWidth: warn ? 1.5 : 1)
             }
         }
         .frame(height: 40)
@@ -212,7 +212,7 @@ private struct SimFrameGraph: View {
             fill.addLine(to: CGPoint(x: size.width, y: size.height))
             fill.addLine(to: CGPoint(x: offset, y: size.height))
             fill.closeSubpath()
-            let tint: Color = good ? Theme.accent : Theme.accent
+            let tint: Color = good ? Theme.good : Theme.warn
             context.fill(fill, with: .linearGradient(Gradient(colors: [tint.opacity(0.28), tint.opacity(0.02)]),
                                                      startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
             context.stroke(path, with: .color(tint), style: StrokeStyle(lineWidth: 1.5, lineJoin: .round))

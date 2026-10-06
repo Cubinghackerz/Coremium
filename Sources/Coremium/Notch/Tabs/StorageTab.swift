@@ -94,15 +94,15 @@ final class StorageModel: ObservableObject {
 }
 
 extension StorageKind {
-    /// A grey ramp: each kind stays distinguishable on the ring without adding colour.
+    /// Muted colours so each arc of the ring can be told apart at a glance.
     var tint: Color {
         switch self {
-        case .appCaches: return Color(white: 0.96)
-        case .developerBuilds: return Color(white: 0.78)
-        case .oldDownloads: return Color(white: 0.62)
-        case .logs: return Color(white: 0.48)
-        case .trash: return Color(white: 0.36)
-        case .largeFiles: return Color(white: 0.30)
+        case .appCaches: return Theme.yield
+        case .developerBuilds: return Theme.boost
+        case .oldDownloads: return Color(red: 0.95, green: 0.58, blue: 0.72)
+        case .logs: return Theme.gpu
+        case .trash: return Color(white: 0.55)
+        case .largeFiles: return Color(white: 0.4)
         }
     }
 }
@@ -200,7 +200,7 @@ struct StorageTab: View {
             if kind.cleanable {
                 Button { model.setAll(kind, on: !allOn) } label: {
                     Image(systemName: allOn ? "checkmark.circle.fill" : someOn ? "minus.circle.fill" : "circle")
-                        .font(.system(size: 12.5)).foregroundColor(.white.opacity(someOn ? 0.95 : 0.25))
+                        .font(.system(size: 12.5)).foregroundColor(someOn ? kind.tint : .white.opacity(0.25))
                 }
                 .buttonStyle(.plain).disabled(items.isEmpty)
                 .help(allOn ? "Leave all \(kind.title.lowercased()) out" : "Include all \(kind.title.lowercased())")
@@ -301,7 +301,7 @@ struct StorageTab: View {
             if item.kind.cleanable {
                 Button { model.toggle(item) } label: {
                     Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.system(size: 12))
-                        .foregroundColor(.white.opacity(on ? 0.95 : 0.25))
+                        .foregroundColor(on ? item.kind.tint : .white.opacity(0.25))
                 }.buttonStyle(.plain)
             }
             VStack(alignment: .leading, spacing: 0) {

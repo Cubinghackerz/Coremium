@@ -145,10 +145,10 @@ extension PerformanceMode {
 extension AppRule {
     var tint: Color {
         switch self {
-        case .boost: return Color(white: 1.0)
+        case .boost: return Theme.boost
         case .normal: return Color(white: 0.62)
-        case .auto: return Color(white: 0.86)
-        case .efficiency: return Color(white: 0.74)
+        case .auto: return Theme.yield
+        case .efficiency: return Theme.eco
         }
     }
 
@@ -235,7 +235,7 @@ private struct CollapsedView: View {
         return HStack(spacing: 0) {
             HStack(alignment: .bottom, spacing: 2) {
                 ForEach(Array(perf.enumerated()), id: \.offset) { _, load in
-                    Capsule().fill(Color.white.opacity(0.35 + 0.65 * load))
+                    Capsule().fill(Theme.yield.opacity(0.4 + 0.6 * load))
                         .frame(width: 2.5, height: max(3, 14 * CGFloat(load)))
                 }
             }
@@ -253,7 +253,7 @@ private struct CollapsedView: View {
 
     @ViewBuilder private var idleEars: some View {
         let mode = engine.rules.mode
-        let dot: Color = engine.paused ? Color(white: 0.4) : (engine.sessionActive ? Theme.accent : Color(white: 0.35))
+        let dot: Color = engine.paused ? Color(white: 0.4) : (engine.sessionActive ? Theme.good : Color(white: 0.35))
         if geometry.hasNotch {
             HStack(spacing: 0) {
                 Image(systemName: engine.paused ? "pause.fill" : mode.symbol)
@@ -262,7 +262,7 @@ private struct CollapsedView: View {
                     .frame(width: NotchGeometry.earWidth)
                 Spacer().frame(width: geometry.notchWidth)
                 Circle().fill(dot).frame(width: 7, height: 7)
-                    .shadow(color: engine.sessionActive ? Theme.accent.opacity(0.8) : .clear, radius: 4)
+                    .shadow(color: engine.sessionActive ? Theme.good.opacity(0.8) : .clear, radius: 4)
                     .frame(width: NotchGeometry.earWidth)
             }
         } else {
@@ -364,7 +364,7 @@ private struct StatusLine: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
-                Circle().fill(engine.sessionActive && !engine.paused ? Theme.accent : Color(white: 0.4)).frame(width: 6, height: 6)
+                Circle().fill(engine.sessionActive && !engine.paused ? Theme.good : Color(white: 0.4)).frame(width: 6, height: 6)
                 Text(engine.statusLine)
                     .font(.system(size: 11, weight: .medium, design: .rounded))
                     .foregroundColor(.white.opacity(0.9)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
@@ -599,7 +599,7 @@ struct AppRowView: View {
             if !installed, row.gpu >= 5 {
                 Label(advanced ? "GPU \(Int(row.gpu))%" : "GPU heavy", systemImage: "square.stack.3d.up.fill")
                     .font(.system(size: 9.5, weight: .semibold, design: .rounded))
-                    .foregroundColor(Theme.accent.opacity(0.9)).lineLimit(1).fixedSize()
+                    .foregroundColor(Theme.gpu).lineLimit(1).fixedSize()
                     .help("Using about \(Int(row.gpu))% of the GPU's time. macOS has no public way to lower another app's GPU priority, so Coremium shows it instead.")
             }
             if !installed, row.demoted || row.cpu >= 10 {
@@ -607,7 +607,7 @@ struct AppRowView: View {
                 let word = AppEngine.loadWord(row.cpu, moved: row.demoted)
                 Label(word, systemImage: row.demoted ? "leaf.fill" : "gauge.with.dots.needle.33percent")
                     .font(.system(size: 9.5, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white.opacity(row.demoted ? 0.9 : 0.5)).lineLimit(1).fixedSize()
+                    .foregroundColor(row.demoted ? Theme.eco : .white.opacity(0.5)).lineLimit(1).fixedSize()
                     .help(row.demoted
                           ? "Moved to the efficiency cores so it stays out of the way. Using about \(coresText(row.cpu))."
                           : "Using about \(coresText(row.cpu)) of CPU. One core is 100%; your Mac has \(ProcessInfo.processInfo.activeProcessorCount).")
