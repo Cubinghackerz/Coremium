@@ -44,6 +44,8 @@ public struct RuleSet: Codable, Equatable, Sendable {
     public var gameRules: [String: [String: AppRule]] = [:]
     /// On battery, apps working hard in the background move to the efficiency cores even without a boost.
     public var saveBatteryWhenUnplugged = true
+    /// In Automatic, choose background work from sustained CPU pressure instead of category alone.
+    public var adaptiveAutomatic = true
 
     public init(mode: PerformanceMode = .automatic, rules: [String: AppRule] = [:],
                 protectedBundleIDs: Set<String> = RuleSet.defaultProtected, demoteHeavyApps: Bool = false,
@@ -64,7 +66,7 @@ public struct RuleSet: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case mode, rules, protectedBundleIDs, demoteHeavyApps, heavyThresholdPercent, boostWhenBusy,
              boostBusyPercent, graceSeconds, fullscreenFixEnabled, keepDisplayAwakeDuringBoost, gameRules,
-             saveBatteryWhenUnplugged
+             saveBatteryWhenUnplugged, adaptiveAutomatic
     }
 
     public init(from decoder: Decoder) throws {
@@ -83,6 +85,7 @@ public struct RuleSet: Codable, Equatable, Sendable {
             ?? d.keepDisplayAwakeDuringBoost
         gameRules = try c.decodeIfPresent([String: [String: AppRule]].self, forKey: .gameRules) ?? [:]
         saveBatteryWhenUnplugged = try c.decodeIfPresent(Bool.self, forKey: .saveBatteryWhenUnplugged) ?? true
+        adaptiveAutomatic = try c.decodeIfPresent(Bool.self, forKey: .adaptiveAutomatic) ?? true
     }
 
     /// The rules in force while `boostApp` is boosted: its own rules win over your general ones.
@@ -119,7 +122,7 @@ public struct RuleSet: Codable, Equatable, Sendable {
         "com.apple.controlcenter", "com.apple.loginwindow", "com.apple.WindowManager",
     ]
 
-    /// Out of the box: Automatic mode, no overrides, everything decided by app category.
+    /// Out of the box: adaptive Automatic, no per-app overrides.
     public static let defaults = RuleSet()
 }
 
@@ -149,10 +152,13 @@ public struct EvaluationInput: Sendable {
     public var ownPid: Int32
     /// Running on battery: heavy background apps step aside even without a boost (if the rule set allows it).
     public var onBattery: Bool
+    /// Main app PIDs selected by the adaptive policy. The evaluator still enforces ownership and shielding.
+    public var adaptiveDemotionAppPids: Set<Int32>?
 
     public init(snapshot: ProcessSnapshot, apps: [AppProcess], frontmostPid: Int32?, rules: RuleSet,
                 sessionActive: Bool, cpuByAppPid: [Int32: Double] = [:], categories: [String: AppCategory] = [:],
-                ownUid: UInt32, ownPid: Int32, onBattery: Bool = false) {
+                ownUid: UInt32, ownPid: Int32, onBattery: Bool = false, adaptiveDemotionAppPids: Set<Int32>? = nil) {
+        self.adaptiveDemotionAppPids = adaptiveDemotionAppPids
         self.onBattery = onBattery
         self.snapshot = snapshot
         self.apps = apps
@@ -214,6 +220,7 @@ public enum RuleEvaluator {
         }
 
         var result: Set<Int32> = []
+        let adaptive = rules.mode == .automatic && rules.adaptiveAutomatic
         for app in input.apps {
             if app.pid == input.frontmostPid { continue }
             if let bundle = app.bundleID {
@@ -226,12 +233,16 @@ public enum RuleEvaluator {
             switch effective(app) {
             case .boost: demote = false
             case .efficiency: demote = true
-            case .auto: demote = input.sessionActive
+            case .auto:
+                let explicitYield = app.bundleID.map { rules.rules[$0] == .auto } ?? false
+                demote = input.sessionActive && (!adaptive || explicitYield || input.adaptiveDemotionAppPids?.contains(app.pid) == true)
             case .normal:
                 let heavy = app.bundleID != nil && (input.cpuByAppPid[app.pid] ?? 0) > rules.heavyThresholdPercent
                 let explicitNormal = app.bundleID.map { rules.rules[$0] == .normal } ?? false
-                demote = heavy && !explicitNormal
-                    && ((input.sessionActive && rules.demoteHeavyApps) || (input.onBattery && rules.saveBatteryWhenUnplugged))
+                let adaptiveSelected = adaptive && input.adaptiveDemotionAppPids?.contains(app.pid) == true
+                demote = !explicitNormal && ((input.sessionActive && adaptiveSelected)
+                    || (heavy && ((input.sessionActive && rules.demoteHeavyApps)
+                        || (input.onBattery && rules.saveBatteryWhenUnplugged))))
             }
             guard demote else { continue }
             for pid in snapshot.tree(of: app.pid) where !shielded.contains(pid) && pid > 1 {

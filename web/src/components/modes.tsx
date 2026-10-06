@@ -1,6 +1,6 @@
 "use client";
 import { Brain, Code2, Gamepad2, Palette, Scale, Wand2, type LucideIcon } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 
 const modes: { name: string; icon: LucideIcon; line: string; hue: string }[] = [
   { name: "Balanced", icon: Scale, line: "Only your per-app choices apply.", hue: "from-zinc-500/40 to-zinc-800/40" },
@@ -12,18 +12,19 @@ const modes: { name: string; icon: LucideIcon; line: string; hue: string }[] = [
 ];
 
 export function Modes() {
+  const reduce = useReducedMotion();
   return (
     <section className="relative px-6 py-24 md:py-32">
       <div className="mx-auto max-w-6xl text-center">
         <h2 className="text-balance mx-auto max-w-3xl text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.02] tracking-[-0.035em]">
-          <span className="text-zinc-500">One mode for what you&apos;re doing.</span>{" "}
+          <span className="text-zinc-400">One mode for what you&apos;re doing.</span>{" "}
           <span className="text-white">Or let it pick.</span>
         </h2>
         <ul className="mx-auto mt-14 flex max-w-4xl flex-wrap items-end justify-center gap-4 md:gap-5">
           {modes.map((m, i) => (
             <motion.li
               key={m.name}
-              whileHover={{ y: -8, scale: 1.06 }}
+              whileHover={reduce ? undefined : { y: -8, scale: 1.06 }}
               transition={{ type: "spring", stiffness: 380, damping: 22 }}
               className="group flex w-[104px] flex-col items-center gap-3 md:w-[120px]"
             >
@@ -36,7 +37,7 @@ export function Modes() {
               </div>
               <span className="text-[15px] font-medium text-white">{m.name}</span>
               <span className="sr-only">{m.line}</span>
-              <span aria-hidden className="hidden max-w-[150px] text-center text-[13px] leading-snug text-zinc-500 md:block">
+              <span aria-hidden className="hidden max-w-[150px] text-center text-[13px] leading-snug text-zinc-400 md:block">
                 {i === 2 ? "Recommended" : ""}
               </span>
             </motion.li>

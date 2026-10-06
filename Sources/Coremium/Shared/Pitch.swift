@@ -3,8 +3,8 @@ import SwiftUI
 
 /// The one-line promise, used everywhere.
 enum Pitch {
-    static let headline = "Keep what matters smooth, without closing anything."
-    static let subline = "Coremium protects the app you're using and quietly moves everything else to your Mac's efficiency cores. Games, renders, builds and local AI stay responsive while your other apps keep running."
+    static let headline = "Give the app you're using more room to work."
+    static let subline = "Coremium lowers background-app priority while you play, create, code, or run local AI. Your other apps stay open."
 }
 
 extension AppRule {

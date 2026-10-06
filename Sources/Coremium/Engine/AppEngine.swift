@@ -3,6 +3,13 @@ import Combine
 import CoremiumCore
 import IOKit.pwr_mgt
 
+#if PREVIEW
+/// Preview/profile builds must never change another process's priority, even when exercising the live sampling loop.
+private struct ReadOnlyPriorityBackend: PriorityBackend {
+    func setBackground(_ pid: Int32, _ on: Bool) -> Bool { false }
+}
+#endif
+
 /// One line in the app list.
 struct AppRow: Identifiable, Equatable {
     let id: String
@@ -68,11 +75,12 @@ struct IndexInfo: Equatable {
 /// Nothing is ever quit; the app you're using is always left at full speed.
 @MainActor
 final class AppEngine: ObservableObject {
+    private let isPreview: Bool
     let chip = ChipInfo.current()
 
     @Published var rules: RuleSet
     @Published var paused = false {
-        didSet { if paused != oldValue { tick() } }
+        didSet { if paused != oldValue { reschedule(); tick() } }
     }
     @Published private(set) var rows: [AppRow] = []
     @Published private(set) var installedRows: [AppRow] = []
@@ -111,22 +119,48 @@ final class AppEngine: ObservableObject {
     @Published private(set) var ownCPU = 0.0
     /// Newest first. Explains every change of profile or of which apps were moved aside.
     @Published private(set) var decisions: [Decision] = []
+    @Published private(set) var adaptiveDecision = AdaptiveAutomaticDecision.observing
+    private var adaptivePolicy = AdaptiveAutomaticPolicy()
     private var lastDecisionKey = ""
     @Published private(set) var sessionStartedAt: Date?
 
-    /// The notch panel is open. Live core load is only sampled while someone is looking.
+    /// The notch panel is open. Live stats use a faster cadence while someone is looking.
     var isPanelExpanded = false {
         didSet {
             guard oldValue != isPanelExpanded else { return }
+            if isPanelExpanded { lastDiagnosticsAt = nil; lastFootprintsAt = nil }
             reschedule()
+            panelAnimatingUntil = ProcessInfo.processInfo.systemUptime + NotchLayout.animationDuration + 0.05
             tick()
         }
+    }
+    /// Until then the panel is animating open or closed. A full tick (every process, CPU, GPU, rows) on the main
+    /// thread inside that animation froze the panel mid-way, so ticks wait for it to finish.
+    private var panelAnimatingUntil: TimeInterval = 0
+    private var settledTickWork: DispatchWorkItem?
+
+    /// Runs one tick when the panel animation ends. Returns false if no animation is running.
+    private func deferTickWhileAnimating() -> Bool {
+        let remaining = panelAnimatingUntil - ProcessInfo.processInfo.systemUptime
+        guard remaining > 0 else { return false }
+        if settledTickWork == nil {
+            let work = DispatchWorkItem { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.settledTickWork = nil
+                    self?.tick()
+                }
+            }
+            settledTickWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + remaining, execute: work)
+        }
+        return true
     }
 
     /// The main window is open and visible.
     var isWindowVisible = false {
         didSet {
             guard oldValue != isWindowVisible else { return }
+            if isWindowVisible { lastDiagnosticsAt = nil; lastFootprintsAt = nil }
             reschedule()
             tick()
         }
@@ -146,6 +180,8 @@ final class AppEngine: ObservableObject {
     private var lastBoostAt = Date.distantPast
     private var learner = WorkloadLearner()
     private var lastTickAt = Date()
+    private var lastDiagnosticsAt: TimeInterval?
+    private var lastFootprintsAt: TimeInterval?
     private var lastPersistAt = Date()
     private var lastSuggestionAt = Date.distantPast
     private var assertionID: IOPMAssertionID = 0
@@ -153,8 +189,15 @@ final class AppEngine: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     init(isPreview: Bool = false) {
-        rules = SettingsStore.load()
-        controller = PriorityController(ledger: DemotionLedger(url: SettingsStore.ledgerURL))
+        self.isPreview = isPreview
+        rules = isPreview ? .defaults : SettingsStore.load()
+        #if PREVIEW
+        controller = PriorityController(backend: ReadOnlyPriorityBackend(), ledger: DemotionLedger(url: nil))
+        #else
+        controller = PriorityController(ledger: DemotionLedger(url: isPreview ? nil : SettingsStore.ledgerURL))
+        #endif
+        // Test/render instances must not restore the running app's ledger, persist settings, or observe other apps.
+        if isPreview { return }
         // Undo anything a previous run left demoted (crash, force quit, power loss).
         controller.restoreAll()
         launchAtLogin = LoginItem.isEnabled
@@ -166,7 +209,10 @@ final class AppEngine: ObservableObject {
             .sink { SettingsStore.save($0) }.store(in: &cancellables)
         // @Published emits before the value is stored, so re-evaluate on the next run-loop turn.
         $rules.dropFirst().sink { [weak self] _ in
-            DispatchQueue.main.async { self?.tick() }
+            DispatchQueue.main.async {
+                self?.refreshInstalledRows()
+                self?.tick()
+            }
         }.store(in: &cancellables)
 
         let workspace = NSWorkspace.shared.notificationCenter
@@ -184,8 +230,6 @@ final class AppEngine: ObservableObject {
         installedApps = indexCache.apps
         for app in installedApps { categoryCache[app.bundleID] = app.category }
         refreshInstalledRows()
-        // The preview renderer builds views offscreen: no timers, no watchers, nothing that touches other apps.
-        if isPreview { return }
         reschedule()
         tick()
         rescan()
@@ -311,10 +355,15 @@ final class AppEngine: ObservableObject {
     // MARK: - Loop
 
     private func reschedule() {
+        guard !isPreview else { return }
         timer?.invalidate()
         // App launches, quits and switches wake the engine on their own (see the workspace observers), so the timer
         // only needs to catch background CPU changes: slow when idle, and coalesced by the system.
-        let interval: TimeInterval = needsLiveStats ? 1.0 : (sessionActive ? 4.0 : 10.0)
+        guard let interval = EngineSamplingPlan.interval(paused: paused, panelVisible: needsLiveStats,
+            sessionActive: sessionActive, lowPowerMode: lowPower) else {
+            timer = nil
+            return
+        }
         let newTimer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
@@ -324,9 +373,12 @@ final class AppEngine: ObservableObject {
     }
 
     private func refreshSystemState() {
-        powerSource = currentPowerSource()
-        lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
-        thermal = ProcessInfo.processInfo.thermalState
+        let source = currentPowerSource()
+        let power = ProcessInfo.processInfo.isLowPowerModeEnabled
+        let state = ProcessInfo.processInfo.thermalState
+        if source != powerSource { powerSource = source }
+        if state != thermal { thermal = state }
+        if power != lowPower { lowPower = power; reschedule() }
     }
 
     private func category(for app: NSRunningApplication) -> AppCategory {
@@ -342,13 +394,36 @@ final class AppEngine: ObservableObject {
     }
 
     func tick() {
+        guard !isPreview, !deferTickWhileAnimating() else { return }
         let now = Date()
         let seconds = min(now.timeIntervalSince(lastTickAt), 60)
         lastTickAt = now
+        // Pause restores once, then sleeps when the panel is closed. Workspace events stay cheap too.
+        if paused && !needsLiveStats {
+            if !controller.demotedPids.isEmpty { controller.restoreAll() }
+            endSessionIfNeeded()
+            adaptivePolicy = AdaptiveAutomaticPolicy()
+            if adaptiveDecision != .observing { adaptiveDecision = .observing }
+            if demotedCount != 0 { demotedCount = 0 }
+            if boostAppName != nil { boostAppName = nil }
+            if boostAppFocused { boostAppFocused = false }
+            if activeProfile != .balanced { activeProfile = .balanced }
+            reschedule()
+            return
+        }
         refreshSystemState()
-        if needsLiveStats || sessionActive {
-            cpuLoads = loadSampler.sample()
-            memory = MemoryInfo.current()
+        let uptime = ProcessInfo.processInfo.systemUptime
+        let sampling = EngineSamplingPlan(paused: paused, panelVisible: needsLiveStats,
+            sessionActive: sessionActive, lowPowerMode: lowPower, uptime: uptime,
+            lastDiagnosticsAt: lastDiagnosticsAt, lastFootprintsAt: lastFootprintsAt)
+        if sampling.samplesCPU {
+            let loads = loadSampler.sample()
+            if loads != cpuLoads { cpuLoads = loads }
+        }
+        if sampling.samplesDiagnostics {
+            let reading = MemoryInfo.current()
+            if reading != memory { memory = reading }
+            lastDiagnosticsAt = uptime
         }
 
         let snapshot = ProcessSnapshot.capture()
@@ -385,21 +460,25 @@ final class AppEngine: ObservableObject {
         var cpu: [Int32: Double] = [:]
         for app in apps { cpu[app.pid] = (tree[app.pid] ?? []).reduce(0) { $0 + (perPid[$1] ?? 0) } }
 
-        // GPU: only measured when someone can see it or a boost is running, so idle stays cheap.
-        var gpu: [Int32: Double] = [:]
-        if needsLiveStats || sessionActive {
+        // Advisory diagnostics share a slower budget; the adaptive policy needs CPU only.
+        let appPids = Set(apps.map(\.pid))
+        var gpu = gpuByApp.filter { appPids.contains($0.key) }
+        if sampling.samplesDiagnostics {
             let reading = GPUStats.read()
             let perPidGPU = gpuSampler.percentages(from: reading)
             for app in apps { gpu[app.pid] = (tree[app.pid] ?? [app.pid]).reduce(0) { $0 + (perPidGPU[$1] ?? 0) } }
             if gpuDevicePercent != reading.devicePercent { gpuDevicePercent = reading.devicePercent }
             let detail = "renderer \(reading.rendererPercent ?? 0)% · tiler \(reading.tilerPercent ?? 0)%"
             if gpuDetail != detail { gpuDetail = detail }
-        } else {
+        } else if !sampling.samplesCPU {
             gpuSampler.reset()
+            gpu = [:]
         }
         gpuByApp = gpu
 
         if paused {
+            adaptivePolicy = AdaptiveAutomaticPolicy()
+            if adaptiveDecision != .observing { adaptiveDecision = .observing }
             controller.restoreAll(snapshot: snapshot)
             endSessionIfNeeded()
             demotedCount = 0
@@ -426,13 +505,25 @@ final class AppEngine: ObservableObject {
             endSessionIfNeeded()
         }
 
-        let input = EvaluationInput(snapshot: snapshot, apps: apps, frontmostPid: front, rules: effRules,
+        var input = EvaluationInput(snapshot: snapshot, apps: apps, frontmostPid: front, rules: effRules,
                                     sessionActive: sessionActive, cpuByAppPid: cpu, categories: categories,
                                     ownUid: getuid(), ownPid: ownPid, onBattery: powerSource == .battery)
+        if rules.mode == .automatic, rules.adaptiveAutomatic {
+            let indices = chip.performanceCPUs.isEmpty ? Array(cpuLoads.indices) : chip.performanceCPUs
+            let values = indices.compactMap { cpuLoads.indices.contains($0) ? cpuLoads[$0] : nil }
+            let load = !values.isEmpty && values.count == indices.count ? values.reduce(0, +) / Double(values.count) : nil
+            let decision = adaptivePolicy.evaluate(input, performanceLoad: load, uptime: ProcessInfo.processInfo.systemUptime)
+            if decision != adaptiveDecision { adaptiveDecision = decision }
+            input.adaptiveDemotionAppPids = decision.appPids
+        } else {
+            adaptivePolicy = AdaptiveAutomaticPolicy()
+            if adaptiveDecision != .observing { adaptiveDecision = .observing }
+        }
         controller.apply(target: RuleEvaluator.pidsToDemote(input), snapshot: snapshot)
 
-        activeProfile = profile
-        demotedCount = controller.demotedPids.count
+        if activeProfile != profile { activeProfile = profile }
+        let movedCount = controller.demotedPids.count
+        if demotedCount != movedCount { demotedCount = movedCount }
         var boostName: String?
         var frontIsBoost = false
         for (index, app) in apps.enumerated() {
@@ -441,8 +532,8 @@ final class AppEngine: ObservableObject {
             if app.pid == front { frontIsBoost = true; boostName = running[index].localizedName }
             else if boostName == nil, (cpu[app.pid] ?? 0) > rules.boostBusyPercent { boostName = running[index].localizedName }
         }
-        boostAppName = boostName
-        boostAppFocused = frontIsBoost
+        if boostAppName != boostName { boostAppName = boostName }
+        if boostAppFocused != frontIsBoost { boostAppFocused = frontIsBoost }
 
         // Evidence: real measurements only. Work that ran on the efficiency cores because Coremium moved it there.
         let movedPercent = controller.demotedPids.reduce(0.0) { $0 + (perPid[$1] ?? 0) }
@@ -460,8 +551,9 @@ final class AppEngine: ObservableObject {
             let growth = memory.swapUsedBytes > t.swapAtStart ? memory.swapUsedBytes - t.swapAtStart : 0
             if swapGrowth != growth { swapGrowth = growth }
         }
-        // Memory guard: who is using the most memory (only measured while someone can see it or a boost runs).
-        if needsLiveStats || sessionActive {
+        // Detailed per-process memory is UI-only and slower than the rule loop.
+        if sampling.samplesFootprints {
+            lastFootprintsAt = uptime
             var hogs: [MemoryHog] = []
             for (index, app) in apps.enumerated() {
                 let bytes = (tree[app.pid] ?? [app.pid]).reduce(UInt64(0)) { $0 + (ProcessCPUSampler.footprint(of: $1) ?? 0) }
@@ -474,13 +566,16 @@ final class AppEngine: ObservableObject {
                 memoryHogs = top
             }
         }
-        usage.record(at: now, seconds: seconds, sessionActive: sessionActive, mode: profile.mode,
-                     movedCoreSeconds: movedPercent / 100 * seconds, movedProcesses: demotedCount,
-                     hot: thermal == .serious || thermal == .critical, sessionStarted: !wasActive && sessionActive,
-                     backgroundGPUSeconds: backgroundGPU)
+        if sessionActive || demotedCount > 0 {
+            usage.record(at: now, seconds: seconds, sessionActive: sessionActive, mode: profile.mode,
+                         movedCoreSeconds: movedPercent / 100 * seconds, movedProcesses: demotedCount,
+                         hot: thermal == .serious || thermal == .critical, sessionStarted: !wasActive && sessionActive,
+                         backgroundGPUSeconds: backgroundGPU)
+        }
 
         // Learning: what each app does when it is in front and when it is in the background during a session.
         for (index, app) in apps.enumerated() {
+            guard sessionActive || app.pid == front else { continue }
             guard let id = app.bundleID else { continue }
             learner.ingest(bundleID: id, name: running[index].localizedName ?? id, isFront: app.pid == front,
                            sessionActive: sessionActive, cores: (cpu[app.pid] ?? 0) / 100)
@@ -502,12 +597,15 @@ final class AppEngine: ObservableObject {
         var list: [AppRow] = running.map { app in
             let id = app.bundleIdentifier
             let cat = id.flatMap { categories[$0] } ?? .other
-            let effective = rules.effectiveRule(bundleID: id, category: cat, profile: profile)
+            let modeRule = rules.effectiveRule(bundleID: id, category: cat, profile: profile)
+            let adaptivelyMoved = adaptiveDecision.appPids.contains(app.processIdentifier)
+            let effective = adaptivelyMoved && modeRule == .normal ? AppRule.auto : modeRule
             let pids = trees[app.processIdentifier] ?? []
             var source = "default"
             if let id, let game = boostBundleID, self.rules.gameRules[game]?[id] != nil { source = "for \(boostAppName ?? "this game")" }
             else if let id, rules.rules[id] != nil { source = "your choice" }
             else if let id, rules.protectedBundleIDs.contains(id) { source = "protected" }
+            else if adaptivelyMoved { source = "adaptive CPU pressure" }
             else if effective != .normal { source = "\(profile.mode.label) mode" }
             return AppRow(id: id ?? "pid:\(app.processIdentifier)", name: app.localizedName ?? id ?? "Unknown",
                           bundleID: id, path: app.bundleURL?.path, category: cat,
@@ -526,7 +624,6 @@ final class AppEngine: ObservableObject {
         list.sort { (rank($0.effective), $0.name.lowercased()) < (rank($1.effective), $1.name.lowercased()) }
         if list != rows { rows = list }
         logDecision(list, profile: profile, front: front)
-        refreshInstalledRows()
     }
 
     /// Records why the set of moved-aside apps changed, so Automatic never feels like a black box.
@@ -535,6 +632,7 @@ final class AppEngine: ObservableObject {
         let key = paused ? "paused"
             : "\(profile.mode.rawValue)|\(sessionActive)|" + moved.map { "\($0.id):\($0.effective?.rawValue ?? "")" }.joined(separator: ",")
               + "|" + list.filter { $0.pid != front && $0.gpu >= 10 }.map(\.id).sorted().joined(separator: ",")
+              + "|\(adaptiveDecision.phase.rawValue)|\(adaptiveDecision.reason)"
         guard key != lastDecisionKey else { return }
         lastDecisionKey = key
 
@@ -551,6 +649,7 @@ final class AppEngine: ObservableObject {
                 sentences.append("\(busy) is busy in the background.")
             }
             if !moved.isEmpty { sentences.append(Self.movedSentence(moved)) }
+            if rules.mode == .automatic, rules.adaptiveAutomatic { sentences.append(adaptiveDecision.reason) }
             // GPU has no public priority control on macOS, so Coremium names who is using it instead of guessing.
             let gpuHeavy = list.filter { $0.pid != front && $0.gpu >= 10 }.sorted { $0.gpu > $1.gpu }.prefix(2)
             for app in gpuHeavy { sentences.append("\(app.name) is using \(Int(app.gpu))% of the GPU in the background.") }
@@ -713,9 +812,12 @@ final class AppEngine: ObservableObject {
         if paused { return "Paused: macOS default scheduling restored." }
         if sessionActive {
             let who = boostAppName.map { "Protecting \($0)" } ?? "Protecting your app"
-            return "\(who) · \(demotedCount) background processes moved off the fast cores"
+            return demotedCount > 0 ? "\(who) · \(demotedCount) background processes at lower priority"
+                : "\(who). Watching CPU load; no background priority changes right now."
         }
-        return rules.mode == .automatic ? "Automatically adapting to what you're doing" : "\(rules.mode.label) mode. Waiting for a boost app."
+        if demotedCount > 0 { return "\(demotedCount) background processes at lower priority" }
+        return rules.mode == .automatic ? "Ready. No apps are being moved right now."
+            : "\(rules.mode.label) mode. Waiting for a boost app."
     }
 
     /// The latest decision, for the line under the status: why things are the way they are.

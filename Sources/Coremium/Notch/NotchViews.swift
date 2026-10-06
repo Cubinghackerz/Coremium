@@ -26,6 +26,7 @@ struct NotchGeometry: Equatable {
 }
 
 enum NotchLayout {
+    static let animationDuration = 0.25
     static let toastExtra = CGSize(width: 300, height: 34)
     static let expandedSize = CGSize(width: 780, height: 488)
 }
@@ -39,6 +40,13 @@ enum NotchTab: String, CaseIterable, Identifiable {
     case apps, insights, storage, system, simulate, guide, settings
 
     var id: String { rawValue }
+    var shortcutNumber: Int { Self.allCases.firstIndex(of: self)! + 1 }
+
+    func next(offset: Int) -> NotchTab {
+        let tabs = Self.allCases
+        let index = tabs.firstIndex(of: self)!
+        return tabs[((index + offset) % tabs.count + tabs.count) % tabs.count]
+    }
 
     var title: String {
         switch self {
@@ -67,13 +75,14 @@ enum NotchTab: String, CaseIterable, Identifiable {
 
 @MainActor
 final class NotchUIState: ObservableObject {
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
 
     @Published var expanded = false
     @Published var geometry: NotchGeometry
     @Published var tab: NotchTab = .apps
     @Published var listTab: ListTab = .running
     @Published var showingOnboarding = false
+    @Published var showingTour = false
     /// Show the numbers: per-core load, memory, process counts, timers.
     @Published var advanced: Bool {
         didSet { defaults.set(advanced, forKey: "advancedMode") }
@@ -92,7 +101,8 @@ final class NotchUIState: ObservableObject {
         didSet { defaults.set(onboardingCompleted, forKey: "onboardingCompleted") }
     }
 
-    init(geometry: NotchGeometry) {
+    init(geometry: NotchGeometry, defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         self.geometry = geometry
         advanced = defaults.bool(forKey: "advancedMode")
         showIndicators = defaults.object(forKey: "showIndicators") as? Bool ?? true
@@ -100,15 +110,21 @@ final class NotchUIState: ObservableObject {
         onboardingCompleted = defaults.bool(forKey: "onboardingCompleted")
     }
 
-    /// Set by the controller: closes the panel when the tour ends.
-    var onOnboardingFinished: (() -> Void)?
     /// Closes the panel (wired to the controller).
     var onHide: (() -> Void)?
+    /// Mouse interaction can give this nonactivating panel keyboard focus without stealing focus on hover.
+    var onFocusTabs: (() -> Void)?
 
-    func finishOnboarding() {
+    func selectTab(_ tab: NotchTab) {
+        if self.tab != tab { self.tab = tab }
+        onFocusTabs?()
+    }
+
+    func finishOnboarding(tab: NotchTab = .apps) {
         onboardingCompleted = true
         showingOnboarding = false
-        onOnboardingFinished?()
+        showingTour = false
+        self.tab = tab
     }
 }
 
@@ -187,10 +203,14 @@ struct NotchRootView: View {
                 Group {
                     if ui.showingOnboarding {
                         OnboardingView(engine: engine, ui: ui, onFinish: { ui.finishOnboarding() })
+                    } else if ui.showingTour {
+                        WelcomeTourView(engine: engine, ui: ui, onFinish: { ui.finishOnboarding() })
                     } else {
                         ExpandedView(engine: engine, ui: ui)
                     }
                 }
+                .frame(width: width, height: height - geometry.notchHeight - 2, alignment: .top)
+                .clipped()
                 .padding(.top, geometry.notchHeight + 2)
                 .transition(.opacity)
             } else {
@@ -211,8 +231,8 @@ struct NotchRootView: View {
         .frame(width: width, height: height, alignment: .top)
         .clipShape(NotchShape(bottomRadius: ui.expanded ? 34 : (geometry.hasNotch ? 12 : 10)))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .animation(.spring(response: 0.4, dampingFraction: 0.82), value: ui.expanded)
-        .animation(.spring(response: 0.45, dampingFraction: 0.8), value: ui.toast)
+        .animation(.easeInOut(duration: NotchLayout.animationDuration), value: ui.expanded)
+        .animation(.easeInOut(duration: NotchLayout.animationDuration), value: ui.toast)
         .preferredColorScheme(.dark)
     }
 }
@@ -290,7 +310,14 @@ private struct ExpandedView: View {
         HStack(alignment: .top, spacing: 20) {
             ChipPanel(engine: engine, advanced: ui.advanced)
             VStack(alignment: .leading, spacing: 10) {
-                ModeBar(engine: engine)
+                VStack(alignment: .leading, spacing: 6) {
+                    ModeBar(engine: engine)
+                    // Mode names already fill this row (about 491 of 520 points). A shared row would drop those names.
+                    HStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        PanelActions(ui: ui)
+                    }
+                }
                 StatusLine(engine: engine, advanced: ui.advanced)
                 UpdateBanner()
                 TabBar(ui: ui)
@@ -404,34 +431,17 @@ private struct StatusLine: View {
     }
 }
 
-private struct TabBar: View {
+private struct PanelActions: View {
     @ObservedObject var ui: NotchUIState
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(NotchTab.allCases) { tab in
-                let selected = ui.tab == tab
-                Button { ui.tab = tab } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: tab.symbol).font(.system(size: 10, weight: .semibold))
-                        if selected { Text(tab.title).font(.system(size: 11, weight: .semibold, design: .rounded)).lineLimit(1).fixedSize() }
-                    }
-                    .padding(.horizontal, selected ? 10 : 8).padding(.vertical, 5)
-                    .foregroundColor(selected ? .white : .white.opacity(0.5))
-                    .background(Capsule().fill(selected ? Color.white.opacity(0.16) : Color.clear))
-                    .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .help(tab.title)
-                .accessibilityLabel(tab.title)
-            }
-            Spacer(minLength: 4)
+        HStack(spacing: 6) {
             Button { ui.advanced.toggle() } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "number").font(.system(size: 9.5, weight: .bold))
                     Text("Advanced").font(.system(size: 10.5, weight: .semibold, design: .rounded)).lineLimit(1).fixedSize()
                 }
-                .padding(.horizontal, 9).padding(.vertical, 5)
+                .padding(.horizontal, 9).frame(minHeight: 30)
                 .foregroundColor(ui.advanced ? .black : .white.opacity(0.65))
                 .background(Capsule().fill(ui.advanced ? Theme.accent : Color.white.opacity(0.08)))
                 .contentShape(Capsule())
@@ -442,7 +452,7 @@ private struct TabBar: View {
             .accessibilityValue(ui.advanced ? "On" : "Off")
             Button { ui.onHide?() } label: {
                 Image(systemName: "chevron.up").font(.system(size: 10, weight: .bold))
-                    .padding(.horizontal, 9).padding(.vertical, 5)
+                    .padding(.horizontal, 9).frame(minHeight: 30)
                     .foregroundColor(.white.opacity(0.65))
                     .background(Capsule().fill(Color.white.opacity(0.08)))
                     .contentShape(Capsule())
@@ -451,6 +461,73 @@ private struct TabBar: View {
             .help("Hide Coremium (it keeps working; hover the notch or use the menu-bar icon to bring it back)")
             .accessibilityLabel("Hide Coremium")
         }
+        .fixedSize()
+    }
+}
+
+private struct TabBar: View {
+    @ObservedObject var ui: NotchUIState
+    @FocusState private var focusedTab: NotchTab?
+    @State private var tabsHadFocus = false
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(NotchTab.allCases) { tab in
+                let selected = ui.tab == tab
+                let focused = focusedTab == tab
+                Button { ui.selectTab(tab) } label: {
+                    Text(tab.title)
+                        .font(.system(size: 11.5, weight: .semibold, design: .rounded))
+                        .lineLimit(1).fixedSize()
+                        .padding(.horizontal, 9).frame(minHeight: 30)
+                        .foregroundColor(selected ? .black : .white.opacity(0.75))
+                        .background(RoundedRectangle(cornerRadius: 8).fill(selected ? Theme.accent : Color.clear))
+                        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focusRing(selected: selected, focused: focused), lineWidth: 1.5))
+                        .contentShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+                .focusable()
+                .modifier(OwnFocusRing())
+                .focused($focusedTab, equals: tab)
+                .onMoveCommand { direction in
+                    guard direction == .left || direction == .right else { return }
+                    let next = tab.next(offset: direction == .left ? -1 : 1)
+                    ui.selectTab(next)
+                    focusedTab = next
+                }
+                .help("\(tab.title) · ⌘\(tab.shortcutNumber). Control-Tab switches to the next tab.")
+                .accessibilityLabel(tab.title)
+                .accessibilityHint("Command \(tab.shortcutNumber). Control-Tab for the next tab.")
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(3)
+        .background(RoundedRectangle(cornerRadius: 11).fill(Theme.card))
+        // Focus entering the bar lands on the selected tab, not the first one, and follows clicks and ⌘1–⌘7, so the
+        // ring never marks a different tab from the one shown.
+        .onChange(of: focusedTab) { focused in
+            let entering = !tabsHadFocus
+            tabsHadFocus = focused != nil
+            if entering, let focused, focused != ui.tab { focusedTab = ui.tab }
+        }
+        .onChange(of: ui.tab) { tab in
+            if focusedTab != nil, focusedTab != tab { focusedTab = tab }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Notch tabs")
+    }
+
+    /// The tabs draw their own ring (below), so the system's blue one would double it.
+    private struct OwnFocusRing: ViewModifier {
+        func body(content: Content) -> some View {
+            if #available(macOS 14, *) { content.focusEffectDisabled() } else { content }
+        }
+    }
+
+    /// Selected fill is white, so a white focus ring would disappear.
+    private func focusRing(selected: Bool, focused: Bool) -> Color {
+        guard focused else { return .clear }
+        return selected ? .black : .white
     }
 }
 

@@ -166,7 +166,7 @@ public enum PerformanceMode: String, Codable, CaseIterable, Sendable {
 
     public var summary: String {
         switch self {
-        case .automatic: return "Watches what you're doing and switches between Gaming, Creator, Coding and Local AI for you."
+        case .automatic: return "Follows your work. Adaptive Automatic moves busy background apps aside during sustained CPU pressure, and restores them when it eases."
         case .balanced: return "No automatic changes. Only the choices you make per app apply."
         case .gaming: return "Games get the performance cores. Browsers, dev tools, chat and AI apps move to efficiency cores."
         case .professional: return "Video, audio, 3D, design and photo apps get the performance cores. Games, browsers, chat and AI assistants move aside."

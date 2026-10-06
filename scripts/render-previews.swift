@@ -23,12 +23,45 @@ struct RenderPreviews {
     }
 
     @MainActor
-    static func main() {
+    static func main() async {
         _ = NSApplication.shared
         let dir = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "."
-        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
-
+        if CommandLine.arguments.contains("--profile-engine") {
+            // The shell wrapper isolates all files; PREVIEW substitutes a backend that cannot change priorities.
+            var rules = RuleSet.defaults
+            rules.mode = .balanced
+            rules.saveBatteryWhenUnplugged = false
+            rules.keepDisplayAwakeDuringBoost = false
+            SettingsStore.save(rules)
+            let engine = AppEngine()
+            let sampler = ProcessCPUSampler()
+            let pid = ProcessInfo.processInfo.processIdentifier
+            for phase in ["idle", "closed", "paused", "open"] {
+                engine.paused = true
+                engine.rules.mode = phase == "idle" ? .balanced : .automatic
+                engine.isPanelExpanded = phase == "open"
+                engine.paused = phase == "paused"
+                // Exclude startup indexing and immediate mode-transition work from the steady-state interval.
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                let before = sampler.cpuNanos(of: pid) ?? 0
+                let start = ProcessInfo.processInfo.systemUptime
+                for _ in 0..<15 { try? await Task.sleep(nanoseconds: 1_000_000_000) }
+                let elapsed = ProcessInfo.processInfo.systemUptime - start
+                let cpu = Double((sampler.cpuNanos(of: pid) ?? before) - before) / 1e9 / elapsed * 100
+                let mib = Double(ProcessCPUSampler.footprint(of: pid) ?? 0) / 1_048_576
+                print(String(format: "PROFILE %@: %.3f%% of one CPU core, %.1f MiB footprint, %.1fs; session=%@; last tick %.2fms",
+                    phase, cpu, mib, elapsed, engine.sessionActive.description, engine.tickMs))
+                fflush(stdout)
+            }
+            engine.shutdown()
+            print("Engine-only read-only profile; no native UI drawing or workload speed-up measured.")
+            return
+        }
         let engine = AppEngine(isPreview: true)
+        if CommandLine.arguments.contains("--test-notch") {
+            exit(await NotchController.runRegressionChecks(engine: engine) ? 0 : 1)
+        }
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
 
         func installed(_ name: String, _ id: String, _ path: String, _ category: AppCategory) -> InstalledApp {
             InstalledApp(name: name, bundleID: id, path: path, category: category)
@@ -70,9 +103,12 @@ struct RenderPreviews {
         // Notch panel: every tab, normal and Advanced, plus the collapsed pill
         let geometry = NotchGeometry(hasNotch: true, notchWidth: 185, notchHeight: 32)
         let size = NotchLayout.expandedSize
+        let suiteName = "Coremium.Previews.\(UUID().uuidString)"
+        let previewDefaults = UserDefaults(suiteName: suiteName)!
+        defer { previewDefaults.removePersistentDomain(forName: suiteName) }
         for advanced in [false, true] {
             for tab in NotchTab.allCases {
-                let ui = NotchUIState(geometry: geometry)
+                let ui = NotchUIState(geometry: geometry, defaults: previewDefaults)
                 ui.expanded = true
                 ui.tab = tab
                 ui.advanced = advanced
@@ -81,21 +117,30 @@ struct RenderPreviews {
                      name: "notch-\(tab.rawValue)\(advanced ? "-advanced" : "")", width: size.width, height: size.height, dir: dir)
             }
         }
-        let collapsed = NotchUIState(geometry: geometry)
+        let collapsed = NotchUIState(geometry: geometry, defaults: previewDefaults)
         save(ZStack(alignment: .top) { Color(white: 0.5); NotchRootView(engine: engine, ui: collapsed) },
              name: "notch-collapsed", width: 400, height: 60, dir: dir)
         for step in 0...5 {
-            let ui = NotchUIState(geometry: geometry)
+            let ui = NotchUIState(geometry: geometry, defaults: previewDefaults)
             save(ZStack(alignment: .top) {
                     Color(white: 0.12)
                     ZStack(alignment: .top) {
                         NotchShape(bottomRadius: 34).fill(Color.black)
-                        OnboardingView(engine: engine, ui: ui, initialStep: step, onFinish: {}).padding(.top, 34)
+                        WelcomeTourView(engine: engine, ui: ui, initialStep: step, onFinish: {}).padding(.top, 34)
                     }
                     .frame(width: size.width, height: size.height)
                 }
                 .environment(\.renderFlat, true),
                 name: "onboarding-\(step)", width: size.width, height: size.height, dir: dir)
         }
+        let firstUse = NotchUIState(geometry: geometry, defaults: previewDefaults)
+        firstUse.expanded = true
+        firstUse.showingOnboarding = true
+        save(NotchRootView(engine: engine, ui: firstUse).environment(\.renderFlat, true),
+             name: "first-use-active", width: size.width, height: size.height, dir: dir)
+        engine.injectPreview(rows: rows, installed: apps, usage: UsageLedger(), suggestions: [], session: false,
+                             boostName: nil, demoted: 0, loads: loads)
+        save(NotchRootView(engine: engine, ui: firstUse).environment(\.renderFlat, true),
+             name: "first-use-idle", width: size.width, height: size.height, dir: dir)
     }
 }

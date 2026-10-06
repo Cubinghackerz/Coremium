@@ -6,16 +6,16 @@ const hanken = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-hanken", d
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://coremium.vercel.app"),
-  title: "Coremium: keep what matters smooth",
+  title: "Coremium: give your app more room to work",
   description:
-    "Coremium lives in your Mac's notch and moves background apps to the efficiency cores while the app you're using stays smooth. Nothing is closed. Free and open source.",
+    "Coremium lowers background-app priority while you play, create, code, or run local AI. Your other apps stay open. Free, open source, no account.",
   openGraph: {
     title: "Coremium",
-    description: "Keep what matters smooth, without closing anything.",
+    description: "Give the app you're using more room to work. Free, open source, no account.",
     images: [{ url: "/coremium-panel.png", width: 1552, height: 876 }],
     type: "website",
   },
-  twitter: { card: "summary_large_image", title: "Coremium", description: "Keep what matters smooth, without closing anything." },
+  twitter: { card: "summary_large_image", title: "Coremium", description: "Give the app you're using more room to work." },
 };
 
 export const viewport: Viewport = { themeColor: "#000000", colorScheme: "dark" };

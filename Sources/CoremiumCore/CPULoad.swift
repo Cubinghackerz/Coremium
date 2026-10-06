@@ -4,14 +4,17 @@ import Foundation
 /// Per-CPU busy fraction (0...1) between successive `sample()` calls, via `host_processor_info`.
 public final class CPULoadSampler {
     private var previous: [(busy: UInt64, total: UInt64)] = []
+    private let hostPort = mach_host_self()
 
     public init() {}
+
+    deinit { mach_port_deallocate(mach_task_self_, hostPort) }
 
     public func sample() -> [Double] {
         var cpuCount: natural_t = 0
         var info: processor_info_array_t?
         var infoCount: mach_msg_type_number_t = 0
-        guard host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpuCount, &info, &infoCount) == KERN_SUCCESS,
+        guard host_processor_info(hostPort, PROCESSOR_CPU_LOAD_INFO, &cpuCount, &info, &infoCount) == KERN_SUCCESS,
               let info else { return [] }
         defer {
             vm_deallocate(mach_task_self_, vm_address_t(bitPattern: info),

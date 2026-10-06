@@ -16,3 +16,5 @@ jobs:
         run: xcodebuild -project Coremium.xcodeproj -scheme CoremiumCore -derivedDataPath build test CODE_SIGN_IDENTITY=-
       - name: Build the app
         run: xcodebuild -project Coremium.xcodeproj -scheme Coremium -configuration Release -derivedDataPath build CODE_SIGN_IDENTITY=- build
+      - name: Native notch lifecycle regressions (no live engine or settings)
+        run: scripts/render-previews.sh --test-notch

@@ -1,21 +1,13 @@
 "use client";
 import { PauseCircle, SlidersHorizontal } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 function Tile({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
     <div
-      onMouseMove={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
-        e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
-      }}
       className={cn(
         "group relative overflow-hidden rounded-[28px] bg-white/[0.035] p-7 ring-1 ring-inset ring-white/10 md:p-9",
-        "before:pointer-events-none before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-500 before:content-['']",
-        "before:bg-[radial-gradient(420px_circle_at_var(--mx,50%)_var(--my,50%),rgba(98,228,255,0.10),transparent_60%)] hover:before:opacity-100",
         className,
       )}
     >
@@ -33,13 +25,7 @@ const Title = ({ children, sub }: { children: React.ReactNode; sub: string }) =>
 
 /* two kinds of cores: the idea in one strip */
 function CoreStrip() {
-  const reduce = useReducedMotion();
-  const [on, setOn] = useState(true);
-  useEffect(() => {
-    if (reduce) return;
-    const t = setInterval(() => setOn((v) => !v), 4200);
-    return () => clearInterval(t);
-  }, [reduce]);
+  const on = true;
   const perf = Array.from({ length: 5 });
   const eff = Array.from({ length: 6 });
   return (
@@ -56,11 +42,11 @@ function CoreStrip() {
           </div>
         ))}
       </div>
-      <div className="mt-3 flex justify-between text-[13px] text-zinc-500">
+      <div className="mt-3 flex justify-between text-[13px] text-zinc-400">
         <span>Performance cores</span>
         <span>Efficiency cores</span>
       </div>
-      <p className="mt-4 text-[15px] text-zinc-300">{on ? "Coremium on: only the app in front keeps the fast cores." : "Coremium off: everything competes for the fast cores."}</p>
+      <p className="mt-4 text-[15px] text-zinc-300">{on ? "Illustration: eligible background work has lower priority." : "Illustration: busy apps can compete for CPU time."}</p>
     </div>
   );
 }
@@ -72,36 +58,14 @@ const choices = [
   { name: "Eco", text: "Always efficient.", color: "text-eff" },
 ];
 
-const decisions = [
-  ["Gaming mode activated.", "Roblox became active. Chrome and Discord moved to Yield, Spotify to Eco."],
-  ["Standing by.", "No Boost is running, so nothing is being moved. Your app rules are ready."],
-  ["Coding mode activated.", "Terminal became active. Chrome moved to Yield."],
-  ["Paused.", "macOS default scheduling restored."],
-];
-
 function Decisions() {
-  const reduce = useReducedMotion();
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    if (reduce) return;
-    const t = setInterval(() => setI((v) => (v + 1) % decisions.length), 4600);
-    return () => clearInterval(t);
-  }, [reduce]);
-  const [head, body] = decisions[i];
   return (
-    <div className="relative mt-8 min-h-[148px] rounded-2xl bg-black/60 p-5 ring-1 ring-inset ring-white/10" aria-live="polite">
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={i}
-          initial={reduce ? false : { opacity: 0, y: 8, filter: "blur(6px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          exit={reduce ? undefined : { opacity: 0, y: -8, filter: "blur(6px)" }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="text-[19px] leading-snug tracking-[-0.01em]"
-        >
-          <span className="font-semibold text-white">{head}</span> <span className="text-zinc-400">{body}</span>
-        </motion.p>
-      </AnimatePresence>
+    <div className="relative mt-8 min-h-[148px] rounded-2xl bg-black/60 p-5 ring-1 ring-inset ring-white/10">
+      <p className="mb-3 text-sm text-zinc-400">Example decision, not live activity</p>
+      <p className="text-[19px] leading-snug tracking-[-0.01em]">
+        <span className="font-semibold text-white">Gaming mode activated.</span>{" "}
+        <span className="text-zinc-400">Roblox is protected. Eligible background apps have lower priority.</span>
+      </p>
     </div>
   );
 }
@@ -115,7 +79,7 @@ function PauseSwitch() {
       aria-pressed={paused}
       className="mt-8 flex w-full items-center justify-between gap-4 rounded-2xl bg-black/60 p-5 text-left ring-1 ring-inset ring-white/10 transition-colors hover:bg-black/40"
     >
-      <span className="text-[16px] text-zinc-300">{paused ? "macOS default scheduling restored." : "Coremium is moving apps aside."}</span>
+      <span className="text-[16px] text-zinc-300">{paused ? "Illustration: normal scheduling restored." : "Illustration: Coremium lowers background priority."}</span>
       <span className={cn("relative h-7 w-12 shrink-0 rounded-full transition-colors duration-300", paused ? "bg-yellow-300" : "bg-white/15")}>
         <span className={cn("absolute top-1 size-5 rounded-full bg-white shadow transition-all duration-300", paused ? "left-6 bg-black" : "left-1")} />
       </span>
@@ -127,12 +91,12 @@ export function Features() {
   return (
     <section id="how" className="mx-auto max-w-6xl px-6 py-16 md:py-24">
       <h2 className="text-balance mx-auto max-w-3xl text-center text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.02] tracking-[-0.035em]">
-        <span className="text-zinc-500">Your Mac has two kinds of cores.</span> <span className="text-white">Apps rarely share them well.</span>
+        <span className="text-zinc-400">Busy background apps can compete.</span> <span className="text-white">Give your work more room.</span>
       </h2>
       <div className="mt-16 grid gap-4 md:grid-cols-6">
         <Tile className="md:col-span-4">
-          <Title sub="Performance cores are fast and power-hungry. Efficiency cores are calm and frugal. Coremium points your background apps at the efficient ones while the app in front keeps the fast ones.">
-            Fast cores for what you&apos;re using. Frugal cores for the rest.
+          <Title sub="On Apple Silicon, background priority favors efficiency cores. On Intel, it lowers scheduling priority. Coremium leaves the app you're using at normal priority; macOS still decides where it runs.">
+            Lower background priority. Your work stays protected.
           </Title>
           <CoreStrip />
         </Tile>
@@ -156,7 +120,7 @@ export function Features() {
             One click puts everything back.
           </Title>
           <PauseSwitch />
-          <p className="mt-4 flex items-center gap-2 text-sm text-zinc-500">
+          <p className="mt-4 flex items-center gap-2 text-sm text-zinc-400">
             <PauseCircle className="size-4" aria-hidden /> Try the switch.
           </p>
         </Tile>

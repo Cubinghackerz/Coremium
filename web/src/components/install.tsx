@@ -1,99 +1,86 @@
 "use client";
-import { Check, Copy, Download, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Check, Copy, Download } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { INSTALL_CMD, INSTALL_CMD_WINDOWS, RELEASE, WINDOWS_RELEASES } from "@/lib/utils";
+import { ButtonLink } from "@/components/ui/button";
+import { DOWNLOADS, INSTALL_CMD, INSTALL_CMD_WINDOWS, REPO } from "@/lib/utils";
 
 export function CopyLine({ text, label }: { text: string; label: string }) {
-  const [done, setDone] = useState(false);
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timeout.current) clearTimeout(timeout.current); }, []);
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white/[0.05] py-3 pl-5 pr-3 ring-1 ring-inset ring-white/12">
-      <code aria-label={label} className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-[13.5px] text-zinc-100 [scrollbar-width:none]">{text}</code>
-      <button
-        type="button"
-        onClick={async () => {
-          try { await navigator.clipboard.writeText(text); setDone(true); setTimeout(() => setDone(false), 1600); } catch {}
-        }}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-full bg-white px-4 text-sm font-medium text-black transition-colors hover:bg-zinc-200"
-      >
-        {done ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-        {done ? "Copied" : "Copy"}
-      </button>
+    <div>
+      <div className="flex items-center gap-3 rounded-xl bg-white/[0.05] py-3 pl-4 pr-3 ring-1 ring-inset ring-white/12">
+        <code aria-label={label} className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-sm text-zinc-100">{text}</code>
+        <button type="button" aria-label={`Copy ${label}`} onClick={async () => {
+          if (timeout.current) clearTimeout(timeout.current);
+          try { await navigator.clipboard.writeText(text); setState("copied"); }
+          catch { setState("failed"); }
+          timeout.current = setTimeout(() => setState("idle"), 2500);
+        }} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-white px-4 text-sm font-medium text-black hover:bg-zinc-200">
+          {state === "copied" ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+          {state === "copied" ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <p role="status" className="mt-2 text-sm text-zinc-400">{state === "failed" ? "Couldn't copy. Select the command and copy it manually." : state === "copied" ? "Command copied." : ""}</p>
     </div>
   );
 }
 
-const why = [
-  ["Checked before it runs", "The script downloads the latest release and compares its SHA-256 checksum with the one published next to it. If they differ, nothing is installed."],
-  ["No security warning to click through", "Files fetched from a terminal aren't flagged as downloads, so macOS Gatekeeper and Windows SmartScreen don't stop the first launch."],
-  ["No admin rights, easy to update", "It installs for you only and starts the app. Run the same line again later to update."],
-] as const;
-
 function Panel({ os }: { os: "mac" | "windows" }) {
   const mac = os === "mac";
+  const release = DOWNLOADS[os];
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-10 text-left md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-      <div>
-        <p className="text-[16px] text-zinc-400">
-          {mac ? "Open Terminal (in Applications › Utilities), paste this and press Return:" : "Open PowerShell (Start menu › PowerShell), paste this and press Enter:"}
-        </p>
-        <div className="mt-4">
-          <CopyLine text={mac ? INSTALL_CMD : INSTALL_CMD_WINDOWS} label={mac ? "macOS install command" : "Windows install command"} />
+    <div className="text-left">
+      <div className="grid gap-8 md:grid-cols-2">
+        <div>
+          <ButtonLink href={release.download} size="lg" className="w-full sm:w-auto">
+            <Download className="size-5" aria-hidden /> {mac ? "Download for Mac — Free" : "Download Windows beta"}
+          </ButtonLink>
+          <p className="mt-4 text-sm text-zinc-400">v{release.version} · {mac ? "macOS 13+, Apple Silicon & Intel" : "Windows 10 & 11, x64 · Beta"}</p>
+          <ol className="mt-6 list-decimal space-y-3 pl-5 text-base leading-relaxed text-zinc-300">
+            <li>{mac ? "Open the disk image and drag Coremium to Applications." : "Extract the zip to a folder you want to keep."}</li>
+            <li>{mac ? "Open Coremium. If the developer cannot be verified, follow the approval steps beside this." : "Open Coremium.exe. Check the publisher and any Windows Security message before proceeding."}</li>
+            <li>{mac ? "Automatic follows your game or work app. Hover the notch or use the menu-bar chip to see activity." : "Automatic follows your game or work app. Use the tray icon to reopen the window."}</li>
+          </ol>
+          <p className="mt-5 text-sm text-zinc-400"><a href={release.checksums} className="underline underline-offset-4">Published SHA-256 checksums</a>{" · "}<a href={`${REPO}/releases`} className="underline underline-offset-4">Release notes</a></p>
         </div>
-        <p className="mt-4 text-[14.5px] text-zinc-500">
-          {mac
-            ? "Installs Coremium into Applications and opens it. macOS 13 or later, Apple Silicon and Intel."
-            : "Installs Coremium for Windows (beta) into your user folder, adds it to the Start menu and starts it. Windows 10 and 11, x64."}
-        </p>
-        <p className="mt-8 text-[14.5px] text-zinc-500">
-          Prefer to download it yourself?{" "}
-          <a className="inline-flex items-center gap-1.5 text-zinc-200 underline decoration-zinc-600 underline-offset-4 hover:decoration-white" href={mac ? RELEASE : WINDOWS_RELEASES}>
-            <Download className="size-3.5" aria-hidden />
-            {mac ? "Disk image" : "Zip (beta)"}
-          </a>
-          {mac
-            ? ". macOS asks once because Coremium is signed without a paid Apple account: System Settings › Privacy & Security › Open Anyway."
-            : ". It isn't code-signed yet, so SmartScreen asks once: More info › Run anyway."}
-        </p>
-        <p className="mt-3 text-[14.5px] text-zinc-500">
-          Something stays slow? <code className="break-all font-mono text-[13px] text-zinc-300">{mac ? "/Applications/Coremium.app/Contents/MacOS/Coremium --restore-all" : "Coremium.exe --restore-all"}</code> puts every app back.
-        </p>
+        <div className="rounded-xl border border-line bg-white/[0.035] p-6">
+          <h3 className="text-lg font-semibold text-white">{mac ? "First-open approval" : "About the Windows beta"}</h3>
+          {mac ? <>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-400">Coremium is ad-hoc signed and not notarized. For an unidentified-developer warning, after trying to open it:</p>
+            <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm leading-relaxed text-zinc-300">
+              <li>Open <strong>System Settings → Privacy &amp; Security</strong>.</li>
+              <li>Find the Coremium message and choose <strong>Open Anyway</strong>.</li>
+              <li>Confirm <strong>Open</strong>. Later launches use this exception.</li>
+            </ol>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-400">If it says “will damage your computer” or “is damaged,” stop and report the exact message instead of using these steps.</p>
+            <a href="https://support.apple.com/en-au/102445" className="mt-4 inline-block text-sm text-zinc-200 underline underline-offset-4">Apple&apos;s guide to opening downloaded apps</a>
+          </> : <>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-400">Windows builds are currently unsigned. An unrecognized-app message concerns reputation; a malware or potentially unwanted app detection needs investigation. Please report its exact wording.</p>
+            <p className="mt-4 text-sm leading-relaxed text-zinc-400">The beta has automated tests, but still needs hands-on testing on Windows PCs.</p>
+          </>}
+        </div>
       </div>
-      <div className="rounded-[24px] bg-white/[0.035] p-7 ring-1 ring-inset ring-white/10">
-        <p className="flex items-center gap-2 text-[15px] font-semibold text-white">
-          <ShieldCheck className="size-[18px] text-perf" aria-hidden /> Why the terminal is the recommended way
-        </p>
-        <dl className="mt-5 space-y-5">
-          {why.map(([t, d]) => (
-            <div key={t}>
-              <dt className="text-[15px] font-medium text-zinc-100">{t}</dt>
-              <dd className="mt-1 text-[14.5px] leading-relaxed text-zinc-400">{d}</dd>
-            </div>
-          ))}
-        </dl>
-        <p className="mt-5 text-[13.5px] text-zinc-500">The script is short and readable on GitHub before you run it.</p>
-      </div>
+      <details className="mt-8 border-t border-line pt-5">
+        <summary className="cursor-pointer py-2 text-sm text-zinc-300">Other installation methods: {mac ? "Terminal" : "PowerShell"}</summary>
+        <p className="my-4 text-sm leading-relaxed text-zinc-400">The optional script downloads a release, verifies its published checksum, installs it, and opens the app. Read the script on GitHub before running it.</p>
+        <CopyLine text={mac ? INSTALL_CMD : INSTALL_CMD_WINDOWS} label={mac ? "macOS install command" : "Windows install command"} />
+        <a href={`${REPO}/blob/master/scripts/install.${mac ? "sh" : "ps1"}`} className="text-sm text-zinc-300 underline underline-offset-4">Read the installer source</a>
+      </details>
     </div>
   );
 }
 
 export function Install() {
-  const [os, setOs] = useState("mac");
-  useEffect(() => { if (/Windows/i.test(navigator.userAgent)) setOs("windows"); }, []);
   return (
-    <section id="install" className="mx-auto max-w-5xl px-6 py-24 text-center md:py-32">
-      <h2 className="text-balance text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.02] tracking-[-0.035em]">
-        <span className="text-zinc-500">One line to install.</span> <span className="text-white">Done in a minute.</span>
-      </h2>
-      <Tabs value={os} onValueChange={setOs} className="mt-12">
-        <div className="flex justify-center">
-          <TabsList>
-            <TabsTrigger value="mac">macOS</TabsTrigger>
-            <TabsTrigger value="windows">Windows (beta)</TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent value="mac" className="mt-10"><Panel os="mac" /></TabsContent>
-        <TabsContent value="windows" className="mt-10"><Panel os="windows" /></TabsContent>
+    <section id="install" className="mx-auto max-w-5xl scroll-mt-20 px-6 py-20 text-center md:py-24">
+      <h2 className="text-balance text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.02] tracking-[-0.035em]">Download. Open. <span className="text-zinc-400">Let Automatic take it from there.</span></h2>
+      <Tabs defaultValue="mac" className="mt-10">
+        <div className="flex justify-center"><TabsList><TabsTrigger value="mac">macOS</TabsTrigger><TabsTrigger value="windows">Windows beta</TabsTrigger></TabsList></div>
+        <TabsContent value="mac" className="mt-8"><Panel os="mac" /></TabsContent>
+        <TabsContent value="windows" className="mt-8"><Panel os="windows" /></TabsContent>
       </Tabs>
     </section>
   );

@@ -3,13 +3,13 @@ import { REPO } from "@/lib/utils";
 
 export function Footer() {
   return (
-    <footer className="border-t border-line px-6 py-14 text-sm text-zinc-500">
+    <footer className="border-t border-line px-6 py-14 text-sm text-zinc-400">
       <div className="mx-auto flex max-w-6xl flex-wrap items-start justify-between gap-8">
         <div className="max-w-sm">
           <div className="flex items-center gap-3 text-base font-semibold text-white">
             <Image src="/logo.png" alt="" width={24} height={24} className="rounded-md" /> Coremium
           </div>
-          <p className="mt-3">Keep what matters smooth, without closing anything.</p>
+          <p className="mt-3">Give the app you&apos;re using more room to work.</p>
         </div>
         <div className="flex gap-12">
           <ul className="space-y-2">

@@ -73,7 +73,9 @@ final class ModeTests: XCTestCase {
         ]
         var categories: [String: AppCategory] = [:]
         for a in apps { categories[a.bundleID!] = AppClassifier.classify(bundleID: a.bundleID, lsCategory: nil) }
-        let rules = RuleSet(mode: mode, rules: overrides)
+        var rules = RuleSet(mode: mode, rules: overrides)
+        // These fixtures exercise the classic category profiles; adaptive timing is covered separately.
+        rules.adaptiveAutomatic = false
         let input = EvaluationInput(snapshot: snapshot, apps: apps, frontmostPid: front, rules: rules, sessionActive: session,
                                     cpuByAppPid: cpu, categories: categories, ownUid: 501, ownPid: 999)
         let profile = RuleEvaluator.activeProfile(apps: apps, frontmostPid: front, rules: rules, cpuByAppPid: cpu, categories: categories)

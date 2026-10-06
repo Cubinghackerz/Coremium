@@ -43,7 +43,7 @@ struct GuideTab: View {
                         SectionLabel(text: "Good to know")
                         tip("Hover the notch for a moment to open this panel. While a game is in front the pill ignores the mouse; use the menu-bar chip icon then.")
                         tip("Advanced shows the numbers: per-core load, memory, process counts, timers and why each rule applies.")
-                        tip("Fullscreen fix keeps an invisible 2-pixel window on screen so macOS composites normally. It cures fullscreen stutter on 120 Hz MacBooks, mostly on macOS 27.")
+                        tip("Fullscreen fix adds an invisible 2-pixel window, only while an app is fullscreen, so macOS composites normally. It cures fullscreen stutter on 120 Hz MacBooks, mostly on macOS 27. Ordinary windows are left alone.")
                         tip("Coremium can't push the fast cores past what macOS allows: Boost works by clearing the way. It only affects your own apps, can't see helper services macOS starts for an app, and can't measure power or exact temperature.")
                         tip("GPU: macOS has no public way to lower another app's GPU priority, so Coremium shows who is using the GPU (\"GPU heavy\") and says so in its decisions instead of guessing.")
                         tip("If your Mac isn't overloaded there's nothing to fix, and Coremium will simply have little to move.")
@@ -102,7 +102,10 @@ struct SettingsTab: View {
                 Card(padding: 12) {
                     VStack(alignment: .leading, spacing: 11) {
                         SectionLabel(text: "Performance")
-                        SettingRow(title: "Fullscreen fix", detail: "Stops fullscreen stutter on 120 Hz MacBooks with an invisible 2-pixel window.",
+                        SettingRow(title: "Adapt Automatic to CPU pressure",
+                                   detail: "Waits for sustained CPU load, then moves busy background apps aside. Preserves busy builds, renders, and local models; your per-app choices still win.",
+                                   isOn: $engine.rules.adaptiveAutomatic)
+                        SettingRow(title: "Fullscreen fix", detail: "Stops fullscreen stutter on 120 Hz MacBooks with an invisible 2-pixel window, only while an app is fullscreen.",
                                    badge: FullscreenFix.isRecommended ? "Recommended" : "Experimental", isOn: $engine.rules.fullscreenFixEnabled)
                         SettingRow(title: "Protect a busy boosted app in the background", detail: "Keeps protecting a game or render that runs while you check something else.",
                                    isOn: $engine.rules.boostWhenBusy)
@@ -137,7 +140,7 @@ struct SettingsTab: View {
                             .font(.system(size: 10.5, design: .rounded)).foregroundColor(Theme.textDim).fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 8) {
                             Button("Restore all apps now") { engine.restoreAllNow() }.buttonStyle(GhostButtonStyle())
-                            Button("Replay welcome tour") { ui.showingOnboarding = true }.buttonStyle(GhostButtonStyle())
+                            Button("Welcome tour") { ui.showingTour = true }.buttonStyle(GhostButtonStyle())
                             Button("Reset settings…") { confirmReset = true }.buttonStyle(GhostButtonStyle())
                             Spacer(minLength: 0)
                         }

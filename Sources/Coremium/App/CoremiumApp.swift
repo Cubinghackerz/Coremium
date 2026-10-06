@@ -68,8 +68,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Automation.engine = engine
         Automation.notch = notch
 
-        // First launch: open the welcome tour in the notch.
-        if !notch.ui.onboardingCompleted { showTour() }
+        if !notch.ui.onboardingCompleted {
+            notch.ui.showingOnboarding = true
+            notch.expand(pinned: true)
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) { engine.shutdown() }
@@ -80,7 +82,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func showTour() {
-        notch.ui.showingOnboarding = true
+        notch.ui.showingOnboarding = false
+        notch.ui.showingTour = true
         notch.expand(pinned: true)
     }
 

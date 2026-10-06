@@ -19,19 +19,21 @@ public struct MemoryInfo: Equatable, Sendable {
     }
 
     public static func current() -> MemoryInfo {
+        let hostPort = mach_host_self()
+        defer { mach_port_deallocate(mach_task_self_, hostPort) }
         let total = UInt64(sysctlInt64("hw.memsize") ?? 0)
 
         var stats = vm_statistics64()
         var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64>.size / MemoryLayout<integer_t>.size)
         let result = withUnsafeMutablePointer(to: &stats) { pointer in
             pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
+                host_statistics64(hostPort, HOST_VM_INFO64, $0, &count)
             }
         }
         var used: UInt64 = 0
         if result == KERN_SUCCESS {
             var pageSize: vm_size_t = 0
-            host_page_size(mach_host_self(), &pageSize)
+            host_page_size(hostPort, &pageSize)
             let pages = UInt64(stats.active_count) + UInt64(stats.wire_count) + UInt64(stats.compressor_page_count)
             used = min(pages * UInt64(pageSize), total)
         }

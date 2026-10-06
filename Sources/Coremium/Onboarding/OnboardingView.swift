@@ -1,8 +1,76 @@
 import CoremiumCore
 import SwiftUI
 
-/// The welcome tour, shown inside the notch panel on first launch (and from Settings).
+/// Shows real activity immediately; the full explanation is optional.
 struct OnboardingView: View {
+    @ObservedObject var engine: AppEngine
+    @ObservedObject var ui: NotchUIState
+    var onFinish: () -> Void
+
+    private var notable: [AppRow] {
+        Array(engine.rows.filter { [.game, .creative, .developer, .localAI].contains($0.category) }.prefix(4))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                CoremiumLogo().frame(width: 42, height: 42)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(engine.paused ? "Coremium is paused" : "Coremium is running in \(engine.rules.mode.label) mode")
+                        .font(.system(size: 22, weight: .bold, design: .rounded)).foregroundColor(.white)
+                    Text("\(Pitch.subline)").font(.system(size: 12, design: .rounded)).foregroundColor(Theme.textDim)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Card(padding: 14) {
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionLabel(text: "On your Mac right now")
+                    Text(engine.statusLine).font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.white)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let decision = engine.latestDecision, !engine.paused {
+                        Text(decision.detail).font(.system(size: 11.5, design: .rounded)).foregroundColor(Theme.textDim)
+                            .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    }
+                    if !notable.isEmpty {
+                        HStack(spacing: 12) {
+                            ForEach(notable) { row in
+                                HStack(spacing: 5) {
+                                    AppIconView(path: row.path)
+                                    Text(row.name).font(.system(size: 11, design: .rounded)).foregroundColor(.white.opacity(0.85))
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+                        .accessibilityLabel("Detected running apps")
+                    }
+                }
+            }
+            Text("Helps when background CPU work competes with your app. On a quiet Mac, there may be nothing to change.")
+                .font(.system(size: 11.5, design: .rounded)).foregroundColor(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+            SettingRow(title: "Open at login", detail: "Optional. Keep Automatic ready when you start your Mac.",
+                       isOn: Binding(get: { engine.launchAtLogin }, set: { engine.setLaunchAtLogin($0) }))
+            Spacer(minLength: 0)
+            HStack(spacing: 10) {
+                Button("How it works") {
+                    ui.showingOnboarding = false
+                    ui.showingTour = true
+                }.buttonStyle(GhostButtonStyle())
+                Button("See a simulation") { ui.finishOnboarding(tab: .simulate) }.buttonStyle(GhostButtonStyle())
+                Spacer(minLength: 0)
+                Button("Continue to live view", action: onFinish).buttonStyle(PrimaryButtonStyle()).keyboardShortcut(.defaultAction)
+            }
+            Text(ui.geometry.hasNotch ? "Hover the notch or use the menu-bar chip to reopen. Click elsewhere or press Escape to close."
+                 : "Use the menu-bar chip to reopen. Click elsewhere or press Escape to close.")
+                .font(.system(size: 10.5, design: .rounded)).foregroundColor(Theme.textDim)
+        }
+        .padding(.horizontal, 30).padding(.top, 12).padding(.bottom, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+/// The optional welcome tour, available from the first screen, Settings, and the menu bar.
+struct WelcomeTourView: View {
     @ObservedObject var engine: AppEngine
     @ObservedObject var ui: NotchUIState
     var onFinish: () -> Void
@@ -95,7 +163,7 @@ private struct HowItWorks: View {
     var body: some View {
         VStack(spacing: 14) {
             Spacer(minLength: 0)
-            StepHeader(title: "Two kinds of cores", subtitle: "Fast performance cores and frugal efficiency cores. Normally every app piles onto the fast ones. Coremium sends the apps you aren't using to the efficient ones.")
+            StepHeader(title: "Make room for what you're doing", subtitle: "Coremium lowers eligible background apps' priority while your game or work app stays at normal priority. On Apple Silicon, macOS schedules that background work on efficiency cores.")
             HStack(spacing: 14) {
                 zone("Performance cores", "Fast, power-hungry", Theme.yield,
                      moved ? [("gamecontroller.fill", "Game")] : [("gamecontroller.fill", "Game"), ("globe", "Browser"), ("bubble.left.fill", "Chat"), ("sparkles", "AI")])
@@ -103,7 +171,7 @@ private struct HowItWorks: View {
                 zone("Efficiency cores", "Calm, frugal", Theme.eco,
                      moved ? [("globe", "Browser"), ("bubble.left.fill", "Chat"), ("sparkles", "AI")] : [])
             }
-            Text(moved ? "With Coremium the game has the fast cores to itself." : "Without Coremium everything competes for the fast cores.")
+            Text(moved ? "Illustration: eligible background apps have lower priority." : "Illustration: busy apps can compete for CPU time.")
                 .font(.system(size: 12.5, weight: .semibold, design: .rounded)).foregroundColor(moved ? Theme.good : Theme.warn)
             Spacer(minLength: 0)
         }

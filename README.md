@@ -2,12 +2,12 @@
 
 <img src="docs/assets/logo.png" width="96" align="right" alt="Coremium logo">
 
-**Keep what matters smooth, without closing anything.**
+**Give the app you're using more room to work.**
 
-Coremium lives in your Mac's notch. It protects the app you're using (a game, a render, a build, a local AI job) and
-quietly moves everything else to the efficiency cores. Nothing is quit; the app you're using is always left at full speed.
+Coremium lives in your Mac's notch. It protects the app you're using (a game, a render, a build, a local AI job) by
+lowering eligible background-app priority. Nothing is quit; your foreground app stays at normal priority.
 
-- **Modes:** Automatic, Balanced, Gaming, Creator, Coding, Local AI. Automatic switches by itself.
+- **Modes:** Automatic, Balanced, Gaming, Creator, Coding, Local AI. Automatic follows your work and adapts to sustained CPU pressure.
 - **Four choices per app:** Boost, Normal, Yield, Eco. Your choice always beats the mode.
 - **Advanced mode:** per-core load %, memory, swap and pressure, process counts, PIDs, timers, and why each rule applies.
 - **Memory guard (System tab):** pressure, swap, and the apps using the most memory, with Hide and Quit (you choose; it asks
@@ -29,15 +29,17 @@ quietly moves everything else to the efficiency cores. Nothing is quit; the app 
 - **Simulate:** an animated illustration of the idea (clearly labelled as such).
 - **Learns locally:** suggests "Yield" for apps that hog the CPU while you play, and "Boost" for apps you work hard in.
 - **Fullscreen fix** for the macOS 27 fullscreen stutter on 120 Hz MacBooks (optional).
-- Welcome tour and guide built in. Free, open source (MIT), no account, no telemetry. Its only network request is a daily update check you can turn off.
+- A short first-launch screen shows real activity immediately; the full welcome tour is optional. Free, open source
+  (MIT), no account, no telemetry. Its only network request is a daily update check you can turn off.
 
 > Not affiliated with Apple. The Apple logo on the chip is Apple's own system symbol, drawn by macOS at runtime to
 > indicate Apple Silicon. Coremium doesn't ship it.
 
 ## How it works, and what it can't do
 
-macOS lets any app lower the priority of its **own user's** processes. Processes in the *background band* are scheduled on
-the **efficiency cores** with throttled disk and network I/O. That is what `taskpolicy -b` does, and what Coremium does
+macOS lets any app lower the priority of its **own user's** processes. Processes in the *background band* get lower CPU
+priority and throttled disk and network I/O, favoring the **efficiency cores** on Apple Silicon. That is what
+`taskpolicy -b` does, and what Coremium does
 for you, automatically and reversibly.
 
 **"Boost" is therefore indirect.** macOS has no public way to raise an app above normal priority or pin it to the
@@ -62,9 +64,9 @@ On Intel Macs there are no efficiency cores; demoted apps simply get lower prior
 
 ## Modes
 
-| Mode | Protected (boost) | Moved to efficiency cores during a session |
+| Mode | Protected (boost) | Lower-priority background work during a session |
 |---|---|---|
-| **Automatic** | Follows the app in front, or a busy game/creator/AI app | per the profile in force |
+| **Automatic** | Follows the app in front, or a busy game/creator/AI app | Busy eligible apps under sustained CPU pressure; preserves busy builds, renders and local models |
 | **Gaming** | Games | Creative tools, dev tools, browsers, chat, AI assistants |
 | **Creator** | Video, audio, 3D, design, photo | Games, browsers, chat, AI assistants |
 | **Coding** | Editors, terminals, builds | Games, creative tools |
@@ -77,6 +79,38 @@ isn't in use. Finder, Dock, Music, Spotify and Coremium itself are protected.
 
 Apps are recognised by kind (a built-in table, the category each app declares, Steam library location, and names of
 common local-AI tools). Coremium reads your apps directly and watches your app folders, so it never waits on Spotlight.
+
+### Adaptive Automatic
+
+Automatic uses local measurements, not a cloud model. During a protected session it waits for sustained high CPU load
+before lowering the priority of busy background apps. It restores those changes after sustained relief instead of
+switching back and forth on every sample. Foreground apps, protected apps and busy developer/creative/local-AI work
+are excluded. Your explicit per-app and per-game choices still win; Pause and Quit restore scheduling as before.
+
+The initial policy requires average performance-core load of at least 80% for six seconds (all cores on Intel), with
+eligible background apps using at least 25% of one core for six seconds. Recovery requires load at or below 55% for
+12 seconds, a minimum 15-second hold, then a 10-second cooldown. Sampling cadence means decisions can take longer
+than these minimums. Missing measurements or a long sampling gap release adaptive selections safely.
+
+Disable **Adapt Automatic to CPU pressure** in Settings to return to category-based Automatic. Existing explicit
+Yield/Eco rules, the optional heavy-app catcher and battery-saving rules are separate controls; this adaptive policy
+does not override them. GPU and memory readings remain advisory: it does not claim to optimize GPU priority, free
+memory, or guarantee a speed-up. Learning suggestions still require your approval.
+
+### Coremium's own resource budget
+
+Application events trigger immediate evaluation; one coalesced timer catches background changes. The source build
+does not poll while paused with the panel closed. Normal cadence is ten seconds idle, four seconds during a session,
+and two seconds while the panel is open. Low Power Mode slows those to 20, six and three seconds respectively.
+Adaptive CPU decisions reuse this loop rather than starting another one.
+
+Global memory/GPU diagnostics refresh at most every 12 seconds during a closed session, or every four seconds while
+visible; detailed per-process memory footprints are visible-only and refresh at most every six seconds. Low Power
+Mode slows diagnostics further. App indexing is cached and refreshed by filesystem events, not repeated every tick.
+The installed-app list is rebuilt only after indexing or rule changes. Idle ticks do not continually update history.
+
+Use the read-only engine profiler below to measure overhead on your own machine. It isolates settings and cannot
+change other apps' priorities. This measures the engine, not native UI drawing, and is not a workload speed benchmark.
 
 ## Known limitations
 
@@ -104,16 +138,24 @@ or download it from the [Windows beta release](../../releases?q=windows&expanded
 
 No paid Apple developer account is needed, so the app is **ad-hoc signed, not notarized**; macOS warns the first time.
 
-1. Download `Coremium-x.y.z.dmg` from [Releases](../../releases), open it and drag **Coremium** to Applications. Or in
-   Terminal (checks the checksum, no first-launch warning):
-   `curl -fsSL https://raw.githubusercontent.com/Cubinghackerz/Coremium/master/scripts/install.sh | bash`
-2. Open it. If macOS can't verify it: **System Settings › Privacy & Security › "Open Anyway"**, or in Terminal:
-   `xattr -dr com.apple.quarantine /Applications/Coremium.app`
-3. Follow the welcome tour. Hover the notch (or click the menu-bar chip icon) to open the panel. While a game is in
+1. Download the Mac DMG from [Releases](../../releases), open it and drag **Coremium** to Applications.
+2. Open it. For an unidentified-developer warning, use **System Settings › Privacy & Security › Open Anyway** after
+   trying to open it, then confirm Open. See [Apple's approval instructions](https://support.apple.com/en-au/102445).
+   A warning that the app is damaged or will damage your computer is different: stop and report the exact message.
+3. Automatic is enabled by default. The source build's short first-launch screen shows actual activity; the longer
+   tour is optional (published v2.0.1 still has the earlier tour). Hover the notch or click the menu-bar chip icon.
+   While a game is in
    front the pill ignores the mouse so it never gets in the way; use the menu-bar icon then.
 
 Supports **macOS 13 through 27**, Apple Silicon and Intel (universal binary). Developed and tested on macOS 27 / M3 Pro;
 other versions are built against the macOS 13 target but not individually tested yet. Reports are welcome.
+
+Prefer Terminal? First [inspect the installer](scripts/install.sh). It verifies the downloaded checksum and removes
+quarantine, so it bypasses the normal first-launch approval. Only use it if you trust that behavior:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Cubinghackerz/Coremium/master/scripts/install.sh | bash
+```
 
 ### If something stays slow
 
@@ -126,9 +168,11 @@ Quitting restores everything, as does the next launch after a crash. From Termin
 ## The fullscreen fix
 
 On 120 Hz ProMotion MacBooks, fullscreen Metal apps use Direct-to-Display, which breaks frame pacing; macOS 27 makes it
-worse. Any other window on screen makes macOS composite normally. With the fix on, Coremium keeps a 2-pixel
-always-on-top window on every display (invisible inside the notch; one dark pixel in the corner elsewhere). It ignores
-clicks and never takes focus. Fullscreen video may use slightly more battery.
+worse. Any other window on screen makes macOS composite normally. With the fix on, Coremium adds a 2-pixel always-on-top
+window (invisible inside the notch; one dark pixel in the corner elsewhere), but only on a display that is showing a
+fullscreen app, and removes it when the app leaves fullscreen. Ordinary and maximized windows are left alone, so moving,
+tiling and resizing them feels exactly like stock macOS. It reads only window positions (no Screen Recording permission),
+ignores clicks and never takes focus. Fullscreen video may use slightly more battery.
 
 ## Uninstall
 
@@ -142,6 +186,8 @@ brew install xcodegen
 scripts/build.sh            # universal, ad-hoc signed app + zip in dist/
 xcodebuild -project Coremium.xcodeproj -scheme CoremiumCore test
 scripts/render-previews.sh out/   # renders every panel/tab/onboarding step to PNGs without launching the app
+scripts/render-previews.sh --test-notch # native panel lifecycle regressions, isolated from real settings
+scripts/render-previews.sh --profile-engine # read-only idle/active/paused/visible engine CPU and footprint samples
 ```
 
 `Sources/CoremiumCore` holds all logic (process tree, priority control, rules, modes, classification, usage history,

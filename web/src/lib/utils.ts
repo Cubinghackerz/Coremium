@@ -1,5 +1,8 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import downloads from "../../../docs/downloads.json";
+
+export const DOWNLOADS = downloads;
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
