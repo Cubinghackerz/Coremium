@@ -7,6 +7,10 @@ cores; on other CPUs they simply get lower priority. Nothing is closed.
 
 - Modes: Automatic, Balanced, Gaming, Creator, Coding, Local AI. Per app: Boost, Normal, Yield, Eco.
 - Plain-words decisions, Advanced numbers, Pause, tray icon, start with Windows (tray menu).
+- Optional **Best performance power mode during boosts** (tray menu, off by default): switches Windows' power mode for the
+  length of a boost and puts your previous mode back afterwards (also after a crash).
+- **Storage**: temporary files, browser caches and old downloads, moved to the Recycle Bin only after a review that lists
+  what moves and warns about your own downloads. Caches of open browsers are skipped.
 - Only your own apps, no admin rights, no network access. Settings, history and the crash-recovery file live in
   `%LOCALAPPDATA%\Coremium`. Quitting, pausing or `Coremium.exe --restore-all` puts everything back.
 

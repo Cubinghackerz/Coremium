@@ -3,16 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnExplicitShutdown">
   <Application.Resources>
-    <SolidColorBrush x:Key="Bg" Color="#08090B"/>
-    <SolidColorBrush x:Key="Card" Color="#121418"/>
+    <SolidColorBrush x:Key="Bg" Color="#050505"/>
+    <SolidColorBrush x:Key="Card" Color="#111111"/>
     <SolidColorBrush x:Key="Line" Color="#1F2228"/>
     <SolidColorBrush x:Key="Ink" Color="#F3F4F6"/>
     <SolidColorBrush x:Key="Dim" Color="#8B919B"/>
     <SolidColorBrush x:Key="Faint" Color="#5B616B"/>
-    <SolidColorBrush x:Key="Perf" Color="#62E4FF"/>
-    <SolidColorBrush x:Key="Eff" Color="#7B87FF"/>
-    <SolidColorBrush x:Key="Boost" Color="#FFC267"/>
-    <SolidColorBrush x:Key="Mint" Color="#5EEAB0"/>
+    <SolidColorBrush x:Key="Perf" Color="#F3F4F6"/>
+    <SolidColorBrush x:Key="Eff" Color="#9AA0A8"/>
+    <SolidColorBrush x:Key="Boost" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Mint" Color="#C9CDD3"/>
     <FontFamily x:Key="UI">Segoe UI Variable Text, Segoe UI</FontFamily>
     <FontFamily x:Key="Display">Segoe UI Variable Display, Segoe UI</FontFamily>
 

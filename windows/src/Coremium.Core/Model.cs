@@ -67,6 +67,8 @@ public sealed class RuleSet
     public bool BoostWhenBusy { get; set; } = true;
     public double BoostBusyPercent { get; set; } = 20;
     public double GraceSeconds { get; set; } = 90;
+    /// Switch Windows to its "Best performance" power mode while a boost runs, and back afterwards. Off by default.
+    public bool BestPerformanceDuringBoost { get; set; }
 
     /// <summary>Protected by default; an explicit choice overrides these (so Spotify can be set to Eco).</summary>
     public static readonly string[] DefaultProtected = ["spotify", "music.ui", "explorer"];

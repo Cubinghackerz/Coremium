@@ -48,6 +48,8 @@ sealed class Engine : Observable
     readonly Usage usage = Store.Load<Usage>("usage.json");
     readonly DecisionLog log = new();
     readonly Scheduler scheduler = new();
+    readonly PowerMode powerMode = new();
+    public StorageModel Storage { get; } = new();
     readonly DispatcherTimer timer = new();
     readonly Dictionary<int, (long Start, long Cpu, long At)> cpuLast = new();
     readonly Dictionary<string, (string Name, ImageSource? Icon, string? Path)> appInfo = new();
@@ -82,6 +84,7 @@ sealed class Engine : Observable
     public Engine()
     {
         scheduler.RestoreAll();   // anything left over from a crash goes back first
+        powerMode.End();
         ChipName = (Registry.GetValue(@"HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\CentralProcessor\0", "ProcessorNameString", null) as string)?.Trim() ?? "Processor";
         var (p, e) = Native.CoreCounts();
         CoresText = e > 0 ? $"{p} performance + {e} efficiency cores" : $"{p} cores (no efficiency cores: moved apps get lower priority)";
@@ -111,7 +114,9 @@ sealed class Engine : Observable
     }
 
     public void RestoreAll() { scheduler.RestoreAll(); Tick(); }
-    public void Shutdown() { timer.Stop(); scheduler.RestoreAll(); Persist(); }
+    public void Shutdown() { timer.Stop(); scheduler.RestoreAll(); powerMode.End(); Persist(); }
+
+    public void SetBestPerformance(bool on) { Rules.BestPerformanceDuringBoost = on; SaveSettings(); if (!on) powerMode.End(); Tick(); }
     void SaveSettings() { try { Store.Save("settings.json", Rules); } catch { } }
     void Persist() { try { Store.Save("usage.json", usage); } catch { } lastPersist = DateTime.Now; }
 
@@ -183,6 +188,7 @@ sealed class Engine : Observable
         usage.Record(nowT, seconds, sessionActive, sessionActive && !wasActive, scheduler.Count);
         if ((nowT - lastPersist).TotalSeconds > 60) Persist();
         if (wasActive != sessionActive) Reschedule();
+        if (sessionActive && Rules.BestPerformanceDuringBoost && !paused) powerMode.Begin(); else powerMode.End();
 
         // What the window shows
         var moved = apps.Where(a => a.Pids.Any(scheduler.Contains))

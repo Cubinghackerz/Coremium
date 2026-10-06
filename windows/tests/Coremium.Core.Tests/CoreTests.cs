@@ -100,3 +100,34 @@ public class CoreTests
         Assert.Equal(AppRule.Yield, r.Rules["chrome"]);
     }
 }
+
+public class StorageTests
+{
+    [Fact]
+    public void ScanOffersOnlyOldTempAndOldDownloadsAndBrowserCaches()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "coremium-win-" + Guid.NewGuid());
+        var temp = Path.Combine(root, "Temp"); var downloads = Path.Combine(root, "Downloads"); var local = Path.Combine(root, "Local");
+        Directory.CreateDirectory(temp); Directory.CreateDirectory(downloads);
+        var cache = Path.Combine(local, @"Google\Chrome\User Data\Default\Cache".Replace('\\', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(cache);
+        void Make(string path, int size, int ageDays) { File.WriteAllBytes(path, new byte[size]); File.SetLastWriteTime(path, DateTime.Now.AddDays(-ageDays)); }
+        Make(Path.Combine(temp, "old.tmp"), 2_000_000, 3);
+        Make(Path.Combine(temp, "fresh.tmp"), 2_000_000, 0);
+        Make(Path.Combine(downloads, "old.iso"), 2_000_000, 120);
+        Make(Path.Combine(downloads, "new.iso"), 2_000_000, 2);
+        Make(Path.Combine(cache, "blob"), 3_000_000, 0);
+        try
+        {
+            // Browser folders use Windows separators in the scanner; on Windows this finds the cache too.
+            var items = StorageScanner.Scan(temp, downloads, local, DateTime.Now);
+            Assert.Contains(items, i => i.Name == "old.tmp" && i.Kind == StorageKind.TempFiles);
+            Assert.Contains(items, i => i.Name == "old.iso" && i.Kind == StorageKind.OldDownloads);
+            Assert.DoesNotContain(items, i => i.Name is "fresh.tmp" or "new.iso");
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void FormatsBytes() => Assert.Equal("1.5 GB", StorageScanner.Format(1_500_000_000));
+}

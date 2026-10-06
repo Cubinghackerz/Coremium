@@ -58,6 +58,8 @@ public partial class App : Application
             modes.DropDownItems.Add(new Forms.ToolStripMenuItem(Labels.Of(m), null, (_, _) => engine.SetMode(m)) { Checked = engine.Rules.Mode == m });
         menu.Items.Add(modes);
         menu.Items.Add(new Forms.ToolStripMenuItem("Pause Coremium", null, (_, _) => engine.Paused = !engine.Paused) { Checked = engine.Paused });
+        menu.Items.Add(new Forms.ToolStripMenuItem("Best performance power mode during boosts", null,
+            (_, _) => engine.SetBestPerformance(!engine.Rules.BestPerformanceDuringBoost)) { Checked = engine.Rules.BestPerformanceDuringBoost });
         menu.Items.Add(new Forms.ToolStripMenuItem("Start with Windows", null, (_, _) => SetStartup(!StartsWithWindows)) { Checked = StartsWithWindows });
         menu.Items.Add("Restore all apps now", null, (_, _) => engine.RestoreAll());
         menu.Items.Add(new Forms.ToolStripSeparator());

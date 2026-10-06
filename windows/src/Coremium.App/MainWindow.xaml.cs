@@ -48,6 +48,27 @@ public partial class MainWindow : Window
         AdvancedButton.Foreground = engine.Advanced ? Brushes.Black : Brushes.White;
     }
 
+    async void Storage_Click(object sender, RoutedEventArgs e)
+    {
+        var show = StorageView.Visibility != Visibility.Visible;
+        StorageView.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        AppsView.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+        StorageButton.Background = show ? Brushes.White : new SolidColorBrush(Color.FromArgb(0x16, 255, 255, 255));
+        StorageButton.Foreground = show ? Brushes.Black : Brushes.White;
+        if (show && engine.Storage.Rows.Count == 0) await engine.Storage.ScanAsync();
+    }
+
+    async void StorageScan_Click(object sender, RoutedEventArgs e) => await engine.Storage.ScanAsync();
+
+    async void StorageReview_Click(object sender, RoutedEventArgs e)
+    {
+        var (text, move, _) = engine.Storage.Review();
+        if (move.Count == 0) { engine.Storage.Status = "Nothing selected to move."; return; }
+        // Nothing moves without this explicit confirmation.
+        if (MessageBox.Show(this, text, "Coremium: review before moving", MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel) == MessageBoxResult.OK)
+            await engine.Storage.CleanAsync(move);
+    }
+
     void Mode_Click(object sender, RoutedEventArgs e) => engine.SetMode((Mode)((Button)sender).Tag);
     void Pause_Click(object sender, RoutedEventArgs e) => engine.Paused = !engine.Paused;
     void Advanced_Click(object sender, RoutedEventArgs e) => engine.Advanced = !engine.Advanced;
