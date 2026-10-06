@@ -81,3 +81,27 @@ final class StorageLargeFileTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: dir.appendingPathComponent("big.bin").path))
     }
 }
+
+final class StorageEdgeTests: XCTestCase {
+    /// Regression: a kind with no entries (e.g. an empty or unreadable Trash) must not crash the parallel sizing step.
+    func testScanningAnEmptyKindReturnsNothing() {
+        let home = FileManager.default.temporaryDirectory.appendingPathComponent("coremium-empty-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: home) }
+        try? FileManager.default.createDirectory(at: home.appendingPathComponent(".Trash"), withIntermediateDirectories: true)
+        XCTAssertEqual(StorageScanner.scan(home: home, kinds: [.trash]), [])
+        XCTAssertEqual(StorageScanner.scan(home: home, kinds: [.logs]), [], "missing folder")
+    }
+}
+
+final class InUseCacheTests: XCTestCase {
+    /// Regression: Chrome keeps its cache in a folder called "Google", which the old matcher missed.
+    func testRecognisesCachesOfOpenApps() {
+        let ids: Set<String> = ["com.google.Chrome", "com.spotify.client", "com.apple.Safari"]
+        let names: Set<String> = ["Google Chrome", "Spotify", "Safari"]
+        XCTAssertTrue(StorageCleaner.cacheBelongsToRunningApp("Google", bundleIDs: ids, appNames: names))
+        XCTAssertTrue(StorageCleaner.cacheBelongsToRunningApp("com.spotify.client", bundleIDs: ids, appNames: names))
+        XCTAssertTrue(StorageCleaner.cacheBelongsToRunningApp("com.apple.Safari.SafeBrowsing", bundleIDs: ids, appNames: names))
+        XCTAssertFalse(StorageCleaner.cacheBelongsToRunningApp("com.roblox.RobloxPlayer", bundleIDs: ids, appNames: names))
+        XCTAssertFalse(StorageCleaner.cacheBelongsToRunningApp("pip", bundleIDs: ids, appNames: names))
+    }
+}

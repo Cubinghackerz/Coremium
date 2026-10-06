@@ -15,15 +15,18 @@ final class StorageModel: ObservableObject {
     @Published var disk: DiskUsage? = DiskUsage.current()
     @Published var message = ""
     @Published var reviewing = false
-    private var generation = 0
+    /// Latest scan run per kind: a result is kept only if it belongs to the newest run for its own kind.
+    private var runs: [StorageKind: Int] = [:]
+    private var counter = 0
 
     var scanning: Bool { !pending.isEmpty }
 
     /// Scans each kind on its own, so a slow folder (or a macOS permission prompt) never holds up the others.
     func scan(_ kinds: [StorageKind] = StorageKind.standard) {
         guard pending.isDisjoint(with: kinds) else { return }
-        generation += 1
-        let run = generation
+        counter += 1
+        let run = counter
+        for kind in kinds { runs[kind] = run }
         message = ""
         waitingForPermission = false
         items.removeAll { kinds.contains($0.kind) }
@@ -33,7 +36,7 @@ final class StorageModel: ObservableObject {
                 let found = await Task.detached(priority: .utility) {
                     kind == .largeFiles ? StorageScanner.largeFiles() : StorageScanner.scan(kinds: [kind])
                 }.value
-                guard run == generation || kinds == [.largeFiles] else { return }
+                guard runs[kind] == run else { return }
                 items.append(contentsOf: found)
                 items.sort { $0.bytes > $1.bytes }
                 // Safe-to-clear kinds start selected; your downloads always need a deliberate tick.
@@ -44,7 +47,7 @@ final class StorageModel: ObservableObject {
         }
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 15_000_000_000)
-            if run == generation, !pending.isEmpty { waitingForPermission = true }
+            if kinds.contains(where: { runs[$0] == run && pending.contains($0) }) { waitingForPermission = true }
         }
     }
 
@@ -65,12 +68,10 @@ final class StorageModel: ObservableObject {
 
     /// Caches that belong to an app that is running right now: moving them could upset it, so they are skipped.
     var inUseCaches: [StorageItem] {
-        let running = Set(NSWorkspace.shared.runningApplications.compactMap { $0.bundleIdentifier?.lowercased() })
-        let names = Set(NSWorkspace.shared.runningApplications.compactMap { $0.localizedName?.lowercased() })
-        return selectedItems.filter { item in
-            guard item.kind == .appCaches else { return false }
-            let key = item.name.lowercased()
-            return running.contains(key) || names.contains(key) || running.contains { $0.hasPrefix(key + ".") || key.hasPrefix($0) }
+        let ids = Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier))
+        let names = Set(NSWorkspace.shared.runningApplications.compactMap(\.localizedName))
+        return selectedItems.filter {
+            $0.kind == .appCaches && StorageCleaner.cacheBelongsToRunningApp($0.name, bundleIDs: ids, appNames: names)
         }
     }
 

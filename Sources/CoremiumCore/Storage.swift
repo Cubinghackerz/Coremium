@@ -112,6 +112,7 @@ public enum StorageScanner {
                 candidates.append((child, kind))
             }
         }
+        guard !candidates.isEmpty else { return [] }
         var sizes = [Int64](repeating: 0, count: candidates.count)
         sizes.withUnsafeMutableBufferPointer { buffer in
             let base = buffer.baseAddress!
@@ -142,6 +143,22 @@ extension StorageScanner {
             }
         }
         return Array(found.sorted { $0.bytes > $1.bytes }.prefix(maxResults))
+    }
+}
+
+extension StorageCleaner {
+    /// True when a cache folder (named after a bundle id like "com.spotify.client" or a vendor like "Google") belongs to
+    /// an app that is open right now. Moving a cache out from under a running app can upset it, so those are skipped.
+    public static func cacheBelongsToRunningApp(_ cacheName: String, bundleIDs: Set<String>, appNames: Set<String>) -> Bool {
+        let key = cacheName.lowercased()
+        guard key.count >= 3 else { return false }
+        for id in bundleIDs.map({ $0.lowercased() }) {
+            if id == key || id.hasPrefix(key + ".") || key.hasPrefix(id + ".") || id.contains("." + key + ".") || id.hasSuffix("." + key) {
+                return true
+            }
+        }
+        for name in appNames.map({ $0.lowercased() }) where name == key || name.hasPrefix(key + " ") { return true }
+        return false
     }
 }
 

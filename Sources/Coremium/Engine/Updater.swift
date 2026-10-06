@@ -66,9 +66,14 @@ final class Updater: ObservableObject {
     /// A tiny detached shell waits for Coremium to quit (which restores every app), swaps the bundle and reopens it.
     private func relaunch(replacing target: URL, with newApp: URL) {
         let pid = ProcessInfo.processInfo.processIdentifier
+        let backup = target.path + ".previous-\(pid)"
+        // Move the old app aside, copy the new one in, and only then delete the old copy. If the copy fails, put the old
+        // app back and reopen it, so an update can never leave you without Coremium.
         let script = """
         while kill -0 \(pid) 2>/dev/null; do sleep 0.2; done
-        rm -rf "\(target.path)" && /usr/bin/ditto "\(newApp.path)" "\(target.path)" && open "\(target.path)"
+        mv "\(target.path)" "\(backup)" || exit 1
+        if /usr/bin/ditto "\(newApp.path)" "\(target.path)"; then rm -rf "\(backup)"; else rm -rf "\(target.path)"; mv "\(backup)" "\(target.path)"; fi
+        open "\(target.path)"
         """
         let shell = Process()
         shell.executableURL = URL(fileURLWithPath: "/bin/sh")

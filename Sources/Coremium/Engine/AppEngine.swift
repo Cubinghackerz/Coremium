@@ -511,7 +511,10 @@ final class AppEngine: ObservableObject {
             else if effective != .normal { source = "\(profile.mode.label) mode" }
             return AppRow(id: id ?? "pid:\(app.processIdentifier)", name: app.localizedName ?? id ?? "Unknown",
                           bundleID: id, path: app.bundleURL?.path, category: cat,
-                          override: id.flatMap { rules.rules[$0] },
+                          override: id.flatMap { id in
+                              if ruleScopeIsGame, let game = boostBundleID { return self.rules.gameRules[game]?[id] }
+                              return self.rules.rules[id]
+                          },
                           effective: effective,
                           demoted: demoted.contains(app.processIdentifier), cpu: (cpu[app.processIdentifier] ?? 0).rounded(),
                           pid: app.processIdentifier, processes: pids.count,
