@@ -56,104 +56,206 @@ final class StorageModel: ObservableObject {
     }
 }
 
+extension StorageKind {
+    /// Muted, distinct hues that sit quietly on the black panel.
+    var tint: Color {
+        switch self {
+        case .appCaches: return Color(red: 0.42, green: 0.80, blue: 0.98)
+        case .logs: return Color(red: 0.66, green: 0.58, blue: 0.98)
+        case .developerBuilds: return Color(red: 0.96, green: 0.72, blue: 0.45)
+        case .oldDownloads: return Color(red: 0.95, green: 0.50, blue: 0.70)
+        case .trash: return Color(red: 0.58, green: 0.64, blue: 0.72)
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .appCaches: return "shippingbox.fill"
+        case .logs: return "doc.text.fill"
+        case .developerBuilds: return "hammer.fill"
+        case .oldDownloads: return "arrow.down.circle.fill"
+        case .trash: return "trash.fill"
+        }
+    }
+}
+
+/// The disk as one ring: each reclaimable kind is a coloured arc, the rest of what's used is grey, free space is dark.
+private struct StorageRing: View {
+    let disk: DiskUsage?
+    let parts: [(StorageKind, Int64)]
+    let focus: StorageKind?
+    let scanning: Bool
+    @State private var spin = false
+
+    var body: some View {
+        let total = Double(max(disk?.total ?? 1, 1))
+        let segments = arcs(total: total)
+        ZStack {
+            Circle().stroke(Color.white.opacity(0.05), lineWidth: 14)
+            ForEach(segments.indices, id: \.self) { i in
+                let seg = segments[i]
+                Circle().trim(from: seg.from, to: max(seg.from, seg.to - 0.004))
+                    .stroke(seg.color.opacity(focus == nil || seg.kind == focus || seg.kind == nil ? 1 : 0.25),
+                            style: StrokeStyle(lineWidth: seg.kind == focus && focus != nil ? 17 : 14, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
+            }
+            if scanning {
+                Circle().trim(from: 0, to: 0.18)
+                    .stroke(AngularGradient(colors: [.clear, .white.opacity(0.7)], center: .center), style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                    .rotationEffect(.degrees(spin ? 270 : -90))
+                    .onAppear { withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) { spin = true } }
+            }
+            VStack(spacing: 1) {
+                Text(disk.map { formatBytes($0.available) } ?? "–").font(.system(size: 19, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white).minimumScaleFactor(0.7).lineLimit(1)
+                Text(disk.map { "free of \(formatBytes($0.total))" } ?? "").font(.system(size: 9.5, design: .rounded)).foregroundColor(Theme.textDim)
+            }
+            .padding(.horizontal, 22)
+        }
+        .animation(.easeOut(duration: 0.6), value: parts.map(\.1))
+        .animation(.easeOut(duration: 0.25), value: focus)
+    }
+
+    private struct Arc { let from: CGFloat; let to: CGFloat; let color: Color; let kind: StorageKind? }
+
+    private func arcs(total: Double) -> [Arc] {
+        guard let disk else { return [] }
+        var result: [Arc] = []
+        var cursor: CGFloat = 0
+        for (kind, bytes) in parts where bytes > 0 {
+            let len = CGFloat(Double(bytes) / total)
+            result.append(Arc(from: cursor, to: cursor + len, color: kind.tint, kind: kind))
+            cursor += len
+        }
+        let other = CGFloat(Double(disk.used) / total) - cursor
+        if other > 0 { result.append(Arc(from: cursor, to: cursor + other, color: Color.white.opacity(0.22), kind: nil)) }
+        return result
+    }
+}
+
 struct StorageTab: View {
     @ObservedObject var ui: NotchUIState
     @StateObject private var model = StorageModel()
     @State private var confirm = false
+    @State private var focus: StorageKind?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            header
-            if !model.scanned {
-                Card(padding: 14) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("See what's filling your Mac, and clear it safely.").font(.system(size: 13, weight: .semibold, design: .rounded))
-                        Text("Coremium looks only at caches, logs, Xcode build files, old downloads and the Trash. Everything it clears goes to the Trash first, never deleted for good, and your documents are never touched. macOS may ask once to let Coremium look in Downloads and the Trash; if they show as empty, allow it in System Settings › Privacy & Security › Files and Folders.")
-                            .font(.system(size: 11, design: .rounded)).foregroundColor(Theme.textDim).fixedSize(horizontal: false, vertical: true)
-                        Button(model.scanning ? "Scanning…" : "Scan now") { model.scan() }
-                            .buttonStyle(PrimaryButtonStyle()).disabled(model.scanning)
-                    }
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 18) {
+                StorageRing(disk: model.disk, parts: StorageKind.allCases.map { ($0, model.bytes($0)) }, focus: focus, scanning: model.scanning)
+                    .frame(width: 138, height: 138)
+                VStack(spacing: 2) {
+                    ForEach(StorageKind.allCases, id: \.self) { kind in categoryRow(kind) }
+                    otherRow
                 }
-            } else {
-                FlexScroll {
-                    VStack(spacing: 6) { ForEach(StorageKind.allCases, id: \.self) { kind in group(kind) } }
-                }
-                .frame(minHeight: 110, maxHeight: .infinity)
-                footer
             }
+            detail
+            footer
         }
         .onAppear { if !model.scanned && !model.scanning { model.scan() } }
+        // Open the biggest reclaimable category once a scan finishes, so the space below the ring is never empty.
+        .onChange(of: model.scanning) { scanning in
+            guard !scanning, focus == nil else { return }
+            focus = StorageKind.allCases.filter(\.cleanable).max { model.bytes($0) < model.bytes($1) }
+        }
         .confirmationDialog("Move \(formatBytes(model.selectedBytes)) to the Trash?", isPresented: $confirm) {
             Button("Move to Trash") { model.clean() }
             Button("Cancel", role: .cancel) {}
-        } message: { Text("\(model.selectedItems.count) items. You can put them back from the Trash.") }
+        } message: { Text("\(model.selectedItems.count) items. Nothing is deleted until you empty the Trash.") }
     }
 
-    private var header: some View {
-        HStack(spacing: 10) {
-            if let disk = model.disk {
-                GeometryReader { proxy in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Color.white.opacity(0.08))
-                        Capsule().fill(LinearGradient(colors: [CoremiumLogo.cyan, CoremiumLogo.violet], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: proxy.size.width * CGFloat(Double(disk.used) / Double(max(disk.total, 1))))
-                    }
-                }
-                .frame(height: 8)
-                Text("\(formatBytes(disk.available)) free of \(formatBytes(disk.total))")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundColor(.white.opacity(0.85)).fixedSize()
-            }
-            Spacer(minLength: 0)
-            if model.scanned {
-                Button(model.scanning ? "Scanning…" : "Rescan") { model.scan() }.buttonStyle(GhostButtonStyle()).disabled(model.scanning)
-            }
-        }
-    }
-
-    @ViewBuilder private func group(_ kind: StorageKind) -> some View {
+    private func categoryRow(_ kind: StorageKind) -> some View {
         let items = model.items.filter { $0.kind == kind }
-        let total = model.bytes(kind)
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
-                Button { if model.expanded.contains(kind) { model.expanded.remove(kind) } else { model.expanded.insert(kind) } } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: model.expanded.contains(kind) ? "chevron.down" : "chevron.right").font(.system(size: 8, weight: .bold)).frame(width: 10)
-                        Text(kind.title).font(.system(size: 12, weight: .semibold, design: .rounded))
-                        Text(formatBytes(total)).font(.system(size: 11, design: .rounded)).foregroundColor(Theme.textDim)
-                    }
-                }.buttonStyle(.plain).help(kind.explanation)
-                Spacer()
-                if kind.cleanable, !items.isEmpty {
-                    Button(items.allSatisfy { model.selected.contains($0.id) } ? "Clear selection" : "Select all") {
-                        model.setAll(kind, on: !items.allSatisfy { model.selected.contains($0.id) })
-                    }.buttonStyle(.plain).font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundColor(CoremiumLogo.cyan)
+        let bytes = model.bytes(kind)
+        let allOn = !items.isEmpty && items.allSatisfy { model.selected.contains($0.id) }
+        let someOn = items.contains { model.selected.contains($0.id) }
+        let focused = focus == kind
+        return HStack(spacing: 9) {
+            if kind.cleanable {
+                Button { model.setAll(kind, on: !allOn) } label: {
+                    Image(systemName: allOn ? "checkmark.circle.fill" : someOn ? "minus.circle.fill" : "circle")
+                        .font(.system(size: 13)).foregroundColor(someOn ? kind.tint : .white.opacity(0.28))
                 }
-            }
-            if items.isEmpty {
-                Text("Nothing big here.").font(.system(size: 10.5, design: .rounded)).foregroundColor(Theme.textDim).padding(.leading, 16)
-            } else if model.expanded.contains(kind) || items.count <= 3 {
-                ForEach(items.prefix(model.expanded.contains(kind) ? 60 : 3)) { item in row(item) }
+                .buttonStyle(.plain).disabled(items.isEmpty)
+                .help(allOn ? "Leave all \(kind.title.lowercased()) out" : "Include all \(kind.title.lowercased())")
             } else {
-                ForEach(items.prefix(3)) { item in row(item) }
-                Text("\(items.count - 3) more. Click \(kind.title) to see all.").font(.system(size: 10, design: .rounded)).foregroundColor(Theme.textDim).padding(.leading, 16)
+                Image(systemName: "lock.fill").font(.system(size: 10)).foregroundColor(.white.opacity(0.28)).frame(width: 13)
+                    .help("Coremium never empties the Trash.")
             }
-            if kind == .trash, !items.isEmpty {
-                Text(kind.explanation).font(.system(size: 10, design: .rounded)).foregroundColor(Theme.textDim).padding(.leading, 16)
+            Button { withAnimation(.easeOut(duration: 0.2)) { focus = focused ? nil : kind } } label: {
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 2.5).fill(kind.tint).frame(width: 9, height: 9)
+                    Text(kind.title).font(.system(size: 12, weight: focused ? .semibold : .medium, design: .rounded))
+                        .foregroundColor(.white.opacity(focused ? 1 : 0.85))
+                    Spacer(minLength: 6)
+                    Text(model.scanned ? formatBytes(bytes) : "…").font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .monospacedDigit().foregroundColor(.white.opacity(bytes > 0 ? 0.9 : 0.35))
+                    Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.white.opacity(focused ? 0.8 : 0.25)).rotationEffect(.degrees(focused ? 90 : 0))
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .help(kind.explanation)
         }
-        .padding(.horizontal, 10).padding(.vertical, 7)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.05)))
+        .padding(.horizontal, 10).padding(.vertical, 5.5)
+        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.white.opacity(focused ? 0.08 : 0)))
     }
 
-    private func row(_ item: StorageItem) -> some View {
-        HStack(spacing: 8) {
+    private var otherRow: some View {
+        let reclaim = StorageKind.allCases.reduce(Int64(0)) { $0 + model.bytes($1) }
+        let other = max(0, (model.disk?.used ?? 0) - reclaim)
+        return HStack(spacing: 8) {
+            Color.clear.frame(width: 13, height: 1)
+            RoundedRectangle(cornerRadius: 2.5).fill(Color.white.opacity(0.22)).frame(width: 9, height: 9)
+            Text("Everything else").font(.system(size: 12, design: .rounded)).foregroundColor(Theme.textDim)
+            Spacer(minLength: 6)
+            Text(formatBytes(other)).font(.system(size: 12, design: .rounded)).monospacedDigit().foregroundColor(Theme.textDim)
+            Color.clear.frame(width: 8, height: 1)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 4)
+        .help("Apps, documents, photos and the system. Coremium never touches these.")
+    }
+
+    @ViewBuilder private var detail: some View {
+        if let kind = focus {
+            let items = model.items.filter { $0.kind == kind }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(kind.explanation).font(.system(size: 10.5, design: .rounded)).foregroundColor(Theme.textDim)
+                    .fixedSize(horizontal: false, vertical: true)
+                FlexScroll {
+                    VStack(spacing: 2) {
+                        if items.isEmpty {
+                            Text(model.scanned ? "Nothing large here." : "Scanning…").font(.system(size: 11, design: .rounded))
+                                .foregroundColor(Theme.textDim).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 6)
+                        }
+                        ForEach(items.prefix(80)) { item in itemRow(item) }
+                    }
+                }
+            }
+            .padding(10)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.white.opacity(0.04)))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(kind.tint.opacity(0.18), lineWidth: 1))
+            .transition(.opacity)
+        } else {
+            Text(model.scanned
+                 ? "Choose a category to see what's inside. Everything you clear goes to the Trash first, and documents are never touched."
+                 : "Looking at caches, logs, Xcode build files, old downloads and the Trash. Read-only; nothing changes until you choose. macOS may ask once to let Coremium look in Downloads and the Trash.")
+                .font(.system(size: 10.5, design: .rounded)).foregroundColor(Theme.textDim)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .padding(.horizontal, 2)
+        }
+    }
+
+    private func itemRow(_ item: StorageItem) -> some View {
+        let on = model.selected.contains(item.id)
+        return HStack(spacing: 9) {
             if item.kind.cleanable {
                 Button { model.toggle(item) } label: {
-                    Image(systemName: model.selected.contains(item.id) ? "checkmark.square.fill" : "square")
-                        .foregroundColor(model.selected.contains(item.id) ? CoremiumLogo.cyan : .white.opacity(0.4))
+                    Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.system(size: 12))
+                        .foregroundColor(on ? item.kind.tint : .white.opacity(0.28))
                 }.buttonStyle(.plain)
-            } else {
-                Image(systemName: "trash").foregroundColor(.white.opacity(0.3))
             }
             VStack(alignment: .leading, spacing: 0) {
                 Text(item.name).font(.system(size: 11.5, weight: .medium, design: .rounded)).lineLimit(1).truncationMode(.middle)
@@ -163,19 +265,24 @@ struct StorageTab: View {
                 }
             }
             Spacer(minLength: 6)
-            Text(formatBytes(item.bytes)).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundColor(.white.opacity(0.7)).fixedSize()
+            Text(formatBytes(item.bytes)).font(.system(size: 11, design: .rounded)).monospacedDigit().foregroundColor(.white.opacity(0.7))
+            Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: {
+                Image(systemName: "magnifyingglass").font(.system(size: 9.5)).foregroundColor(.white.opacity(0.35))
+            }.buttonStyle(.plain).help("Show in Finder")
         }
-        .padding(.leading, 16)
+        .padding(.vertical, 3).padding(.horizontal, 4)
     }
 
     private var footer: some View {
         HStack(spacing: 10) {
-            Text(model.message.isEmpty ? "Everything cleared goes to the Trash first." : model.message)
-                .font(.system(size: 10.5, design: .rounded)).foregroundColor(model.message.isEmpty ? Theme.textDim : .green)
+            Text(model.message.isEmpty ? (model.scanning ? "Scanning…" : "Selected: \(formatBytes(model.selectedBytes))") : model.message)
+                .font(.system(size: 10.5, design: .rounded)).foregroundColor(model.message.isEmpty ? Theme.textDim : Color(red: 0.45, green: 0.9, blue: 0.65))
                 .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 4)
-            Button("Move \(formatBytes(model.selectedBytes)) to Trash") { confirm = true }
-                .buttonStyle(PrimaryButtonStyle()).disabled(model.selectedItems.isEmpty).fixedSize()
+            Button { model.scan() } label: { Image(systemName: "arrow.clockwise").font(.system(size: 11, weight: .semibold)) }
+                .buttonStyle(GhostButtonStyle()).disabled(model.scanning).help("Scan again")
+            Button(model.selectedItems.isEmpty ? "Move to Trash" : "Move \(formatBytes(model.selectedBytes)) to Trash") { confirm = true }
+                .buttonStyle(PrimaryButtonStyle()).disabled(model.selectedItems.isEmpty || model.scanning).fixedSize()
         }
     }
 }
