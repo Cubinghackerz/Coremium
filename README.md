@@ -143,7 +143,7 @@ No paid Apple developer account is needed, so the app is **ad-hoc signed, not no
    trying to open it, then confirm Open. See [Apple's approval instructions](https://support.apple.com/en-au/102445).
    A warning that the app is damaged or will damage your computer is different: stop and report the exact message.
 3. Automatic is enabled by default. The source build's short first-launch screen shows actual activity; the longer
-   tour is optional (published v2.0.1 still has the earlier tour). Hover the notch or click the menu-bar chip icon.
+   tour is optional. Hover the notch or click the menu-bar chip icon.
    While a game is in
    front the pill ignores the mouse so it never gets in the way; use the menu-bar icon then.
 

@@ -1,8 +1,8 @@
 {
   "mac": {
-    "version": "2.0.1",
-    "download": "https://github.com/Cubinghackerz/Coremium/releases/download/v2.0.1/Coremium-2.0.1.dmg",
-    "checksums": "https://github.com/Cubinghackerz/Coremium/releases/download/v2.0.1/Coremium-2.0.1.sha256"
+    "version": "2.0.2",
+    "download": "https://github.com/Cubinghackerz/Coremium/releases/download/v2.0.2/Coremium-2.0.2.dmg",
+    "checksums": "https://github.com/Cubinghackerz/Coremium/releases/download/v2.0.2/Coremium-2.0.2.sha256"
   },
   "windows": {
     "version": "0.1.1-beta",
