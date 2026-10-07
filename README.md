@@ -150,6 +150,12 @@ No paid Apple developer account is needed, so the app is **ad-hoc signed, not no
 Supports **macOS 13 through 27**, Apple Silicon and Intel (universal binary). Developed and tested on macOS 27 / M3 Pro;
 other versions are built against the macOS 13 target but not individually tested yet. Reports are welcome.
 
+With Homebrew:
+
+```bash
+brew install --cask cubinghackerz/tap/coremium
+```
+
 Prefer Terminal? First [inspect the installer](scripts/install.sh). It verifies the downloaded checksum and removes
 quarantine, so it bypasses the normal first-launch approval. Only use it if you trust that behavior:
 
