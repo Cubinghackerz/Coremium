@@ -102,7 +102,11 @@ final class AppEngine: ObservableObject {
     @Published private(set) var usage = UsageLedger()
     @Published private(set) var suggestions: [Suggestion] = []
     @Published private(set) var memory = MemoryInfo.current()
+    /// Main-thread time of the last tick, and how long its measurement took off the main thread.
     @Published private(set) var tickMs = 0.0
+    @Published private(set) var measureMs = 0.0
+    /// Longest main-thread tick since launch (the profiler's budget check).
+    private(set) var maxTickMs = 0.0
     /// Device-wide GPU utilization (%), and the renderer/tiler split for Advanced. Nil until first measured.
     /// The boosted app whose own rules are in force right now, and whether chips edit those rules or everyone's.
     @Published private(set) var boostBundleID: String?
@@ -113,7 +117,6 @@ final class AppEngine: ObservableObject {
     private var tally: SessionTally?
     @Published private(set) var gpuDevicePercent: Int?
     @Published private(set) var gpuDetail = ""
-    private let gpuSampler = GPUSampler()
     private var gpuByApp: [Int32: Double] = [:]
     /// Coremium's own CPU use (percent of one core): the cost of the optimiser itself.
     @Published private(set) var ownCPU = 0.0
@@ -169,8 +172,9 @@ final class AppEngine: ObservableObject {
     private var needsLiveStats: Bool { isPanelExpanded || isWindowVisible }
 
     private let controller: PriorityController
-    private let cpuSampler = ProcessCPUSampler()
-    private let loadSampler = CPULoadSampler()
+    private let measurer = EngineMeasurer()
+    private var measuring = false
+    private var tickPending = false
     private var installed: [InstalledApp] { installedApps }
     private var indexCache = AppIndexCache()
     private var watchers: [DispatchSourceFileSystemObject] = []
@@ -393,8 +397,11 @@ final class AppEngine: ObservableObject {
         return result
     }
 
+    /// One evaluation: decide what needs measuring here, measure off the main thread, then decide and publish here.
     func tick() {
         guard !isPreview, !deferTickWhileAnimating() else { return }
+        // One measurement at a time; anything that asks meanwhile gets one fresh tick right after it.
+        if measuring { tickPending = true; return }
         let now = Date()
         let seconds = min(now.timeIntervalSince(lastTickAt), 60)
         lastTickAt = now
@@ -416,17 +423,9 @@ final class AppEngine: ObservableObject {
         let sampling = EngineSamplingPlan(paused: paused, panelVisible: needsLiveStats,
             sessionActive: sessionActive, lowPowerMode: lowPower, uptime: uptime,
             lastDiagnosticsAt: lastDiagnosticsAt, lastFootprintsAt: lastFootprintsAt)
-        if sampling.samplesCPU {
-            let loads = loadSampler.sample()
-            if loads != cpuLoads { cpuLoads = loads }
-        }
-        if sampling.samplesDiagnostics {
-            let reading = MemoryInfo.current()
-            if reading != memory { memory = reading }
-            lastDiagnosticsAt = uptime
-        }
+        if sampling.samplesDiagnostics { lastDiagnosticsAt = uptime }
+        if sampling.samplesFootprints { lastFootprintsAt = uptime }
 
-        let snapshot = ProcessSnapshot.capture()
         let ownPid = ProcessInfo.processInfo.processIdentifier
         let running = NSWorkspace.shared.runningApplications.filter {
             $0.activationPolicy == .regular && !$0.isTerminated && $0.processIdentifier != ownPid
@@ -436,25 +435,95 @@ final class AppEngine: ObservableObject {
         for app in running { if let id = app.bundleIdentifier { categories[id] = category(for: app) } }
         let front = NSWorkspace.shared.frontmostApplication?.processIdentifier
 
-        // CPU use of every process in every app, measured once per tick.
-        cpuSampler.prune(keeping: Set(snapshot.entries.keys))
-        var tree: [Int32: [Int32]] = [:]
-        var allPids: [Int32] = []
-        var seen = Set<Int32>()
         // Idle and panel closed: only apps that could start or hold a boost need measuring, not every browser tab.
         let lightweight = !needsLiveStats && !sessionActive && !paused
         let watched: Set<AppCategory> = [.game, .creative, .localAI, .developer]
-        for app in apps {
-            if lightweight, app.pid != front, rules.rules[app.bundleID ?? ""] != .boost,
-               !(app.bundleID.flatMap { categories[$0] }.map(watched.contains) ?? false) {
-                tree[app.pid] = [app.pid]
-                continue
-            }
-            let pids = snapshot.tree(of: app.pid)
-            tree[app.pid] = pids
-            for pid in pids where seen.insert(pid).inserted { allPids.append(pid) }
+        let expand = Set(apps.filter { app in
+            !lightweight || app.pid == front || rules.rules[app.bundleID ?? ""] == .boost
+                || (app.bundleID.flatMap { categories[$0] }.map(watched.contains) ?? false)
+        }.map(\.pid))
+
+        let context = TickContext(now: now, seconds: seconds, running: running, apps: apps, categories: categories,
+                                  front: front, ownPid: ownPid)
+        measuring = true
+        measurer.measure(MeasureRequest(apps: apps, ownPid: ownPid, expand: expand, samplesCPU: sampling.samplesCPU,
+                                        samplesDiagnostics: sampling.samplesDiagnostics,
+                                        samplesFootprints: sampling.samplesFootprints)) { [weak self] m in
+            self?.finishTick(m, context)
         }
-        let perPid = cpuSampler.percentages(of: allPids + [ownPid])
+    }
+
+    /// A main-thread tick over 50 ms can be felt, so it is logged locally with its measurement time.
+    private func finishTiming(startedAt start: UInt64, measureMs measured: Double) {
+        let ms = Double(DispatchTime.now().uptimeNanoseconds - start) / 1e6
+        maxTickMs = max(maxTickMs, ms)
+        // Only the open panel shows these; don't re-render a closed one every tick.
+        if needsLiveStats {
+            tickMs = ms
+            measureMs = measured
+        }
+        if ms > 50 || measured > 1000 {
+            SettingsStore.logDiagnostic(String(format: "slow tick: main %.1f ms, measure %.1f ms, %d apps, panel %@, session %@",
+                                               ms, measured, rows.count, needsLiveStats ? "open" : "closed",
+                                               sessionActive ? "on" : "off"))
+        }
+    }
+
+    /// Plain text for bug reports: versions, current state and the local slow-tick log. Copied only when asked.
+    func diagnosticsReport() -> String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let log = (try? String(contentsOf: SettingsStore.diagnosticsURL, encoding: .utf8)) ?? ""
+        let recent = log.split(separator: "\n").suffix(40).joined(separator: "\n")
+        return """
+        Coremium \(version) on macOS \(ProcessInfo.processInfo.operatingSystemVersionString)
+        \(chip.brand): \(chip.performanceCores)P + \(chip.efficiencyCores)E, \(chip.memoryBytes / 1_073_741_824) GB
+        mode \(rules.mode.rawValue) (\(activeProfile.mode.rawValue)), paused \(paused), session \(sessionActive), \
+        \(rows.count) apps, \(demotedCount) processes moved
+        tick \(String(format: "%.1f", tickMs)) ms (max \(String(format: "%.1f", maxTickMs)) ms), \
+        measuring \(String(format: "%.0f", measureMs)) ms, Coremium CPU \(ownCPU)%
+        Recent slow ticks:
+        \(recent.isEmpty ? "none" : recent)
+        """
+    }
+
+    private struct TickContext {
+        let now: Date
+        let seconds: TimeInterval
+        let running: [NSRunningApplication]
+        let apps: [AppProcess]
+        let categories: [String: AppCategory]
+        let front: Int32?
+        let ownPid: Int32
+    }
+
+    private func finishTick(_ m: Measurement, _ context: TickContext) {
+        // Publishing re-renders the panel, so results that land mid-animation wait for it to finish.
+        let remaining = panelAnimatingUntil - ProcessInfo.processInfo.systemUptime
+        if remaining > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + remaining) { [weak self] in
+                MainActor.assumeIsolated { self?.finishTick(m, context) }
+            }
+            return
+        }
+        measuring = false
+        defer {
+            if tickPending { tickPending = false; tick() }
+        }
+        // Paused while measuring: the pending tick restores; never apply a measurement taken before the pause.
+        guard !(paused && !needsLiveStats) else { tickPending = true; return }
+        apply(m, context)
+    }
+
+    private func apply(_ m: Measurement, _ context: TickContext) {
+        let applyStart = DispatchTime.now().uptimeNanoseconds
+        let signpost = EngineMeasurer.signposter.beginInterval("apply")
+        defer { EngineMeasurer.signposter.endInterval("apply", signpost) }
+        let now = context.now, seconds = context.seconds, running = context.running, apps = context.apps
+        let categories = context.categories, front = context.front, ownPid = context.ownPid
+        if let loads = m.loads, loads != cpuLoads { cpuLoads = loads }
+        if let reading = m.memory, reading != memory { memory = reading }
+        let snapshot = m.snapshot, tree = m.tree, perPid = m.perPid
+
         let ownNow = ((perPid[ownPid] ?? 0) * 10).rounded() / 10
         if abs(ownNow - ownCPU) >= 0.5 { ownCPU = ownNow }
         var cpu: [Int32: Double] = [:]
@@ -463,15 +532,12 @@ final class AppEngine: ObservableObject {
         // Advisory diagnostics share a slower budget; the adaptive policy needs CPU only.
         let appPids = Set(apps.map(\.pid))
         var gpu = gpuByApp.filter { appPids.contains($0.key) }
-        if sampling.samplesDiagnostics {
-            let reading = GPUStats.read()
-            let perPidGPU = gpuSampler.percentages(from: reading)
-            for app in apps { gpu[app.pid] = (tree[app.pid] ?? [app.pid]).reduce(0) { $0 + (perPidGPU[$1] ?? 0) } }
+        if let (reading, perApp) = m.gpu {
+            gpu.merge(perApp) { $1 }
             if gpuDevicePercent != reading.devicePercent { gpuDevicePercent = reading.devicePercent }
             let detail = "renderer \(reading.rendererPercent ?? 0)% · tiler \(reading.tilerPercent ?? 0)%"
             if gpuDetail != detail { gpuDetail = detail }
-        } else if !sampling.samplesCPU {
-            gpuSampler.reset()
+        } else if m.gpuReset {
             gpu = [:]
         }
         gpuByApp = gpu
@@ -486,6 +552,7 @@ final class AppEngine: ObservableObject {
             boostAppFocused = false
             activeProfile = .balanced
             publishRows(running: running, snapshot: snapshot, cpu: cpu, categories: categories, profile: .balanced, front: front, trees: tree)
+            finishTiming(startedAt: applyStart, measureMs: m.milliseconds)
             return
         }
 
@@ -552,11 +619,10 @@ final class AppEngine: ObservableObject {
             if swapGrowth != growth { swapGrowth = growth }
         }
         // Detailed per-process memory is UI-only and slower than the rule loop.
-        if sampling.samplesFootprints {
-            lastFootprintsAt = uptime
+        if let footprints = m.footprints {
             var hogs: [MemoryHog] = []
             for (index, app) in apps.enumerated() {
-                let bytes = (tree[app.pid] ?? [app.pid]).reduce(UInt64(0)) { $0 + (ProcessCPUSampler.footprint(of: $1) ?? 0) }
+                let bytes = footprints[app.pid] ?? 0
                 if bytes > 300_000_000 {
                     hogs.append(MemoryHog(pid: app.pid, name: running[index].localizedName ?? app.bundleID ?? "App", bundleID: app.bundleID, bytes: bytes))
                 }
@@ -585,7 +651,7 @@ final class AppEngine: ObservableObject {
 
         publishRows(running: running, snapshot: snapshot, cpu: cpu, categories: categories, profile: profile, front: front, trees: tree,
                     rules: effRules)
-        tickMs = Date().timeIntervalSince(now) * 1000
+        finishTiming(startedAt: applyStart, measureMs: m.milliseconds)
         if wasActive != sessionActive { reschedule() }
     }
 

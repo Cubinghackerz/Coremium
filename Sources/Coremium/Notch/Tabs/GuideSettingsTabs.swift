@@ -1,4 +1,5 @@
 import CoremiumCore
+import AppKit
 import SwiftUI
 
 struct GuideTab: View {
@@ -77,6 +78,7 @@ struct SettingsTab: View {
     @ObservedObject var engine: AppEngine
     @ObservedObject var ui: NotchUIState
     @State private var confirmReset = false
+    @State private var copiedDiagnostics = false
 
     var body: some View {
         FlexScroll {
@@ -144,8 +146,18 @@ struct SettingsTab: View {
                             Button("Reset settings…") { confirmReset = true }.buttonStyle(GhostButtonStyle())
                             Spacer(minLength: 0)
                         }
-                        Text("Coremium \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") · MIT license · not affiliated with Apple")
-                            .font(.system(size: 10, design: .rounded)).foregroundColor(Theme.textDim)
+                        HStack {
+                            Text("Coremium \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") · MIT license · not affiliated with Apple")
+                                .font(.system(size: 10, design: .rounded)).foregroundColor(Theme.textDim)
+                            Spacer(minLength: 6)
+                            Button(copiedDiagnostics ? "Copied" : "Copy diagnostics") {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(engine.diagnosticsReport(), forType: .string)
+                                copiedDiagnostics = true
+                            }
+                            .buttonStyle(.plain).font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundColor(.white.opacity(0.7))
+                            .help("Copies versions, current state and the local log of slow moments, for a bug report. Nothing is sent.")
+                        }
                     }
                 }
             }

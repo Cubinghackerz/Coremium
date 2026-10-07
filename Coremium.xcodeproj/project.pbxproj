@@ -33,6 +33,7 @@
 		61D22354D379EEE018CD81A7 /* UpdateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967B9E60735B749128D1E083 /* UpdateTests.swift */; };
 		6690F54A6016421F65A2F6C1 /* CoremiumCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9CBE18C970F19FD1BF1D53C0 /* CoremiumCore.framework */; };
 		6C367722690DA205B3890D93 /* SamplerResourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37AAF2E7C7881B912DB9AED3 /* SamplerResourceTests.swift */; };
+		6D89947EFC0C5D259F10BB11 /* EngineMeasurer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B2499BA00FE49F6C7D0AE5 /* EngineMeasurer.swift */; };
 		775761E4275598427C54A361 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68C498138F008AAB199BFD0E /* Theme.swift */; };
 		79A4F2961D1296CF633EA3D5 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE41AA1A660DFDC1BC953888 /* Storage.swift */; };
 		7AA508EBA07B72E298F7C7D9 /* PriorityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721D5BF78DEB8ED6703ACA05 /* PriorityController.swift */; };
@@ -150,6 +151,7 @@
 		CEE5FB10CF173B7182E046D9 /* WorkloadLearner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkloadLearner.swift; sourceTree = "<group>"; };
 		D009C618F2267E1E67D04DF2 /* AdaptiveAutomaticTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveAutomaticTests.swift; sourceTree = "<group>"; };
 		D40FF670FF732AEBF2D4C9E3 /* RuleEvaluatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleEvaluatorTests.swift; sourceTree = "<group>"; };
+		D7B2499BA00FE49F6C7D0AE5 /* EngineMeasurer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineMeasurer.swift; sourceTree = "<group>"; };
 		D9E27FCCBC5D12EB1D9E5FD8 /* CPUUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUUsage.swift; sourceTree = "<group>"; };
 		E0CBB82F7AF85C03A232C477 /* NotchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchController.swift; sourceTree = "<group>"; };
 		E64D7DA828B6F747118C7F07 /* FullscreenDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenDetection.swift; sourceTree = "<group>"; };
@@ -276,6 +278,7 @@
 			isa = PBXGroup;
 			children = (
 				8FB0A42591D57283FC98E9A0 /* AppEngine.swift */,
+				D7B2499BA00FE49F6C7D0AE5 /* EngineMeasurer.swift */,
 				6DB0755C3842D348B8AC1783 /* Updater.swift */,
 			);
 			path = Engine;
@@ -498,6 +501,7 @@
 				8D1063DC962024E014D5F01E /* Automation.swift in Sources */,
 				421361F07B4991BA64AF0240 /* ChipView.swift in Sources */,
 				0C2E3AA3B463807A604C96AC /* CoremiumApp.swift in Sources */,
+				6D89947EFC0C5D259F10BB11 /* EngineMeasurer.swift in Sources */,
 				4A440635B9A8016C00F7CBFB /* FullscreenFix.swift in Sources */,
 				9DAA5E87863F2E1F9F6EBDEB /* GuideSettingsTabs.swift in Sources */,
 				04A02B8BA38AFC9CBE0E9EF3 /* InsightsTab.swift in Sources */,

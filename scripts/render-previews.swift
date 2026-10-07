@@ -36,6 +36,7 @@ struct RenderPreviews {
             let engine = AppEngine()
             let sampler = ProcessCPUSampler()
             let pid = ProcessInfo.processInfo.processIdentifier
+            var idleCPU = 0.0
             for phase in ["idle", "closed", "paused", "open"] {
                 engine.paused = true
                 engine.rules.mode = phase == "idle" ? .balanced : .automatic
@@ -49,13 +50,18 @@ struct RenderPreviews {
                 let elapsed = ProcessInfo.processInfo.systemUptime - start
                 let cpu = Double((sampler.cpuNanos(of: pid) ?? before) - before) / 1e9 / elapsed * 100
                 let mib = Double(ProcessCPUSampler.footprint(of: pid) ?? 0) / 1_048_576
-                print(String(format: "PROFILE %@: %.3f%% of one CPU core, %.1f MiB footprint, %.1fs; session=%@; last tick %.2fms",
-                    phase, cpu, mib, elapsed, engine.sessionActive.description, engine.tickMs))
+                print(String(format: "PROFILE %@: %.3f%% of one CPU core, %.1f MiB footprint, %.1fs; session=%@; max main-thread tick %.2fms",
+                    phase, cpu, mib, elapsed, engine.sessionActive.description, engine.maxTickMs))
                 fflush(stdout)
+                if phase == "idle" { idleCPU = cpu }
             }
             engine.shutdown()
             print("Engine-only read-only profile; no native UI drawing or workload speed-up measured.")
-            return
+            // Budget: the main thread never stalls long enough to be felt, and idle stays nearly free.
+            let ok = engine.maxTickMs <= 50 && idleCPU <= 0.15
+            print(String(format: "%@ budget: max main-thread tick %.1f ms (limit 50), idle %.3f%% (limit 0.15%%)",
+                         ok ? "PASS" : "FAIL", engine.maxTickMs, idleCPU))
+            exit(ok ? 0 : 1)
         }
         let engine = AppEngine(isPreview: true)
         if CommandLine.arguments.contains("--test-notch") {

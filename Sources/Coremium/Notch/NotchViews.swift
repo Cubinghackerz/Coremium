@@ -426,7 +426,7 @@ private struct StatusLine: View {
         if engine.sessionActive { parts.append("session \(formatDuration(engine.sessionSeconds))") }
         parts.append("grace \(Int(engine.rules.graceSeconds)) s")
         parts.append("\(engine.ledgerCount) procs on E-cores")
-        parts.append(String(format: "tick %.1f ms", engine.tickMs))
+        parts.append(String(format: "tick %.1f ms (+%.0f ms measuring)", engine.tickMs, engine.measureMs))
         return parts.joined(separator: " · ")
     }
 }

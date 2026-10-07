@@ -17,6 +17,18 @@ enum SettingsStore {
     static var indexURL: URL { directory.appendingPathComponent("app-index.json") }
     static var usageURL: URL { directory.appendingPathComponent("usage.json") }
     static var learningURL: URL { directory.appendingPathComponent("learning.json") }
+    static var diagnosticsURL: URL { directory.appendingPathComponent("diagnostics.log") }
+
+    /// Appends one line to a small local log (never sent anywhere). Keeps the newest ~100 KB.
+    static func logDiagnostic(_ line: String) {
+        let url = diagnosticsURL
+        let stamp = ISO8601DateFormatter().string(from: Date())
+        var text = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+        text += "\(stamp) \(line)\n"
+        if text.utf8.count > 100_000 { text = String(text.suffix(80_000)) }
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try? text.write(to: url, atomically: true, encoding: .utf8)
+    }
 
     static func load() -> RuleSet {
         guard let data = try? Data(contentsOf: settingsURL),
