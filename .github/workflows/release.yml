@@ -21,3 +21,29 @@ jobs:
             dist/*.dmg
             dist/*.sha256
           generate_release_notes: true
+      - name: Update Homebrew cask
+        # Needs a TAP_TOKEN secret: a token that can push to Cubinghackerz/homebrew-tap. Without it the release still
+        # succeeds and this step only prints a notice.
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TAP_TOKEN:-}" ]; then
+            echo "::notice::TAP_TOKEN is not set, so the Homebrew cask was not updated."
+            exit 0
+          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          SHA="$(awk '/\.dmg$/ { print $1 }' "dist/Coremium-$VERSION.sha256")"
+          [ -n "$SHA" ] || { echo "::error::No DMG checksum in dist/Coremium-$VERSION.sha256"; exit 1; }
+          TAP_DIR="$(mktemp -d)"
+          git clone --depth 1 "https://x-access-token:$TAP_TOKEN@github.com/Cubinghackerz/homebrew-tap.git" "$TAP_DIR"
+          CASK="$TAP_DIR/Casks/coremium.rb"
+          # Only the version and checksum change; the rest of the cask (caveats, uninstall, zap) is kept.
+          sed -i '' -E "s/^  version \".*\"/  version \"$VERSION\"/; s/^  sha256 \".*\"/  sha256 \"$SHA\"/" "$CASK"
+          grep -q "version \"$VERSION\"" "$CASK" && grep -q "sha256 \"$SHA\"" "$CASK"
+          cd "$TAP_DIR"
+          git config user.name "Coremium Release"
+          git config user.email "releases@coremium.local"
+          git add Casks/coremium.rb
+          git diff --cached --quiet || git commit -m "coremium $VERSION"
+          git push
