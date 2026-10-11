@@ -310,37 +310,47 @@ struct DashboardContent: View {
     var body: some View {
         HStack(alignment: .top, spacing: 20) {
             ChipPanel(engine: engine, advanced: ui.advanced)
-            VStack(alignment: .leading, spacing: 10) {
-                VStack(alignment: .leading, spacing: 6) {
-                    ModeBar(engine: engine)
-                    // Mode names already fill this row (about 491 of 520 points). A shared row would drop those names.
-                    HStack(spacing: 0) {
-                        Spacer(minLength: 0)
-                        PanelActions(ui: ui)
-                    }
-                }
-                StatusLine(engine: engine, advanced: ui.advanced)
-                UpdateBanner()
-                TabBar(ui: ui)
-                Group {
-                    switch ui.tab {
-                    case .apps: AppsTab(engine: engine, ui: ui)
-                    case .insights: InsightsTab(engine: engine, advanced: ui.advanced)
-                    case .simulate: SimulateTab(engine: engine, advanced: ui.advanced)
-                    case .guide: GuideTab()
-                    case .storage: StorageTab(ui: ui)
-                    case .system: SystemTab(engine: engine, ui: ui)
-                    case .settings: SettingsTab(engine: engine, ui: ui)
-                    }
-                }
+            DashboardColumn(engine: engine, ui: ui)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .padding(.horizontal, 26)
         .padding(.bottom, 20)
         .padding(.top, 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+}
+
+/// The mode bar, status, banner and tabs: the part of the dashboard the notch and the standard window share.
+struct DashboardColumn: View {
+    @ObservedObject var engine: AppEngine
+    @ObservedObject var ui: NotchUIState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 6) {
+                ModeBar(engine: engine)
+                // Mode names already fill this row (about 491 of 520 points). A shared row would drop those names.
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    PanelActions(ui: ui)
+                }
+            }
+            StatusLine(engine: engine, advanced: ui.advanced)
+            UpdateBanner()
+            TabBar(ui: ui)
+            Group {
+                switch ui.tab {
+                case .apps: AppsTab(engine: engine, ui: ui)
+                case .insights: InsightsTab(engine: engine, advanced: ui.advanced)
+                case .simulate: SimulateTab(engine: engine, advanced: ui.advanced)
+                case .guide: GuideTab()
+                case .storage: StorageTab(ui: ui)
+                case .system: SystemTab(engine: engine, ui: ui)
+                case .settings: SettingsTab(engine: engine, ui: ui)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
     }
 }
 
