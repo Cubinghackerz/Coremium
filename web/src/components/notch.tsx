@@ -80,7 +80,7 @@ export function Notch() {
         initial={false}
         animate={{ width, height, borderBottomLeftRadius: open ? 30 : 14, borderBottomRightRadius: open ? 30 : 14 }}
         transition={reduce ? { duration: 0 } : spring}
-        className="relative overflow-visible bg-black ring-1 ring-inset ring-white/[0.08]"
+        className="relative overflow-visible bg-black"
         style={{ width: base, height: BAR }}
       >
         <span className="absolute -left-[10px] top-0 size-[10px] bg-[radial-gradient(circle_at_0_100%,transparent_9.5px,#000_10px)]" />

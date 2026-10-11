@@ -7,7 +7,7 @@ const link = "rounded-md px-2.5 py-1 transition-colors hover:bg-white/10 hover:t
 /* A menu bar: app menus on the left, status items on the right, the notch in between. */
 export function Nav() {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 h-[var(--bar)] border-b border-white/[0.06] bg-black/40 backdrop-blur-xl backdrop-saturate-150">
+    <header className="fixed inset-x-0 top-0 z-50 h-[var(--bar)] border-b border-white/[0.06] bg-black/85 backdrop-blur-xl">
       <div className="relative mx-auto flex h-full max-w-[1400px] items-center justify-between px-3 md:px-6">
         <nav aria-label="Main" className="flex items-center gap-1 text-[14.5px] text-zinc-300">
           <a href="#top" className="mr-2 flex items-center gap-2 rounded-md px-1.5 py-1 font-semibold text-white">

@@ -146,7 +146,7 @@ export function Hero() {
   }
 
   return (
-    <section id="top" ref={ref} className="relative h-[460svh] [--nw:124px] [--pad:40px] md:[--nw:200px] md:[--pad:0px]">
+    <section id="top" ref={ref} className="relative h-[460svh] [--nw:124px] [--pad:40px] md:[--nw:200px] md:[--pad:28px]">
       <div id="screens" className="absolute top-[30%]" aria-hidden />
       <div className="sticky top-0 h-svh overflow-hidden bg-black [--pw:min(1040px,calc(100vw-24px),calc((100svh-var(--bar)-200px)*1.598))]">
 
