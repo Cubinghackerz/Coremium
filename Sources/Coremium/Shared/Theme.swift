@@ -19,12 +19,14 @@ enum Theme {
 
 struct Card<Content: View>: View {
     var padding: CGFloat = 18
+    /// Stretch to the height offered, for cards that share a column with room to spare.
+    var fillsHeight = false
     @ViewBuilder var content: Content
 
     var body: some View {
         content
             .padding(padding)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: fillsHeight ? .infinity : nil, alignment: fillsHeight ? .topLeading : .leading)
             .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Theme.card))
             .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.border, lineWidth: 1))
     }

@@ -53,6 +53,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         notch = NotchController(engine: engine)
         dashboard = DashboardWindowController(engine: engine)
         Automation.dashboard = dashboard
+        // One surface at a time: the notch steps aside while the window is open and returns when it closes.
+        dashboard?.onShowTour = { [weak self] in self?.showTour() }
+        dashboard?.onVisibilityChange = { [weak self] open in self?.notch.setEnabled(!open) }
         installMainMenu()
 
         engine.$rules.map(\.fullscreenFixEnabled).removeDuplicates()
@@ -86,6 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func showTour() {
+        dashboard?.closeIfOpen()
         notch.ui.showingOnboarding = false
         notch.ui.showingTour = true
         notch.expand(pinned: true)
@@ -162,7 +166,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(entry)
     }
 
-    @objc private func showPanel() { notch.expand(pinned: true) }
+    @objc private func showPanel() {
+        dashboard?.closeIfOpen()
+        notch.expand(pinned: true)
+    }
     @objc private func openWindow() { dashboard?.show() }
     @objc private func hidePanel() { notch.collapse() }
     @objc private func tour() { showTour() }

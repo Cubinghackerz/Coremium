@@ -23,6 +23,7 @@ enum Automation {
         case "resume": engine.paused = false
         case "open":
             if let argument, let tab = NotchTab.allCases.first(where: { $0.rawValue == argument }) { notch?.ui.tab = tab }
+            dashboard?.closeIfOpen()
             notch?.expand(pinned: true)
         case "window": dashboard?.show()
         default: return false

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import CoremiumCore
 import SwiftUI
 
@@ -11,30 +12,46 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
     private let ui = NotchUIState(geometry: NotchGeometry(hasNotch: false, notchWidth: 0, notchHeight: 24))
     private var window: DashboardWindow?
     private var occlusionObserver: NSObjectProtocol?
+    private var tourObserver: AnyCancellable?
+    /// The welcome tour lives in the notch, so the window hands it over (and closes).
+    var onShowTour: (() -> Void)?
 
     init(engine: AppEngine) {
         self.engine = engine
         super.init()
+        tourObserver = ui.$showingTour.filter { $0 }.sink { [weak self] _ in
+            guard let self else { return }
+            self.ui.showingTour = false
+            self.onShowTour?()
+        }
     }
 
     /// Opens the window (or brings it forward). Sampling starts when the window is actually visible.
     func show() {
         let window = self.window ?? makeWindow()
         self.window = window
+        onVisibilityChange?(true)
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
     }
 
     var isOpen: Bool { window?.isVisible ?? false }
 
+    /// Called with true when the window opens and false when it closes. The notch is off while the window is open.
+    var onVisibilityChange: ((Bool) -> Void)?
+
+    func closeIfOpen() {
+        if isOpen { window?.close() }
+    }
+
     private func makeWindow() -> DashboardWindow {
-        let window = DashboardWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 720),
+        let window = DashboardWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 680),
                                      styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                                      backing: .buffered, defer: false)
         window.title = "Coremium"
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
-        window.minSize = NSSize(width: 900, height: 640)
+        window.minSize = NSSize(width: 900, height: 600)
         window.titleVisibility = .hidden
         window.isReleasedWhenClosed = false
         window.backgroundColor = .black
@@ -73,6 +90,7 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         engine.isWindowVisible = false
+        onVisibilityChange?(false)
     }
 
     /// The same tab shortcuts as the notch: ⌘1–⌘7, and Control-Tab (Control-Shift-Tab goes back).
@@ -119,7 +137,7 @@ struct DashboardWindowView: View {
             UpdateBanner()
             HStack(alignment: .top, spacing: 22) {
                 overview
-                    .frame(width: ui.advanced ? 380 : 340)
+                    .frame(width: ui.advanced ? 380 : 310)
                 VStack(alignment: .leading, spacing: 12) {
                     ModeBar(engine: engine)
                     TabBar(ui: ui, quietFocus: true)
@@ -188,9 +206,10 @@ struct DashboardWindowView: View {
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 LiveTiles(engine: engine, telemetry: engine.telemetry)
+                    .frame(maxHeight: .infinity)
                 CoreBars(chip: engine.chip, loads: engine.cpuLoads)
+                    .frame(maxHeight: .infinity)
             }
-            .frame(maxHeight: .infinity, alignment: .top)
         }
     }
 
@@ -241,7 +260,7 @@ private struct LiveTiles: View {
 
     private func tile(_ title: String, percent: Int?, detail: String, color: Color, entries: [TelemetryEntry],
                       value: @escaping (TelemetrySample) -> Double?) -> some View {
-        Card(padding: 14) {
+        Card(padding: 14, fillsHeight: true) {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 5) {
@@ -254,7 +273,7 @@ private struct LiveTiles: View {
                 }
                 .fixedSize(horizontal: true, vertical: false)
                 Sparkline(entries: entries, capacity: 120, color: color, value: value)
-                    .frame(height: 64)
+                    .frame(minHeight: 40, maxHeight: .infinity)
                     .accessibilityHidden(true)
             }
         }
@@ -270,7 +289,7 @@ private struct CoreBars: View {
     let loads: [Double]
 
     var body: some View {
-        Card(padding: 14) {
+        Card(padding: 14, fillsHeight: true) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     SectionLabel(text: "Cores")
@@ -287,6 +306,7 @@ private struct CoreBars: View {
                         bar(cpu, label: "E\(index + 1)", color: Theme.eco, name: "Efficiency core \(index + 1)")
                     }
                 }
+                .frame(maxHeight: .infinity)
             }
         }
     }
@@ -305,13 +325,15 @@ private struct CoreBars: View {
         return VStack(spacing: 4) {
             Text("\(percent)").font(.system(size: 9, weight: .semibold, design: .rounded)).monospacedDigit()
                 .foregroundColor(load > 0.05 ? tint : Theme.textDim.opacity(0.6))
-            ZStack(alignment: .bottom) {
-                Capsule().fill(Color.white.opacity(0.07))
-                Capsule()
-                    .fill(LinearGradient(colors: [tint, tint.opacity(0.5)], startPoint: .top, endPoint: .bottom))
-                    .frame(height: max(5, 96 * CGFloat(load)))
+            GeometryReader { proxy in
+                ZStack(alignment: .bottom) {
+                    Capsule().fill(Color.white.opacity(0.07))
+                    Capsule()
+                        .fill(LinearGradient(colors: [tint, tint.opacity(0.5)], startPoint: .top, endPoint: .bottom))
+                        .frame(height: max(5, proxy.size.height * CGFloat(load)))
+                }
             }
-            .frame(maxWidth: .infinity).frame(height: 96)
+            .frame(maxWidth: .infinity, minHeight: 60, maxHeight: .infinity)
             .animation(.easeOut(duration: 0.4), value: load)
             Text(label).font(.system(size: 9, weight: .medium, design: .rounded)).foregroundColor(Theme.textDim)
         }
