@@ -6,7 +6,6 @@ export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden pt-28 md:pt-36">
       <div className="mx-auto max-w-6xl px-6 text-center">
-        <p className="mb-5 text-sm font-medium tracking-wide text-perf">A little breathing room for your Mac.</p>
         <h1 className="text-balance mx-auto max-w-4xl text-[clamp(40px,6.5vw,80px)] font-semibold leading-[1.04] tracking-[-0.04em]">
           Give the app you&apos;re using <span className="text-zinc-400">more room to work.</span>
         </h1>

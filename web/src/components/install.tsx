@@ -11,7 +11,7 @@ export function CopyLine({ text, label }: { text: string; label: string }) {
   return (
     <div>
       <div className="flex items-center gap-3 rounded-xl bg-white/[0.05] py-3 pl-4 pr-3 ring-1 ring-inset ring-white/12">
-        <code aria-label={label} className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-sm text-zinc-100">{text}</code>
+        <code aria-label={label} className="min-w-0 flex-1 break-all text-left font-mono text-[13px] leading-relaxed text-zinc-100 sm:text-sm">{text}</code>
         <button type="button" aria-label={`Copy ${label}`} onClick={async () => {
           if (timeout.current) clearTimeout(timeout.current);
           try { await navigator.clipboard.writeText(text); setState("copied"); }

@@ -16,17 +16,14 @@ const steps = [
 export function Steps() {
   return (
     <section className="mx-auto max-w-6xl px-6 py-20 md:py-28">
-      <div className="text-center">
-        <p className="text-sm font-medium tracking-wide text-perf">Three steps</p>
-        <h2 className="text-balance mx-auto mt-4 max-w-3xl text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.04] tracking-[-0.035em]">
-          No setup. <span className="text-zinc-400">No account.</span>
-        </h2>
-      </div>
-      <ol className="mt-14 grid gap-5 md:grid-cols-3">
+      <h2 className="text-balance mx-auto max-w-3xl text-center text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.04] tracking-[-0.035em]">
+        No setup. <span className="text-zinc-400">No account.</span>
+      </h2>
+      <ol className="mt-16 grid gap-10 md:grid-cols-3 md:gap-12">
         {steps.map((step, index) => (
-          <li key={step.title} className="rounded-[28px] bg-white/[0.035] p-7 ring-1 ring-inset ring-white/10 md:p-8">
-            <span className="flex size-9 items-center justify-center rounded-full bg-white text-sm font-semibold text-black">{index + 1}</span>
-            <h3 className="mt-6 text-xl font-semibold tracking-[-0.02em] text-white">{step.title}</h3>
+          <li key={step.title} className="border-t border-white/12 pt-6">
+            <span className="text-sm font-medium tabular-nums text-zinc-500">{index + 1}</span>
+            <h3 className="mt-4 text-xl font-semibold tracking-[-0.02em] text-white">{step.title}</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">{step.body}</p>
           </li>
         ))}

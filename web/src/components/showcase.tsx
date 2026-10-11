@@ -1,5 +1,4 @@
 import CardSwap from "@/components/card-swap";
-import ScrollExpand from "@/components/scroll-expand";
 
 const screens = [
   { title: "Apps", image: "/screens/notch-apps.png", alt: "The Apps tab: each running app with its choice." },
@@ -9,37 +8,41 @@ const screens = [
   { title: "Settings", image: "/screens/notch-settings.png", alt: "The Settings tab: window mode, advanced mode and the rest." },
 ];
 
-/* Scroll to open the Advanced capture, then a stack of every view. Both pause when they are off screen. */
+/* The labels are the ones Advanced mode prints in the notch. */
+const numbers: [string, string][] = [
+  ["P cores · E cores", "Average load of each kind of core, from the per-core readings."],
+  ["Memory · Mem pressure", "Memory in use, and macOS's own pressure level."],
+  ["Swap used", "How much swap is in use right now."],
+  ["GPU · renderer · tiler", "Device utilisation, with its renderer and tiler parts."],
+  ["Thermal · Power", "The system thermal state, and whether the Mac is on AC power."],
+  ["Moved", "How many processes Coremium has moved aside right now."],
+];
+
 export function Showcase() {
   return (
     <>
-      <section aria-label="Scroll to expand the Advanced view" className="h-[290svh] w-full">
-          <ScrollExpand
-            src="/screens/notch-apps-advanced.png"
-            alt="The Coremium notch in Advanced mode, with per-core load and each app's choice."
-            title="The numbers, on purpose"
-            scrollHint="Scroll"
-            useWindowScroll
-            startWidth={62}
-            startHeight={66}
-            startRadius={28}
-            scrollDistance={1.4}
-            holdDistance={0.5}
-            mediaZoom={1.15}
-          >
-            <div className="max-w-xl">
-              <h2 className="text-balance text-[clamp(28px,4vw,48px)] font-semibold leading-[1.05] tracking-[-0.03em] text-white">
-                Advanced mode shows what it measured.
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-zinc-300">
-                Per-core load, memory pressure, swap, and the choice behind each app. Turn it off to keep it simple.
-              </p>
-            </div>
-          </ScrollExpand>
+      <section aria-labelledby="numbers-heading" className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+        <div className="grid gap-12 md:grid-cols-[1fr_1.1fr] md:items-center">
+          <div>
+            <h2 id="numbers-heading" className="text-balance mt-4 text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.04] tracking-[-0.035em]">
+              The numbers behind <span className="text-zinc-400">each choice.</span>
+            </h2>
+            <p className="mt-5 max-w-md text-base leading-relaxed text-zinc-400">
+              Turn on Advanced mode and the notch shows what Coremium measured. Every number here is read from this Mac.
+            </p>
+          </div>
+          <dl className="divide-y divide-white/10 border-y border-white/10">
+            {numbers.map(([label, body]) => (
+              <div key={label} className="grid gap-1 py-5 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:gap-10">
+                <dt className="font-medium text-zinc-100">{label}</dt>
+                <dd className="text-sm leading-relaxed text-zinc-400">{body}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       </section>
       <section aria-labelledby="stack-heading" className="mx-auto max-w-6xl px-6 py-20 md:py-28">
         <div className="text-center">
-          <p className="text-sm font-medium tracking-wide text-perf">Every view</p>
           <h2 id="stack-heading" className="text-balance mx-auto mt-4 max-w-3xl text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.04] tracking-[-0.035em]">
             One notch. <span className="text-zinc-400">Five views.</span>
           </h2>
