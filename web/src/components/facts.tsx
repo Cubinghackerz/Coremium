@@ -1,5 +1,5 @@
 const rows: [string, string, string][] = [
-  ["Closes apps", "Never", "It only changes how the system schedules them. Quit Coremium and everything is restored."],
+  ["Closes apps", "Never on its own", "It only changes how the system schedules them. Quit Coremium and everything is restored."],
   ["Touches", "Your own apps", "Only processes owned by your user. No root helper, no system processes."],
   ["Network", "One update check a day", "Asks GitHub whether a newer version exists. No telemetry, no account. Turn it off in Settings."],
   ["Cost to run", "Visible in Insights", "Coremium shows its own CPU use. Cost varies with your running apps and whether the panel is open."],

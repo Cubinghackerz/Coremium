@@ -138,8 +138,8 @@ struct SimulateTab: View {
                         }
                         SimFrameGraph(frames: sim.frames, good: sim.coremiumOn).frame(height: 96)
                         HStack(spacing: 8) {
-                            mini("Frame rate", String(format: "%.0f fps", sim.averageFPS))
-                            mini("Worst frame", String(format: "%.0f ms", sim.worstMs))
+                            mini("Modelled fps", String(format: "%.0f", sim.averageFPS))
+                            mini("Modelled worst", String(format: "%.0f ms", sim.worstMs))
                             mini("Hitches", "\(sim.hitches)")
                         }
                     }

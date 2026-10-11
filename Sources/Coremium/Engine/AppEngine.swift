@@ -72,7 +72,7 @@ struct IndexInfo: Equatable {
 }
 
 /// Watches what you're doing and moves apps between the performance and efficiency cores accordingly.
-/// Nothing is ever quit; the app you're using is always left at full speed.
+/// Coremium never quits anything on its own; the app you're using is left at full speed.
 @MainActor
 final class AppEngine: ObservableObject {
     private let isPreview: Bool

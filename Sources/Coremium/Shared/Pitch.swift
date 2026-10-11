@@ -12,7 +12,7 @@ extension AppRule {
     var meaning: String {
         switch self {
         case .boost: return "Protected. When you use it (or it's busy), everything else is kept out of its way."
-        case .normal: return "Left alone. Coremium never touches it."
+        case .normal: return "Left alone. Coremium leaves its priority as it is."
         case .auto: return "Steps aside: moves to the efficiency cores while something else is boosted."
         case .efficiency: return "Always on the efficiency cores, unless you're using it."
         }
@@ -34,7 +34,7 @@ struct TrustCard: View {
 
     private let items: [(String, String, String)] = [
         ("arrow.uturn.backward.circle.fill", "Fully reversible", "Undone when you quit, and again at the next start if the app ever crashes."),
-        ("xmark.circle.fill", "Never closes or kills anything", "Apps keep running; they just use the efficient cores while you're busy elsewhere."),
+        ("xmark.circle.fill", "Never closes anything on its own", "Apps keep running; they just use the efficient cores while you're busy elsewhere."),
         ("gearshape.2.fill", "Uses macOS's own scheduling", "The same built-in priority control as the taskpolicy tool. No hacks, no drivers, no admin password."),
         ("lock.shield.fill", "Private", "No accounts, no telemetry. Settings and history stay on this Mac; the only request out is a daily update check you can turn off."),
         ("chevron.left.forwardslash.chevron.right", "Open source", "MIT licensed. Read exactly what it does."),

@@ -5,7 +5,7 @@
 **Give the app you're using more room to work.**
 
 Coremium lives in your Mac's notch. It protects the app you're using (a game, a render, a build, a local AI job) by
-lowering eligible background-app priority. Nothing is quit; your foreground app stays at normal priority.
+lowering eligible background-app priority. Coremium never quits anything on its own; your foreground app stays at normal priority.
 
 - **Modes:** Automatic, Balanced, Gaming, Creator, Coding, Local AI. Automatic follows your work and adapts to sustained CPU pressure.
 - **Four choices per app:** Boost, Normal, Yield, Eco. Your choice always beats the mode.
@@ -52,10 +52,9 @@ moved, its own CPU cost, and a plain-words log of each decision. It makes no bat
 
 **GPU.** macOS has no public way to give one app GPU priority or to slow another app's GPU work. Coremium measures
 instead: device GPU load and each app's share of GPU time (read from the system registry, no admin rights), shows
-"GPU heavy" on rows, and names heavy background users in its decision line. We tested whether the background priority
-band reduces GPU contention with a Metal frame-loop (`bench/gpu-contention.swift`): it did not (median frame time
-2.1 ms with a GPU hog at normal priority, 2.4 ms with the hog in the background band, no hitches in either), so
-Coremium does not pretend it does.
+"GPU heavy" on rows, and names heavy background users in its decision line. An early Metal frame-loop test
+(`bench/gpu-contention.swift`) suggested the background band does not reduce GPU contention. That result is not yet
+reproducible from this repository, so Coremium makes no claim that the band helps GPU work.
 
 Coremium does **not**: touch other users' or system processes (no root helper), control clock speed, measure power or
 exact temperature (so it never claims longer battery life or lower temperature; the energy figure in Insights is a
@@ -174,8 +173,8 @@ Quitting restores everything, as does the next launch after a crash. From Termin
 ## The fullscreen fix
 
 On 120 Hz ProMotion MacBooks, fullscreen Metal apps use Direct-to-Display, which breaks frame pacing; macOS 27 makes it
-worse. Any other window on screen makes macOS composite normally. With the fix on, Coremium adds a 2-pixel always-on-top
-window (invisible inside the notch; one dark pixel in the corner elsewhere), but only on a display that is showing a
+worse. Any other window on screen makes macOS composite normally. With the fix on, Coremium adds a 2-point always-on-top
+window (invisible inside the notch; one dark point in the corner elsewhere), but only on a display that is showing a
 fullscreen app, and removes it when the app leaves fullscreen. Ordinary and maximized windows are left alone, so moving,
 tiling and resizing them feels exactly like stock macOS. It reads only window positions (no Screen Recording permission),
 ignores clicks and never takes focus. Fullscreen video may use slightly more battery.
