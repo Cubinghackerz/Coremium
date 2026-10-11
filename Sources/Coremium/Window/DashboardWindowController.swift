@@ -103,7 +103,7 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
         onVisibilityChange?(false)
     }
 
-    /// The same tab shortcuts as the notch: ⌘1–⌘7, and Control-Tab (Control-Shift-Tab goes back).
+    /// The same tab shortcuts as the notch: ⌘1–⌘8, and Control-Tab (Control-Shift-Tab goes back).
     private func navigate(with event: NSEvent) -> Bool {
         let flags = event.modifierFlags.intersection([.command, .control, .option, .shift])
         if flags == .command, let characters = event.charactersIgnoringModifiers, let number = Int(characters),

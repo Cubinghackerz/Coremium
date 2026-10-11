@@ -33,7 +33,7 @@ final class StorageModel: ObservableObject {
         pending.formUnion(kinds)
         for kind in kinds {
             Task { @MainActor in
-                let found = await Task.detached(priority: .utility) {
+                let found = await Task.detached(priority: .background) {
                     kind == .largeFiles ? StorageScanner.largeFiles() : StorageScanner.scan(kinds: [kind])
                 }.value
                 guard runs[kind] == run else { return }

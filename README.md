@@ -32,6 +32,8 @@ lowering eligible background-app priority. Coremium never quits anything on its 
 - **Live graphs:** per-core CPU (performance and efficiency), GPU use with each app's share, and memory and swap, over the
   last 2 minutes (one point a second) or 30 minutes (one averaged point per 10 seconds). Boost sessions show as ticks. The
   history lives in memory only, is collected only while the window is open, and is never saved.
+- **Activity:** the busiest processes, with CPU and memory, in a tab in the notch and the window. It samples every 2 seconds,
+  only while the tab is open. Coremium reads the process table itself, runs no `ps` or `top`, and changes nothing.
 - **Insights:** what Coremium actually did (measured), why it made each decision, and what it costs. Session reports name
   the apps that were moved aside and the CPU Coremium itself used.
 - **Simulate:** an animated illustration of the idea (clearly labelled as such).

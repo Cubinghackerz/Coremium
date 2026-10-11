@@ -113,11 +113,9 @@ public enum StorageScanner {
             }
         }
         guard !candidates.isEmpty else { return [] }
+        // One folder at a time: sizing them in parallel put every core to work on the first open of the panel.
         var sizes = [Int64](repeating: 0, count: candidates.count)
-        sizes.withUnsafeMutableBufferPointer { buffer in
-            let base = buffer.baseAddress!
-            DispatchQueue.concurrentPerform(iterations: candidates.count) { base[$0] = size(of: candidates[$0].0) }
-        }
+        for index in candidates.indices { sizes[index] = size(of: candidates[index].0) }
         return zip(candidates, sizes).compactMap { pair, bytes in
             bytes >= minimumBytes ? StorageItem(url: pair.0, name: pair.0.lastPathComponent, kind: pair.1, bytes: bytes) : nil
         }.sorted { $0.bytes > $1.bytes }

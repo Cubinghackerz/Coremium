@@ -15,16 +15,22 @@ final class SimulatorState: ObservableObject {
 
     func start() {
         guard timer == nil else { return }
-        let new = Timer(timeInterval: 1.0 / 20.0, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.advance() } }
+        // 10 steps a second, six frames each: the same 60 frames a second of data, drawn half as often.
+        let new = Timer(timeInterval: 1.0 / 10.0, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.advance() } }
         RunLoop.main.add(new, forMode: .common)
         timer = new
     }
 
     func stop() { timer?.invalidate(); timer = nil }
 
+    /// Called after every model step. The graph listens here and draws its own layers, so SwiftUI does not rebuild the
+    /// tab ten times a second.
+    var onStep: (() -> Void)?
+
     private func advance() {
-        for _ in 0..<3 { frames.append(model.nextFrameMs()) }
+        for _ in 0..<6 { frames.append(model.nextFrameMs()) }
         if frames.count > Self.windowSize { frames.removeFirst(frames.count - Self.windowSize) }
+        onStep?()
     }
 
     var averageFPS: Double { frames.isEmpty ? 0 : 1000 / (frames.reduce(0, +) / Double(frames.count)) }
@@ -33,7 +39,9 @@ final class SimulatorState: ObservableObject {
 }
 
 struct SimulateTab: View {
-    @ObservedObject var engine: AppEngine
+    /// Only the core counts are read from the chip. Not observing the engine keeps its every-few-seconds updates
+    /// away from this tab's 10 Hz graph.
+    let chip: ChipInfo
     let advanced: Bool
     @StateObject private var sim = SimulatorState()
     private static let palette: [Color] = [Theme.boost, Theme.yield, Theme.gpu, Theme.eco, Theme.warn]
@@ -47,7 +55,7 @@ struct SimulateTab: View {
                 }
                 controls
                 coresCard
-                graphCard
+                FrameGraphCard(sim: sim)
             }
         }
         .onAppear { sim.start() }
@@ -76,8 +84,8 @@ struct SimulateTab: View {
 
     private var coresCard: some View {
         let layout = SimPlacement.compute(apps: sim.scenario.apps, coremiumOn: sim.coremiumOn,
-                                          performanceCores: max(engine.chip.performanceCores, 1),
-                                          efficiencyCores: max(engine.chip.efficiencyCores, 1))
+                                          performanceCores: max(chip.performanceCores, 1),
+                                          efficiencyCores: max(chip.efficiencyCores, 1))
         return Card(padding: 12) {
             VStack(alignment: .leading, spacing: 9) {
                 coreRow("Performance cores", layout.isOverloaded ? "Overloaded: everything fights for these" : "Free for the app that matters",
@@ -117,18 +125,26 @@ struct SimulateTab: View {
         }
     }
 
-    private var graphCard: some View {
+}
+
+/// The frame-time graph and its numbers. The numbers refresh twice a second; the graph is drawn by its own layers each
+/// model step, so the scrolling tab's SwiftUI layout is not run ten times a second.
+private struct FrameGraphCard: View {
+    let sim: SimulatorState
+
+    var body: some View {
         Card(padding: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     SectionLabel(text: "What the game feels like")
                     Spacer()
-                    HStack(spacing: 5) {
-                        Text("Other apps").font(.system(size: 10, design: .rounded)).foregroundColor(Theme.textDim)
-                        Slider(value: $sim.contention, in: 0.1...1).frame(width: 80)
-                    }
+                    Text("dashed lines: 60 and 120 fps").font(.system(size: 9.5, design: .rounded)).foregroundColor(Theme.textDim)
                 }
-                TimelineView(.periodic(from: .now, by: 0.05)) { _ in
+                FrameGraphLayer(sim: sim)
+                    .frame(height: 96)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Frame time graph")
+                TimelineView(.periodic(from: .now, by: 0.5)) { _ in
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Spacer()
@@ -136,7 +152,6 @@ struct SimulateTab: View {
                                 .font(.system(size: 11, weight: .bold, design: .rounded))
                                 .foregroundColor(sim.coremiumOn ? Theme.good : Theme.warn)
                         }
-                        SimFrameGraph(frames: sim.frames, good: sim.coremiumOn).frame(height: 96)
                         HStack(spacing: 8) {
                             mini("Modelled fps", String(format: "%.0f", sim.averageFPS))
                             mini("Modelled worst", String(format: "%.0f ms", sim.worstMs))
@@ -155,6 +170,102 @@ struct SimulateTab: View {
         }
         .padding(8).frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.white.opacity(0.05)))
+    }
+}
+
+/// Hosts the layer-drawn graph. SwiftUI only places it; each model step updates its paths directly.
+private struct FrameGraphLayer: NSViewRepresentable {
+    let sim: SimulatorState
+
+    func makeNSView(context: Context) -> FrameGraphNSView {
+        let view = FrameGraphNSView()
+        sim.onStep = { [weak view, weak sim] in
+            guard let view, let sim else { return }
+            view.update(frames: sim.frames, good: sim.coremiumOn)
+        }
+        view.update(frames: sim.frames, good: sim.coremiumOn)
+        return view
+    }
+
+    func updateNSView(_ view: FrameGraphNSView, context: Context) {}
+}
+
+final class FrameGraphNSView: NSView {
+    private let guides = CAShapeLayer()
+    private let area = CAShapeLayer()
+    private let line = CAShapeLayer()
+    private let marks = CAShapeLayer()
+    // The same colours as Theme.good and Theme.warn.
+    private static let goodColour = NSColor(red: 0.45, green: 0.86, blue: 0.62, alpha: 1)
+    private static let warnColour = NSColor(red: 0.93, green: 0.78, blue: 0.52, alpha: 1)
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.black.withAlphaComponent(0.35).cgColor
+        layer?.cornerRadius = 10
+        layer?.masksToBounds = true
+        guides.strokeColor = NSColor.white.withAlphaComponent(0.18).cgColor
+        guides.fillColor = nil
+        guides.lineWidth = 1
+        guides.lineDashPattern = [4, 4]
+        line.fillColor = nil
+        line.lineWidth = 1.5
+        line.lineJoin = .round
+        line.lineCap = .round
+        marks.fillColor = Self.warnColour.cgColor
+        for sublayer in [guides, area, line, marks] {
+            sublayer.actions = ["path": NSNull(), "fillColor": NSNull(), "strokeColor": NSNull()]
+            layer?.addSublayer(sublayer)
+        }
+    }
+
+    required init?(coder: NSCoder) { fatalError("FrameGraphNSView is created in code") }
+
+    override func layout() {
+        super.layout()
+        // Dashed reference lines at 60 fps (16.7 ms) and 120 fps (8.3 ms) of a 100 ms scale.
+        let path = CGMutablePath()
+        for ms in [16.7, 8.3] {
+            let y = bounds.height * CGFloat(ms / 100)
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: bounds.width, y: y))
+        }
+        guides.path = path
+        guides.frame = bounds
+    }
+
+    /// Redraws the graph from the newest frames, newest on the right. Frames are in ms on a 0...100 ms scale.
+    func update(frames: [Double], good: Bool) {
+        guard bounds.width > 0, bounds.height > 0 else { return }
+        let height = bounds.height
+        let width = bounds.width
+        let windowSize = SimulatorState.windowSize
+        let step = width / CGFloat(windowSize - 1)
+        let offset = width - step * CGFloat(max(frames.count - 1, 0))
+        let tint = good ? Self.goodColour : Self.warnColour
+        let curve = CGMutablePath()
+        let spikes = CGMutablePath()
+        for (index, ms) in frames.enumerated() {
+            let point = CGPoint(x: offset + CGFloat(index) * step, y: height * CGFloat(min(ms, 100) / 100))
+            if index == 0 { curve.move(to: point) } else { curve.addLine(to: point) }
+            if ms > 40 { spikes.addEllipse(in: CGRect(x: point.x - 2.5, y: point.y - 2.5, width: 5, height: 5)) }
+        }
+        let filled = CGMutablePath()
+        filled.addPath(curve)
+        if frames.count > 1 {
+            filled.addLine(to: CGPoint(x: width, y: 0))
+            filled.addLine(to: CGPoint(x: offset, y: 0))
+            filled.closeSubpath()
+        }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        area.path = filled
+        area.fillColor = tint.withAlphaComponent(0.2).cgColor
+        line.path = curve
+        line.strokeColor = tint.cgColor
+        marks.path = spikes
+        CATransaction.commit()
     }
 }
 
@@ -188,17 +299,18 @@ private struct SimFrameGraph: View {
     let frames: [Double]
     let good: Bool
 
+    /// Drawn on every redraw, so it stays to one canvas: no clipping, no overlays and no text. (Those modifiers cost
+    /// far more than the drawing itself inside a transparent window.)
     var body: some View {
         Canvas { context, size in
+            context.fill(Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 10), with: .color(.black.opacity(0.35)))
             let maxMs = 100.0
             func y(_ ms: Double) -> CGFloat { size.height - CGFloat(min(ms, maxMs) / maxMs) * size.height }
-            for (ms, label) in [(16.7, "60"), (8.3, "120")] {
+            for ms in [16.7, 8.3] {
                 var line = Path()
                 line.move(to: CGPoint(x: 0, y: y(ms)))
                 line.addLine(to: CGPoint(x: size.width, y: y(ms)))
                 context.stroke(line, with: .color(.white.opacity(0.18)), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                context.draw(Text(label).font(.system(size: 9, design: .rounded)).foregroundColor(.white.opacity(0.4)),
-                             at: CGPoint(x: size.width - 10, y: y(ms) - 6))
             }
             guard frames.count > 1 else { return }
             let step = size.width / CGFloat(SimulatorState.windowSize - 1)
@@ -221,8 +333,6 @@ private struct SimFrameGraph: View {
                              with: .color(Theme.warn))
             }
         }
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.black.opacity(0.35)))
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .accessibilityLabel("Frame time graph")
     }
 }

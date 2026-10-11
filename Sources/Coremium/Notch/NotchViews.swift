@@ -37,7 +37,7 @@ enum ListTab: String, CaseIterable {
 }
 
 enum NotchTab: String, CaseIterable, Identifiable {
-    case apps, insights, storage, system, simulate, guide, settings
+    case apps, insights, storage, system, activity, simulate, guide, settings
 
     var id: String { rawValue }
     var shortcutNumber: Int { Self.allCases.firstIndex(of: self)! + 1 }
@@ -54,6 +54,7 @@ enum NotchTab: String, CaseIterable, Identifiable {
         case .insights: return "Insights"
         case .storage: return "Storage"
         case .system: return "System"
+        case .activity: return "Activity"
         case .simulate: return "Simulate"
         case .guide: return "Guide"
         case .settings: return "Settings"
@@ -66,6 +67,7 @@ enum NotchTab: String, CaseIterable, Identifiable {
         case .insights: return "chart.bar.xaxis"
         case .storage: return "internaldrive.fill"
         case .system: return "memorychip.fill"
+        case .activity: return "gauge.with.dots.needle.67percent"
         case .simulate: return "waveform.path.ecg"
         case .guide: return "book.fill"
         case .settings: return "gearshape.fill"
@@ -367,7 +369,8 @@ struct DashboardTabContent: View {
             switch ui.tab {
             case .apps: AppsTab(engine: engine, ui: ui)
             case .insights: InsightsTab(engine: engine, advanced: ui.advanced)
-            case .simulate: SimulateTab(engine: engine, advanced: ui.advanced)
+            case .activity: ActivityTab(chip: engine.chip, movedProcesses: { [weak engine] in engine?.movedProcessIDs() ?? [] })
+            case .simulate: SimulateTab(chip: engine.chip, advanced: ui.advanced)
             case .guide: GuideTab()
             case .storage: StorageTab(ui: ui)
             case .system: SystemTab(engine: engine, ui: ui)
@@ -554,7 +557,7 @@ struct TabBar: View {
         }
         .padding(3)
         .background(RoundedRectangle(cornerRadius: 11).fill(Theme.card))
-        // Focus entering the bar lands on the selected tab, not the first one, and follows clicks and ⌘1–⌘7, so the
+        // Focus entering the bar lands on the selected tab, not the first one, and follows clicks and ⌘1–⌘8, so the
         // ring never marks a different tab from the one shown.
         .onChange(of: focusedTab) { focused in
             let entering = !tabsHadFocus

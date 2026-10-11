@@ -82,6 +82,8 @@ final class AppEngine: ObservableObject {
     let chip = ChipInfo.current()
 
     @Published var rules: RuleSet
+    /// The processes Coremium has moved to the efficiency cores right now (the Activity tab marks them).
+    func movedProcessIDs() -> Set<Int32> { controller.demotedPids }
     /// Use Coremium as a normal app (Dock icon and window) with no notch or pill.
     @Published var windowOnly = UserDefaults.standard.bool(forKey: "windowOnly") {
         didSet { UserDefaults.standard.set(windowOnly, forKey: "windowOnly") }

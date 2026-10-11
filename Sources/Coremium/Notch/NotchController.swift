@@ -301,22 +301,22 @@ extension NotchController {
                 windowNumber: controller.panel.windowNumber, context: nil, characters: text,
                 charactersIgnoringModifiers: text, isARepeat: false, keyCode: code)!
         }
-        let jump = controller.navigate(with: key("7", code: 26, flags: .command)) && controller.ui.tab == .settings
+        let jump = controller.navigate(with: key("8", code: 28, flags: .command)) && controller.ui.tab == .settings
         let next = controller.navigate(with: key("\t", code: 48, flags: .control)) && controller.ui.tab == .apps
         let previous = controller.navigate(with: key("\t", code: 48, flags: [.control, .shift])) && controller.ui.tab == .settings
         let stayed = controller.ui.tab
         let rejectedZero = !controller.navigate(with: key("0", code: 29, flags: .command)) && controller.ui.tab == stayed
-        let rejectedEight = !controller.navigate(with: key("8", code: 28, flags: .command)) && controller.ui.tab == stayed
+        let rejectedNine = !controller.navigate(with: key("9", code: 25, flags: .command)) && controller.ui.tab == stayed
         controller.ui.showingTour = true
         let tourShielded = !controller.navigate(with: key("1", code: 18, flags: .command))
         controller.ui.showingTour = false
         controller.collapse()
         let closedShielded = !controller.navigate(with: key("1", code: 18, flags: .command))
-        let navigation = jump && next && previous && rejectedZero && rejectedEight && tourShielded && closedShielded
-        print("\(jump ? "PASS" : "FAIL") command-7 selects settings")
+        let navigation = jump && next && previous && rejectedZero && rejectedNine && tourShielded && closedShielded
+        print("\(jump ? "PASS" : "FAIL") command-8 selects settings")
         print("\(next ? "PASS" : "FAIL") control-tab wraps to apps")
         print("\(previous ? "PASS" : "FAIL") control-shift-tab wraps to settings")
-        print("\(rejectedZero && rejectedEight ? "PASS" : "FAIL") command-0 and command-8 do not change tabs")
+        print("\(rejectedZero && rejectedNine ? "PASS" : "FAIL") command-0 and command-9 do not change tabs")
         print("\(tourShielded && closedShielded ? "PASS" : "FAIL") inactive-panel and tour shield tab shortcuts")
         controller.panel.orderOut(nil)
         return compact && reopened && escaped && live && remembered && simulated && navigation
