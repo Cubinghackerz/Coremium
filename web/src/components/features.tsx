@@ -1,6 +1,5 @@
 "use client";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
-import { SlidersHorizontal } from "lucide-react";
+import { AnimatePresence, animate, motion, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -200,38 +199,64 @@ function PauseSwitch() {
   );
 }
 
-const numbers = [
-  "Per-core load, performance and efficiency",
-  "Memory, swap and pressure",
-  "Process counts and PIDs",
-  "Why each rule applies to each app",
-  "Time a boost ran, and how many processes moved",
-  "Which apps were moved aside, named in the session report",
-  "Coremium's own CPU cost",
-  "A standard window with live CPU, GPU and memory graphs, from the menu bar",
-  "A Storage tab: what fills your disk, cleared to the Trash only",
-  "A System tab: memory hogs, swap and the helpers that start with your Mac",
+/* Illustrative values, styled after the real Advanced panel. They are not a measurement of any particular Mac. */
+type Readout = { label: string; value: number | string; format?: (n: number) => string; sub?: string };
+const readouts: Readout[] = [
+  { label: "P cores", value: 14, format: (n) => `${Math.round(n)}%`, sub: "average load" },
+  { label: "E cores", value: 31, format: (n) => `${Math.round(n)}%`, sub: "average load" },
+  { label: "Memory", value: "11.0 / 18.0 GB", sub: "61% in use" },
+  { label: "Swap used", value: 389, format: (n) => `${Math.round(n)} MB`, sub: "right now" },
+  { label: "GPU", value: 22, format: (n) => `${Math.round(n)}%`, sub: "renderer 22% · tiler 22%" },
+  { label: "Moved", value: 20, format: (n) => `${Math.round(n)} procs`, sub: "to efficiency cores" },
+  { label: "Mem pressure", value: "normal" },
+  { label: "Power", value: "AC", sub: "thermal nominal" },
 ];
 
-function Numbers() {
-  const ref = useRef<HTMLUListElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.3 });
+function Readout({ item, index }: { item: Readout; index: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.6 });
   const reduce = useReducedMotion();
+  const numeric = typeof item.value === "number";
+  const format = item.format ?? ((n: number) => String(Math.round(n)));
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !numeric || !inView || reduce) return undefined;
+    el.textContent = format(0);
+    const controls = animate(0, item.value as number, {
+      duration: 1.2,
+      delay: 0.08 * index,
+      ease,
+      onUpdate: (v) => {
+        el.textContent = format(v);
+      },
+    });
+    return () => controls.stop();
+  }, [inView, reduce, numeric, item.value, format, index]);
+
   return (
-    <ul ref={ref} className="grid gap-x-8 gap-y-4 text-[15px] text-zinc-300 md:grid-cols-2">
-      {numbers.map((t, i) => (
-        <motion.li
-          key={t}
-          initial={reduce ? false : { opacity: 0, x: -8 }}
-          animate={inView || reduce ? { opacity: 1, x: 0 } : undefined}
-          transition={{ duration: 0.5, ease, delay: 0.05 * i }}
-          className="flex gap-3 border-t border-white/10 pt-4"
-        >
-          <SlidersHorizontal className="mt-0.5 size-4 shrink-0 text-perf" aria-hidden />
-          {t}
-        </motion.li>
-      ))}
-    </ul>
+    <div className="grid gap-1 border-t border-white/10 py-5">
+      <dt className="text-sm text-zinc-400">{item.label}</dt>
+      <dd className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span ref={ref} className="text-[28px] font-semibold tracking-[-0.03em] text-white tabular-nums md:text-[32px]">
+          {numeric ? format(item.value as number) : item.value}
+        </span>
+        {item.sub ? <span className="text-sm text-zinc-500">{item.sub}</span> : null}
+      </dd>
+    </div>
+  );
+}
+
+function Readouts() {
+  return (
+    <div>
+      <dl className="grid gap-x-10 md:grid-cols-2">
+        {readouts.map((item, i) => (
+          <Readout key={item.label} item={item} index={i} />
+        ))}
+      </dl>
+      <p className="mt-6 text-sm text-zinc-500">Illustrative values, styled after the real Advanced panel. Your Mac shows its own.</p>
+    </div>
   );
 }
 
@@ -262,8 +287,10 @@ export function Features() {
         </Cell>
         <Cell className="md:col-span-6">
           <div className="grid gap-10 md:grid-cols-[1fr_1.6fr] md:items-start">
-            <Heading sub="Turn on Advanced when you want the numbers. Nothing is hidden, and nothing leaves your Mac.">Want the numbers? They&apos;re there.</Heading>
-            <Numbers />
+            <div>
+              <Heading sub="Turn on Advanced when you want the numbers. Nothing is hidden, and nothing leaves your Mac.">Want the numbers? They&apos;re there.</Heading>
+            </div>
+            <Readouts />
           </div>
         </Cell>
       </div>
