@@ -22,8 +22,8 @@ PRIME DIRECTIVE: TRUTH OVER DRAMA
   proves it.
 - Nothing is faked. Footage is captured from the app running on this Mac. Editing may cut, crop, scale, dissolve or
   retime whole clips. It may NOT change a number, a label, a status line, or the order of events inside a capture.
-- Never show the proof strip's "Coremium overhead …" figure in frame. It moves from one reading to the next, the film
-  makes no overhead claim, and a number on screen would be read as one.
+- Keep the proof strip's "Coremium overhead …" figure out of frame. It swings with the reveal spike and then settles, the
+  film makes no overhead claim, and a number on screen would be read as one.
 - Never show Insights cards with an energy estimate or a temperature reading ("Energy saved (est.)", "Hot during
   boosts"). The film mentions no watts, battery, temperature, frame rate or percentage speed-up.
 
@@ -52,8 +52,9 @@ THE FOOTAGE PROTOCOL (do this before any editing)
    Debug build if the Release build is not yet ready; say which in CHECKLIST.md.
 2. Make the demo session neutral: open two or three ordinary apps (a browser, a music app, a writing app). Avoid
    third-party logos in close-ups. If a real app name must show, keep it small and out of hero shots.
-3. SETTLE RULE: opening the panel or the window causes a short CPU spike. Start every capture at least 5 seconds after
-   the open. Never cut into the first 5 seconds of an open. Record that rule in CHECKLIST.md. Never speed-ramp a spike
+3. SETTLE RULE: opening the panel or the window causes a short CPU spike. Measured on this Mac by passive sampling (no load
+   applied): Coremium's own CPU reaches roughly 8–12% for about two seconds after the open, then drops. Start every
+   capture at least 5 seconds after the open. Never cut into the first 5 seconds of an open. Record that rule in CHECKLIST.md. Never speed-ramp a spike
    to hide it.
 4. Capture each shot as a separate clip with screencapture (-v for video, -R for a region, or a window capture). Name
    clips by beat: 02-notch-open.mov, 03-apps-row.mov, 04-decision.mov, 05-window-switch.mov, 06-graphs-2min.mov,
@@ -114,9 +115,9 @@ STYLE
 
 HARD RULES (a violation fails QA)
 - No FPS, battery, temperature, watts, energy, "X% faster" or benchmark claims. No overhead figure in frame.
-- No Apple logo as Coremium branding. The chip die in the app draws Apple's system mark (ChipView.swift), and the
-  README says so. In this film, crop the chip out of close-ups, or frame it so the mark is not the hero. Do not
-  recolour, retouch or redraw it. Flag it in CHECKLIST.md as a decision for me.
+- The Apple mark on the chip stays. The chip draws Apple's system mark (ChipView.swift) because the Mac is an Apple
+  Silicon Mac, and the README says so. Keep it as it appears in the app. Do not recolour, retouch, redraw or replace it,
+  and never use it in the title, the end card or any Coremium logo.
 - No third-party logos as hero. No real names of people. No account names, file paths or personal file names in frame.
 - No stock footage, AI-generated footage, voice clone or copyrighted music.
 - Never upload, publish, post, push, or write to the Coremium repo. Work in ./film.
