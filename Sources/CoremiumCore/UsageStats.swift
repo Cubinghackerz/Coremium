@@ -48,12 +48,18 @@ public struct SessionReport: Codable, Equatable, Sendable, Identifiable {
     public var worstPressure: String
     /// Swap growth during the session, in bytes (0 if it shrank).
     public var swapGrowthBytes: UInt64
+    /// Apps that had processes moved aside, most CPU first (at most 8). Optional so reports saved by older versions load.
+    public var movedAppNames: [String]?
+    /// CPU Coremium itself used during the session, in core-seconds. Optional for the same reason.
+    public var coremiumCoreSeconds: Double?
 
     public init(start: Date, end: Date, appName: String, mode: String, peakMovedProcesses: Int, movedCoreSeconds: Double,
-                backgroundGPUSeconds: Double, worstPressure: String, swapGrowthBytes: UInt64) {
+                backgroundGPUSeconds: Double, worstPressure: String, swapGrowthBytes: UInt64,
+                movedAppNames: [String]? = nil, coremiumCoreSeconds: Double? = nil) {
         self.start = start; self.end = end; self.appName = appName; self.mode = mode
         self.peakMovedProcesses = peakMovedProcesses; self.movedCoreSeconds = movedCoreSeconds
         self.backgroundGPUSeconds = backgroundGPUSeconds; self.worstPressure = worstPressure; self.swapGrowthBytes = swapGrowthBytes
+        self.movedAppNames = movedAppNames; self.coremiumCoreSeconds = coremiumCoreSeconds
     }
 
     public var duration: Double { end.timeIntervalSince(start) }

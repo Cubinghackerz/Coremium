@@ -47,6 +47,7 @@
 		8E6AD55D6008227889EB4220 /* Graphs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA50EA5126460294CD7DACB /* Graphs.swift */; };
 		8F5B200DF1E996BF610AB368 /* LoginItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96AD8A6A88E7B0242E4D6B16 /* LoginItem.swift */; };
 		94536D2DA5FAC7870F29850B /* AdaptiveAutomatic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB96616F20FB789425FD7325 /* AdaptiveAutomatic.swift */; };
+		94D51C7BBD5563B7D3941F1D /* SessionReportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27362A6545C3E44ADE2C166 /* SessionReportTests.swift */; };
 		999D7924CB35C71719B23344 /* MemoryInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5FA2C0F769434294C3E673 /* MemoryInfo.swift */; };
 		9CC9CA89D60C1AD0666CF5A3 /* TelemetryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66DDB34D8E670F06D5979E76 /* TelemetryService.swift */; };
 		9DAA5E87863F2E1F9F6EBDEB /* GuideSettingsTabs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4089A208D9CA75523E578BF5 /* GuideSettingsTabs.swift */; };
@@ -174,6 +175,7 @@
 		EC27AA7F326534EA95F4C333 /* GPUTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPUTests.swift; sourceTree = "<group>"; };
 		EE41AA1A660DFDC1BC953888 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
 		EE61B52116421240EFFEA2E1 /* ProcessSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessSnapshot.swift; sourceTree = "<group>"; };
+		F27362A6545C3E44ADE2C166 /* SessionReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReportTests.swift; sourceTree = "<group>"; };
 		F309A4DA628E12B56BC5F326 /* CoremiumApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoremiumApp.swift; sourceTree = "<group>"; };
 		F47353D77D3294AB2131D351 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
 		F728B106F6E1345C43C7124A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -369,6 +371,7 @@
 				8B3B76185923C36837CC39DE /* ProductTests.swift */,
 				D40FF670FF732AEBF2D4C9E3 /* RuleEvaluatorTests.swift */,
 				37AAF2E7C7881B912DB9AED3 /* SamplerResourceTests.swift */,
+				F27362A6545C3E44ADE2C166 /* SessionReportTests.swift */,
 				7EEF2A2B9D957B78B923A118 /* StorageTests.swift */,
 				0E5DB2C289C689AF2656F9F8 /* SystemInfoTests.swift */,
 				9E8D9EA5D2D67C86E9F2FCDA /* TelemetryBuilderTests.swift */,
@@ -597,6 +600,7 @@
 				12AF2F9FEDD167B33AB008CD /* ProductTests.swift in Sources */,
 				A10B41D16EAC8D29AF727408 /* RuleEvaluatorTests.swift in Sources */,
 				6C367722690DA205B3890D93 /* SamplerResourceTests.swift in Sources */,
+				94D51C7BBD5563B7D3941F1D /* SessionReportTests.swift in Sources */,
 				8A57579135610D94F0420E68 /* StorageTests.swift in Sources */,
 				E427C8AB38A49A1AE5A61B3F /* SystemInfoTests.swift in Sources */,
 				67DF105607080E5060F8EEB7 /* TelemetryBuilderTests.swift in Sources */,

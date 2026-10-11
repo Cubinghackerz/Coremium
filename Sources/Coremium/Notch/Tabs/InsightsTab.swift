@@ -219,6 +219,16 @@ struct ReportCard: View {
                 tile(String(format: "%.1f", report.movedCoreSeconds / 60), "core-minutes kept off the fast cores", Theme.yield)
                 tile(report.worstPressure.capitalized, "memory pressure", report.worstPressure == "normal" ? Theme.good : Theme.warn)
             }
+            VStack(alignment: .leading, spacing: 6) {
+                if let names = report.movedAppNames, !names.isEmpty {
+                    Text("Moved aside: \(names.joined(separator: ", "))").font(.system(size: 13, design: .rounded)).foregroundColor(.white.opacity(0.75))
+                        .lineLimit(2)
+                }
+                if let own = report.coremiumCoreSeconds {
+                    Text(String(format: "Coremium itself used %.1f s of CPU across the session.", own))
+                        .font(.system(size: 12, design: .rounded)).foregroundColor(.white.opacity(0.55))
+                }
+            }
             Text("Measured on this Mac. Nothing was closed.").font(.system(size: 11, design: .rounded)).foregroundColor(.white.opacity(0.4))
         }
         .padding(28)

@@ -152,6 +152,13 @@ struct RenderPreviews {
                 .environment(\.renderFlat, true),
                 name: name, width: 560, height: nil, dir: dir)
         }
+        // Session report card. Sample data, for layout only.
+        let sampleReport = SessionReport(start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 2_520), appName: "Roblox",
+                                         mode: "Gaming", peakMovedProcesses: 23, movedCoreSeconds: 540, backgroundGPUSeconds: 30,
+                                         worstPressure: "normal", swapGrowthBytes: 0,
+                                         movedAppNames: ["Google Chrome", "Discord", "Spotify", "Diffusion Studio"],
+                                         coremiumCoreSeconds: 4.2)
+        save(ReportCard(report: sampleReport), name: "report-card", width: 660, height: nil, dir: dir)
         for step in 0...5 {
             let ui = NotchUIState(geometry: geometry, defaults: previewDefaults)
             save(ZStack(alignment: .top) {

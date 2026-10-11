@@ -52,6 +52,9 @@ private struct SessionTally {
     var gpuSeconds = 0.0
     var worstPressure = "normal"
     let swapAtStart: UInt64
+    /// Core-seconds of CPU moved aside, per app name, and Coremium's own core-seconds.
+    var movedByApp: [String: Double] = [:]
+    var ownCoreSeconds = 0.0
 }
 
 /// One thing Coremium decided, in plain words ("Coding mode activated: Terminal became active. Chrome moved to Yield.").
@@ -620,6 +623,13 @@ final class AppEngine: ObservableObject {
             t.mode = profile.mode.label
             t.peakMoved = max(t.peakMoved, demotedCount)
             t.movedCoreSeconds += movedPercent / 100 * seconds
+            t.ownCoreSeconds += (perPid[ownPid] ?? 0) / 100 * seconds
+            for app in running {
+                let moved = (tree[app.processIdentifier] ?? []).filter { controller.demotedPids.contains($0) }
+                guard !moved.isEmpty else { continue }
+                let percent = moved.reduce(0.0) { $0 + (perPid[$1] ?? 0) }
+                t.movedByApp[app.localizedName ?? app.bundleIdentifier ?? "App", default: 0] += percent / 100 * seconds
+            }
             t.gpuSeconds += backgroundGPU
             let order = ["normal", "warning", "critical"]
             let now = memory.pressure.rawValue
@@ -776,10 +786,13 @@ final class AppEngine: ObservableObject {
         sessionActive = false
         sessionStartedAt = nil
         if let t = tally, Date().timeIntervalSince(t.start) >= 60 {
+            let movedNames = t.movedByApp.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+                .prefix(8).map(\.key)
             let report = SessionReport(start: t.start, end: Date(), appName: t.appName.isEmpty ? "Boost" : t.appName, mode: t.mode,
                                        peakMovedProcesses: t.peakMoved, movedCoreSeconds: t.movedCoreSeconds,
                                        backgroundGPUSeconds: t.gpuSeconds, worstPressure: t.worstPressure,
-                                       swapGrowthBytes: swapGrowth)
+                                       swapGrowthBytes: swapGrowth, movedAppNames: movedNames,
+                                       coremiumCoreSeconds: t.ownCoreSeconds)
             usage.add(report)
             latestReport = report
         }
