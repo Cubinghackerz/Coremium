@@ -126,6 +126,32 @@ struct RenderPreviews {
         let collapsed = NotchUIState(geometry: geometry, defaults: previewDefaults)
         save(ZStack(alignment: .top) { Color(white: 0.5); NotchRootView(engine: engine, ui: collapsed) },
              name: "notch-collapsed", width: 400, height: 60, dir: dir)
+        // Live graphs. The history here is generated for layout checks only; the app fills it from real readings.
+        for (name, span, seconds) in [("performance-2min", PerformancePanel.Span.live, 120), ("performance-30min", .history, 1800)] {
+            let store = TelemetryStore()
+            for t in 0..<seconds {
+                let time = 1_000 + TimeInterval(t)
+                var loads: [Double] = []
+                for cpu in 0..<11 { loads.append(min(max(0.5 + 0.45 * sin(time / 7 + Double(cpu)), 0), 1)) }
+                store.record(TelemetrySample(time: time, coreLoads: loads,
+                                             gpuPercent: 40 + 35 * sin(time / 9),
+                                             appGPUPercent: ["com.example.game": 30 + 20 * sin(time / 11),
+                                                             "com.example.browser": 10 + 8 * sin(time / 5),
+                                                             "com.example.chat": 3],
+                                             memoryUsedBytes: UInt64(11e9 + 2e9 * sin(time / 20)),
+                                             swapBytes: 1_200_000_000, pressure: .normal,
+                                             sessionActive: (40..<90).contains(t)))
+            }
+            save(ZStack(alignment: .top) {
+                    Color(white: 0.12)
+                    PerformancePanel(telemetry: store, chip: engine.chip, memoryTotal: 18_000_000_000,
+                                     names: ["com.example.game": "Game", "com.example.browser": "Browser", "com.example.chat": "Chat"],
+                                     initialSpan: span)
+                        .padding(16)
+                }
+                .environment(\.renderFlat, true),
+                name: name, width: 560, height: nil, dir: dir)
+        }
         for step in 0...5 {
             let ui = NotchUIState(geometry: geometry, defaults: previewDefaults)
             save(ZStack(alignment: .top) {

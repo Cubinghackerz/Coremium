@@ -531,7 +531,7 @@ final class AppEngine: ObservableObject {
         if isWindowVisible {
             var treesByApp: [String: [Int32]] = [:]
             for app in apps { treesByApp[app.bundleID ?? "pid:\(app.pid)"] = tree[app.pid] ?? [app.pid] }
-            telemetryService.setAppTrees(treesByApp)
+            telemetryService.setContext(trees: treesByApp, sessionActive: sessionActive)
         }
 
         let ownNow = ((perPid[ownPid] ?? 0) * 10).rounded() / 10

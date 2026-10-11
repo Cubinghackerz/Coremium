@@ -12,9 +12,12 @@ public struct TelemetrySample: Equatable, Sendable {
     public var memoryUsedBytes: UInt64?
     public var swapBytes: UInt64?
     public var pressure: MemoryInfo.Pressure?
+    /// A boost session was running (the charts mark these stretches).
+    public var sessionActive: Bool
 
     public init(time: TimeInterval, coreLoads: [Double], gpuPercent: Double? = nil, appGPUPercent: [String: Double] = [:],
-                memoryUsedBytes: UInt64? = nil, swapBytes: UInt64? = nil, pressure: MemoryInfo.Pressure? = nil) {
+                memoryUsedBytes: UInt64? = nil, swapBytes: UInt64? = nil, pressure: MemoryInfo.Pressure? = nil,
+                sessionActive: Bool = false) {
         self.time = time
         self.coreLoads = coreLoads
         self.gpuPercent = gpuPercent
@@ -22,6 +25,7 @@ public struct TelemetrySample: Equatable, Sendable {
         self.memoryUsedBytes = memoryUsedBytes
         self.swapBytes = swapBytes
         self.pressure = pressure
+        self.sessionActive = sessionActive
     }
 }
 
@@ -119,6 +123,7 @@ public final class MetricHistory {
         private var swapSum: Double = 0
         private var swapCount = 0
         private var worstPressure: MemoryInfo.Pressure?
+        private var sessionSeen = false
 
         init(index: Double, start: TimeInterval) {
             self.index = index
@@ -134,6 +139,7 @@ public final class MetricHistory {
             if let used = sample.memoryUsedBytes { memorySum += Double(used); memoryCount += 1 }
             if let swap = sample.swapBytes { swapSum += Double(swap); swapCount += 1 }
             if let pressure = sample.pressure, Self.rank(pressure) > Self.rank(worstPressure) { worstPressure = pressure }
+            if sample.sessionActive { sessionSeen = true }
         }
 
         func averaged() -> TelemetrySample {
@@ -145,7 +151,8 @@ public final class MetricHistory {
                 appGPUPercent: appSums.mapValues { $0 / n },
                 memoryUsedBytes: memoryCount > 0 ? UInt64(memorySum / Double(memoryCount)) : nil,
                 swapBytes: swapCount > 0 ? UInt64(swapSum / Double(swapCount)) : nil,
-                pressure: worstPressure)
+                pressure: worstPressure,
+                sessionActive: sessionSeen)
         }
 
         private static func rank(_ pressure: MemoryInfo.Pressure?) -> Int {

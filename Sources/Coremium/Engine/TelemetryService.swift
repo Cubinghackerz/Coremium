@@ -31,6 +31,7 @@ final class TelemetryService: @unchecked Sendable {
     // Written on the main actor, read on `queue`:
     private let treeLock = NSLock()
     private var trees: [String: [Int32]] = [:]
+    private var sessionActive = false
 
     init(store: TelemetryStore) {
         self.store = store
@@ -43,10 +44,11 @@ final class TelemetryService: @unchecked Sendable {
         }
     }
 
-    /// The process trees per app, from the engine's latest measurement, so GPU can be attributed to apps.
-    func setAppTrees(_ newTrees: [String: [Int32]]) {
+    /// The process trees per app and whether a boost session is running, from the engine's latest measurement.
+    func setContext(trees newTrees: [String: [Int32]], sessionActive: Bool) {
         treeLock.lock()
         trees = newTrees
+        self.sessionActive = sessionActive
         treeLock.unlock()
     }
 
@@ -68,17 +70,19 @@ final class TelemetryService: @unchecked Sendable {
         let now = ProcessInfo.processInfo.systemUptime
         let loads = cpu.sample(now: now)
         let memory = MemoryInfo.current()
+        treeLock.lock()
+        let currentTrees = trees
+        let inSession = sessionActive
+        treeLock.unlock()
         if tick % 2 == 0 {
             let reading = GPUStats.read()
-            treeLock.lock()
-            let currentTrees = trees
-            treeLock.unlock()
             let perPid = gpu.percentages(from: reading)
             lastGPU = (reading.devicePercent.map(Double.init), TelemetryBuilder.appGPU(perPid: perPid, trees: currentTrees))
         }
         tick &+= 1
         let sample = TelemetrySample(time: now, coreLoads: loads, gpuPercent: lastGPU.device, appGPUPercent: lastGPU.apps,
-                                     memoryUsedBytes: memory.usedBytes, swapBytes: memory.swapUsedBytes, pressure: memory.pressure)
+                                     memoryUsedBytes: memory.usedBytes, swapBytes: memory.swapUsedBytes, pressure: memory.pressure,
+                                     sessionActive: inSession)
         let store = store
         DispatchQueue.main.async { MainActor.assumeIsolated { store.record(sample) } }
     }

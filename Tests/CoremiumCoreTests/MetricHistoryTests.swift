@@ -91,6 +91,21 @@ final class MetricHistoryTests: XCTestCase {
         XCTAssertEqual(bucket.pressure, .critical)
     }
 
+    func testBucketIsMarkedAsSessionIfAnySampleWasInOne() {
+        let history = MetricHistory(coarseInterval: 10)
+        var quiet = sample(0)
+        history.append(quiet)
+        var boosted = sample(1)
+        boosted.sessionActive = true
+        history.append(boosted)
+        guard case let .sample(bucket)? = history.coarseEntries.last else { return XCTFail() }
+        XCTAssertTrue(bucket.sessionActive)
+        quiet.time = 10
+        history.append(quiet)
+        guard case let .sample(first)? = history.coarseEntries.first else { return XCTFail() }
+        XCTAssertTrue(first.sessionActive)
+    }
+
     func testCoarseSeriesDropsOldBucketsPastCapacity() {
         let history = MetricHistory(coarseInterval: 10, coarseCapacity: 2)
         for t in 0..<40 { history.append(sample(TimeInterval(t))) }
