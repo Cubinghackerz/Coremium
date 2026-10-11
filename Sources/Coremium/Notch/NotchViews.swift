@@ -206,7 +206,7 @@ struct NotchRootView: View {
                     } else if ui.showingTour {
                         WelcomeTourView(engine: engine, ui: ui, onFinish: { ui.finishOnboarding() })
                     } else {
-                        ExpandedView(engine: engine, ui: ui)
+                        DashboardContent(engine: engine, ui: ui)
                     }
                 }
                 .frame(width: width, height: height - geometry.notchHeight - 2, alignment: .top)
@@ -302,7 +302,8 @@ private struct CollapsedView: View {
 
 // MARK: - Expanded
 
-private struct ExpandedView: View {
+/// The dashboard itself (chip panel, mode bar, status and tabs). The notch panel and the standard window both show it.
+struct DashboardContent: View {
     @ObservedObject var engine: AppEngine
     @ObservedObject var ui: NotchUIState
 
