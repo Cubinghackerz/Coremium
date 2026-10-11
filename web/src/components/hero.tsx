@@ -1,7 +1,6 @@
-import { Download } from "lucide-react";
-import { ButtonLink } from "@/components/ui/button";
-import { Demo } from "@/components/demo";
-import { DOWNLOADS, REPO } from "@/lib/utils";
+import { CopyLine } from "@/components/install";
+import { NotchGallery } from "@/components/notch-gallery";
+import { DOWNLOADS, INSTALL_CMD, REPO } from "@/lib/utils";
 
 export function Hero() {
   return (
@@ -14,20 +13,19 @@ export function Hero() {
         <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-zinc-400">
           Coremium lowers background-app priority while you play, create, code, or run local AI. Your other apps stay open.
         </p>
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <ButtonLink href={DOWNLOADS.mac.download} size="lg" className="w-full sm:w-auto">
-            <Download className="size-5" aria-hidden /> Download for Mac — Free
-          </ButtonLink>
-          <ButtonLink href="#demo" variant="quiet" size="lg">See how it works</ButtonLink>
+        <div className="mx-auto mt-8 max-w-2xl text-left">
+          <CopyLine text={INSTALL_CMD} label="macOS install command" />
         </div>
-        <p className="mt-4 text-sm text-zinc-400">Free · Open source · No account · No app telemetry</p>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-zinc-400">
-          v{DOWNLOADS.mac.version} · macOS 13+ · Apple Silicon &amp; Intel. Ad-hoc signed; macOS may need one-time approval.{" "}
-          <a href="#install" className="text-zinc-200 underline underline-offset-4">Install help</a>
-          {" · "}<a href={REPO} className="text-zinc-200 underline underline-offset-4">Read the source</a>
+        <p className="mt-4 text-sm text-zinc-400">
+          Free · Open source · No account · v{DOWNLOADS.mac.version} · macOS 13+ · Apple Silicon &amp; Intel
+        </p>
+        <p className="mt-2 text-sm text-zinc-400">
+          <a href="#install" className="text-zinc-200 underline underline-offset-4">More install options</a>
+          {" · "}
+          <a href={REPO} className="text-zinc-200 underline underline-offset-4">Read the source</a>
         </p>
       </div>
-      <Demo />
+      <NotchGallery />
     </section>
   );
 }

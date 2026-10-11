@@ -71,18 +71,9 @@ export function NotchGallery() {
   }
 
   return (
-    <section id="screens" className="relative mx-auto max-w-6xl scroll-mt-20 px-6 py-20 md:py-28">
+    <div id="screens" className="relative mx-auto mt-14 max-w-6xl scroll-mt-20 px-6">
       <div className="pointer-events-none absolute inset-x-0 top-10 -z-10 mx-auto h-[70%] max-w-4xl rounded-full bg-perf/10 blur-3xl" aria-hidden />
-      <div className="text-center">
-        <p className="text-sm font-medium tracking-wide text-perf">Real screenshots</p>
-        <h2 className="text-balance mx-auto mt-4 max-w-3xl text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.06] tracking-[-0.035em]">
-          This is the notch. <span className="text-zinc-400">Nothing mocked up.</span>
-        </h2>
-        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-zinc-400">
-          Taken from Coremium running on a MacBook Pro with an M3 Pro, unedited. The numbers on your Mac will be different.
-        </p>
-      </div>
-
+      <p className="text-center text-sm text-zinc-400">Real screenshots from the notch, taken on one Mac. Unedited.</p>
       <div role="tablist" aria-label="Notch screens" onKeyDown={onKey}
         className="mx-auto mt-10 flex max-w-full flex-wrap justify-center gap-1.5 rounded-2xl bg-white/[0.04] p-1.5 ring-1 ring-inset ring-white/10">
         {screens.map((screen, i) => {
@@ -112,6 +103,6 @@ export function NotchGallery() {
           <p className="mt-2 text-[15px] leading-relaxed text-zinc-400">{current.body}</p>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

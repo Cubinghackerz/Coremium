@@ -1,3 +1,4 @@
+import { Demo } from "@/components/demo";
 import { Faq } from "@/components/faq";
 import { Facts } from "@/components/facts";
 import { Features } from "@/components/features";
@@ -6,7 +7,8 @@ import { Hero } from "@/components/hero";
 import { Install } from "@/components/install";
 import { Modes } from "@/components/modes";
 import { Nav } from "@/components/nav";
-import { NotchGallery } from "@/components/notch-gallery";
+import { Steps } from "@/components/steps";
+import { Wordmark } from "@/components/wordmark";
 
 export default function Page() {
   return (
@@ -14,12 +16,14 @@ export default function Page() {
       <Nav />
       <main>
         <Hero />
-        <NotchGallery />
+        <Steps />
+        <Demo />
         <Modes />
         <Features />
         <Facts />
         <Install />
         <Faq />
+        <Wordmark />
       </main>
       <Footer />
     </>

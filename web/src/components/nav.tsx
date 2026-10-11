@@ -1,7 +1,7 @@
-import { Download } from "lucide-react";
+import { Terminal } from "lucide-react";
 import Image from "next/image";
 import { ButtonLink } from "@/components/ui/button";
-import { DOWNLOADS, REPO } from "@/lib/utils";
+import { REPO } from "@/lib/utils";
 
 export function Nav() {
   return (
@@ -19,8 +19,8 @@ export function Nav() {
           <a className="transition-colors hover:text-white" href="#faq">FAQ</a>
           <a className="transition-colors hover:text-white" href={REPO}>GitHub</a>
         </nav>
-        <ButtonLink href={DOWNLOADS.mac.download} size="sm" variant="ghost">
-          <Download className="size-4" aria-hidden /> Download
+        <ButtonLink href="#install" size="sm" variant="ghost">
+          <Terminal className="size-4" aria-hidden /> Install
         </ButtonLink>
       </div>
     </header>
