@@ -6,6 +6,7 @@
   --color-eff: #7b87ff;
   --color-boost: #ffc267;
   --color-mint: #5eeab0;
+  --color-gpu: #c4b5fd;
   --color-line: rgb(255 255 255 / 0.09);
   --animate-marquee: marquee 40s linear infinite;
 }
