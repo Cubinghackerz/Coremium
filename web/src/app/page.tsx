@@ -6,6 +6,7 @@ import { Hero } from "@/components/hero";
 import { Install } from "@/components/install";
 import { Modes } from "@/components/modes";
 import { Nav } from "@/components/nav";
+import { NotchGallery } from "@/components/notch-gallery";
 
 export default function Page() {
   return (
@@ -13,6 +14,7 @@ export default function Page() {
       <Nav />
       <main>
         <Hero />
+        <NotchGallery />
         <Modes />
         <Features />
         <Facts />

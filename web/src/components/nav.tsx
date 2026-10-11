@@ -12,6 +12,7 @@ export function Nav() {
           Coremium
         </a>
         <nav aria-label="Main" className="hidden items-center gap-8 text-[15px] text-zinc-400 md:flex">
+          <a className="transition-colors hover:text-white" href="#screens">Screens</a>
           <a className="transition-colors hover:text-white" href="#how">How it works</a>
           <a className="transition-colors hover:text-white" href="#facts">Facts</a>
           <a className="transition-colors hover:text-white" href="#install">Install</a>

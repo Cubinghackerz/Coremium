@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Download } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { Demo } from "@/components/demo";
@@ -29,11 +28,6 @@ export function Hero() {
         </p>
       </div>
       <Demo />
-      <details className="mx-auto mb-12 max-w-5xl px-6">
-        <summary className="cursor-pointer py-4 text-sm text-zinc-400">See the Coremium panel</summary>
-        <Image src="/coremium-panel.png" alt="Coremium's notch panel with automatic modes, per-app choices, and activity details."
-          width={1552} height={876} className="mt-4 w-full rounded-2xl border border-line" />
-      </details>
     </section>
   );
 }
