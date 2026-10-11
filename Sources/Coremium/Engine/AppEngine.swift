@@ -164,10 +164,15 @@ final class AppEngine: ObservableObject {
         didSet {
             guard oldValue != isWindowVisible else { return }
             if isWindowVisible { lastDiagnosticsAt = nil; lastFootprintsAt = nil }
+            telemetryService.setRunning(isWindowVisible)
             reschedule()
             tick()
         }
     }
+
+    /// The live series for the dashboard's graphs. Filled only while the window is visible.
+    let telemetry = TelemetryStore()
+    private lazy var telemetryService = TelemetryService(store: telemetry)
 
     private var needsLiveStats: Bool { isPanelExpanded || isWindowVisible }
 
@@ -523,6 +528,11 @@ final class AppEngine: ObservableObject {
         if let loads = m.loads, loads != cpuLoads { cpuLoads = loads }
         if let reading = m.memory, reading != memory { memory = reading }
         let snapshot = m.snapshot, tree = m.tree, perPid = m.perPid
+        if isWindowVisible {
+            var treesByApp: [String: [Int32]] = [:]
+            for app in apps { treesByApp[app.bundleID ?? "pid:\(app.pid)"] = tree[app.pid] ?? [app.pid] }
+            telemetryService.setAppTrees(treesByApp)
+        }
 
         let ownNow = ((perPid[ownPid] ?? 0) * 10).rounded() / 10
         if abs(ownNow - ownCPU) >= 0.5 { ownCPU = ownNow }
