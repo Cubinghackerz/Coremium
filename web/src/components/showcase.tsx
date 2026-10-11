@@ -1,4 +1,5 @@
 import CardSwap from "@/components/card-swap";
+import ScrollExpand from "@/components/scroll-expand";
 
 const screens = [
   { title: "Apps", image: "/screens/notch-apps.png", alt: "The Apps tab: each running app with its choice." },
@@ -21,29 +22,38 @@ const numbers: [string, string][] = [
 export function Showcase() {
   return (
     <>
-      <section aria-labelledby="numbers-heading" className="mx-auto max-w-6xl px-6 py-20 md:py-28">
-        <div className="grid gap-12 md:grid-cols-[1fr_1.1fr] md:items-center">
-          <div>
-            <h2 id="numbers-heading" className="text-balance mt-4 text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.04] tracking-[-0.035em]">
-              The numbers behind <span className="text-zinc-400">each choice.</span>
+      <section aria-label="Advanced numbers" className="h-[290svh] w-full">
+        <ScrollExpand
+          title="The numbers behind each choice."
+          scrollHint="Scroll"
+          useWindowScroll
+          startWidth={64}
+          startHeight={68}
+          startRadius={28}
+          endRadius={0}
+          scrollDistance={1.4}
+          holdDistance={0.5}
+          overlayScrim={0}
+          frameClassName="bg-[#0a0a0c] ring-1 ring-inset ring-white/10"
+        >
+          <div className="w-full max-w-5xl px-6 text-left">
+            <h2 className="text-balance text-[clamp(28px,4vw,52px)] font-semibold leading-[1.04] tracking-[-0.035em] text-white">
+              Turn on Advanced mode. <span className="text-zinc-400">The notch shows the numbers.</span>
             </h2>
-            <p className="mt-5 max-w-md text-base leading-relaxed text-zinc-400">
-              Turn on Advanced mode and the notch shows what Coremium measured. Every number here is read from this Mac.
-            </p>
+            <dl className="mt-8 grid gap-x-12 md:grid-cols-2">
+              {numbers.map(([label, body]) => (
+                <div key={label} className="grid gap-1 border-t border-white/10 py-4">
+                  <dt className="font-medium text-zinc-100">{label}</dt>
+                  <dd className="text-sm leading-relaxed text-zinc-400">{body}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
-          <dl className="divide-y divide-white/10 border-y border-white/10">
-            {numbers.map(([label, body]) => (
-              <div key={label} className="grid gap-1 py-5 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:gap-10">
-                <dt className="font-medium text-zinc-100">{label}</dt>
-                <dd className="text-sm leading-relaxed text-zinc-400">{body}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+        </ScrollExpand>
       </section>
       <section aria-labelledby="stack-heading" className="mx-auto max-w-6xl px-6 py-20 md:py-28">
         <div className="text-center">
-          <h2 id="stack-heading" className="text-balance mx-auto mt-4 max-w-3xl text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.04] tracking-[-0.035em]">
+          <h2 id="stack-heading" className="text-balance mx-auto max-w-3xl text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.04] tracking-[-0.035em]">
             One notch. <span className="text-zinc-400">Five views.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-zinc-400">Drag the top card, or use the arrow keys. Real captures from one Mac.</p>
