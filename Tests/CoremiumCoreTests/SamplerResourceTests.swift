@@ -35,4 +35,25 @@ final class SamplerResourceTests: XCTestCase {
         }
         XCTAssertEqual(references(to: host), before)
     }
+
+    /// Regression: the first reading after an idle stretch used to average the whole stretch as if it were now.
+    func testCoreLoadReprimesAfterAGapInsteadOfAveragingIdleTime() {
+        let sampler = CPULoadSampler()
+        _ = sampler.sample(now: 0)
+        let afterGap = sampler.sample(now: 100, maxGap: 3)
+        XCTAssertFalse(afterGap.isEmpty)
+        XCTAssertTrue(afterGap.allSatisfy { $0 == 0 }, "after a gap the sampler must re-prime, not report the idle average")
+        let next = sampler.sample(now: 101, maxGap: 3)
+        XCTAssertEqual(next.count, afterGap.count)
+        XCTAssertTrue(next.allSatisfy { (0...1).contains($0) })
+    }
+
+    func testCoreLoadKeepsTheBaselineWithinTheGap() {
+        let sampler = CPULoadSampler()
+        _ = sampler.sample(now: 0)
+        let within = sampler.sample(now: 2, maxGap: 3)
+        XCTAssertEqual(within.count, sampler.sample(now: 3, maxGap: 3).count)
+        XCTAssertTrue(within.allSatisfy { (0...1).contains($0) })
+        XCTAssertFalse(within.isEmpty)
+    }
 }
