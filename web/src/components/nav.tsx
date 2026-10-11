@@ -1,27 +1,33 @@
-import { Terminal } from "lucide-react";
 import Image from "next/image";
-import { ButtonLink } from "@/components/ui/button";
+import { Notch } from "@/components/notch";
 import { REPO } from "@/lib/utils";
 
+const link = "rounded-md px-2.5 py-1 transition-colors hover:bg-white/10 hover:text-white";
+
+/* A menu bar: app menus on the left, status items on the right, the notch in between. */
 export function Nav() {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-black/60 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <a href="#top" className="flex items-center gap-3 text-[17px] font-semibold tracking-tight">
-          <Image src="/logo.png" alt="" width={28} height={28} className="rounded-[7px]" />
-          Coremium
-        </a>
-        <nav aria-label="Main" className="hidden items-center gap-8 text-[15px] text-zinc-400 md:flex">
-          <a className="transition-colors hover:text-white" href="#screens">Screens</a>
-          <a className="transition-colors hover:text-white" href="#how">How it works</a>
-          <a className="transition-colors hover:text-white" href="#facts">Facts</a>
-          <a className="transition-colors hover:text-white" href="#install">Install</a>
-          <a className="transition-colors hover:text-white" href="#faq">FAQ</a>
-          <a className="transition-colors hover:text-white" href={REPO}>GitHub</a>
+    <header className="fixed inset-x-0 top-0 z-50 h-[var(--bar)] border-b border-white/[0.06] bg-black/40 backdrop-blur-xl backdrop-saturate-150">
+      <div className="relative mx-auto flex h-full max-w-[1400px] items-center justify-between px-3 md:px-5">
+        <nav aria-label="Main" className="flex items-center gap-1 text-[13.5px] text-zinc-300">
+          <a href="#top" className="mr-2 flex items-center gap-2 rounded-md px-1.5 py-1 font-semibold text-white">
+            <Image src="/brand/mark-white.png" alt="" width={18} height={19} priority />
+            <span className="hidden sm:inline">Coremium</span>
+          </a>
+          <a className={`${link} hidden xl:inline-block`} href="#screens">Screens</a>
+          <a className={`${link} hidden xl:inline-block`} href="#how">How it works</a>
+          <a className={`${link} hidden xl:inline-block`} href="#numbers">Numbers</a>
         </nav>
-        <ButtonLink href="#install" size="sm" variant="ghost">
-          <Terminal className="size-4" aria-hidden /> Install
-        </ButtonLink>
+
+        <Notch />
+
+        <div className="flex items-center gap-1 text-[13.5px] text-zinc-300">
+          <a className={`${link} hidden xl:inline-block`} href="#faq">FAQ</a>
+          <a className={`${link} hidden md:inline-block`} href={REPO}>GitHub</a>
+          <a href="#install" className="ml-1 inline-flex h-7 items-center rounded-full bg-white px-3.5 text-[13px] font-semibold text-black transition-colors hover:bg-zinc-200">
+            Install
+          </a>
+        </div>
       </div>
     </header>
   );

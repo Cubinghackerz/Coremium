@@ -13,11 +13,11 @@ const items: [string, string][] = [
 
 export function Faq() {
   return (
-    <section id="faq" className="mx-auto max-w-3xl px-6 py-24 md:py-32">
-      <h2 className="text-balance text-[clamp(32px,4.6vw,56px)] font-semibold leading-[1.02] tracking-[-0.035em]">
-        <span className="text-zinc-400">Questions,</span> <span className="text-white">answered plainly.</span>
+    <section id="faq" className="mx-auto grid max-w-6xl scroll-mt-16 gap-10 px-5 py-24 md:px-6 md:py-36 lg:grid-cols-[0.9fr_1.4fr] lg:gap-20">
+      <h2 className="text-balance text-[clamp(34px,5vw,64px)] font-semibold leading-[1] tracking-[-0.04em] lg:sticky lg:top-28 lg:self-start">
+        Questions, <span className="text-white/45">answered plainly.</span>
       </h2>
-      <Accordion type="single" collapsible className="mt-12 border-t border-line">
+      <Accordion type="single" collapsible className="border-t border-line">
         {items.map(([q, a], i) => (
           <AccordionItem key={q} value={`q${i}`}>
             <AccordionTrigger>{q}</AccordionTrigger>

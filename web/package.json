@@ -9,11 +9,12 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@hugeicons/core-free-icons": "4.3.5",
+    "@hugeicons/react": "1.1.10",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-tabs": "^1.1.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "latest",
     "motion": "^12.0.0",
     "next": "^16.0.0",
     "react": "^19.0.0",

@@ -1,14 +1,12 @@
-import { Demo } from "@/components/demo";
-import { Faq } from "@/components/faq";
+import { Choices } from "@/components/choices";
 import { Facts } from "@/components/facts";
-import { Features } from "@/components/features";
+import { Faq } from "@/components/faq";
 import { Footer } from "@/components/footer";
 import { Hero } from "@/components/hero";
 import { Install } from "@/components/install";
-import { Modes } from "@/components/modes";
 import { Nav } from "@/components/nav";
-import { Showcase } from "@/components/showcase";
-import { Steps } from "@/components/steps";
+import { Scheduler } from "@/components/scheduler";
+import { Telemetry } from "@/components/telemetry";
 import { Wordmark } from "@/components/wordmark";
 
 export default function Page() {
@@ -17,11 +15,9 @@ export default function Page() {
       <Nav />
       <main>
         <Hero />
-        <Steps />
-        <Showcase />
-        <Demo />
-        <Modes />
-        <Features />
+        <Scheduler />
+        <Choices />
+        <Telemetry />
         <Facts />
         <Install />
         <Faq />

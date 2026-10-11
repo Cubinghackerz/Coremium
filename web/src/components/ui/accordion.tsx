@@ -1,7 +1,8 @@
 "use client";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import { Plus } from "lucide-react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import * as React from "react";
+import { Icon } from "@/components/icon";
 import { cn } from "@/lib/utils";
 
 export const Accordion = AccordionPrimitive.Root;
@@ -17,7 +18,7 @@ export const AccordionTrigger = ({ className, children, ...props }: React.Compon
       {...props}
     >
       {children}
-      <Plus className="size-5 shrink-0 text-zinc-500 transition-transform duration-300 group-data-[state=open]:rotate-45" aria-hidden />
+      <Icon icon={Add01Icon} className="size-5 shrink-0 text-zinc-500 transition-transform duration-300 group-data-[state=open]:rotate-45" />
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 );
