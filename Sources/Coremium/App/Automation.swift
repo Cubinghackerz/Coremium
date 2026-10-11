@@ -29,7 +29,7 @@ enum Automation {
                 dashboard?.closeIfOpen()
                 notch?.expand(pinned: true)
             }
-        case "window": dashboard?.show()
+        case "window": dashboard?.show(tab: argument.flatMap { name in NotchTab.allCases.first { $0.rawValue == name } })
         default: return false
         }
         return true

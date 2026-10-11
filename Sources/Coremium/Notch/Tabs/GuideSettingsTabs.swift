@@ -86,7 +86,7 @@ struct SettingsTab: View {
                 Card(padding: 12) {
                     VStack(alignment: .leading, spacing: 11) {
                         SectionLabel(text: "General")
-                        SettingRow(title: "Window only", detail: "Use Coremium as a normal app: a Dock icon and a window, with no notch or pill. Click the Dock icon or the menu-bar icon to open it.",
+                        SettingRow(title: "Window mode", detail: "Use Coremium as a normal app: a Dock icon and a window, with no notch or pill. The window's Notch button switches back.",
                                    isOn: $engine.windowOnly)
                         SettingRow(title: "Advanced mode", detail: "Show the numbers: per-core load, memory, process counts, timers, and why each rule applies.",
                                    isOn: $ui.advanced)

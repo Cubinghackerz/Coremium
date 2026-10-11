@@ -120,6 +120,10 @@ final class NotchUIState: ObservableObject {
         if decisionToasts != toasts { decisionToasts = toasts }
     }
 
+    /// Switches Coremium between the notch and the window (wired by the app). The notch shows it as a pop-out button,
+    /// the window as a "Notch" button.
+    var onSwitchSurface: (() -> Void)?
+
     /// Closes the panel (wired to the controller).
     var onHide: (() -> Void)?
     /// Mouse interaction can give this nonactivating panel keyboard focus without stealing focus on hover.
@@ -481,6 +485,18 @@ private struct PanelActions: View {
             .help("Show the numbers: per-core load, memory, process counts and timers.")
             .accessibilityLabel("Advanced mode")
             .accessibilityValue(ui.advanced ? "On" : "Off")
+            if let switchSurface = ui.onSwitchSurface {
+                Button { switchSurface() } label: {
+                    Image(systemName: "macwindow").font(.system(size: 10.5, weight: .semibold))
+                        .padding(.horizontal, 9).frame(minHeight: 30)
+                        .foregroundColor(.white.opacity(0.65))
+                        .background(Capsule().fill(Color.white.opacity(0.08)))
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .help("Switch to window mode: a normal app window with a Dock icon. The Notch button there brings you back.")
+                .accessibilityLabel("Switch to window mode")
+            }
             Button { ui.onHide?() } label: {
                 Image(systemName: "chevron.up").font(.system(size: 10, weight: .bold))
                     .padding(.horizontal, 9).frame(minHeight: 30)

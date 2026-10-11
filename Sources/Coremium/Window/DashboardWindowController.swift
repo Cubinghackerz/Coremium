@@ -13,9 +13,13 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
     private var window: DashboardWindow?
     private var occlusionObserver: NSObjectProtocol?
 
+    /// Back to the notch (wired by the app).
+    var onSwitchToNotch: (() -> Void)?
+
     init(engine: AppEngine) {
         self.engine = engine
         super.init()
+        ui.onSwitchSurface = { [weak self] in self?.onSwitchToNotch?() }
     }
 
     /// Opens the window (or brings it forward). Sampling starts when the window is actually visible.
@@ -39,6 +43,9 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
         ui.showingTour = true
         show()
     }
+
+    func toggleAdvanced() { ui.advanced.toggle() }
+    var advanced: Bool { ui.advanced }
 
     func closeIfOpen() {
         if isOpen { window?.close() }
@@ -67,7 +74,10 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
             window.center()
         }
         window.delegate = self
-        window.contentView = NSHostingView(rootView: DashboardWindowView(engine: engine, ui: ui))
+        let host = NSHostingView(rootView: DashboardWindowView(engine: engine, ui: ui))
+        // The window sets the size; long tab content scrolls instead of growing the window past the screen.
+        host.sizingOptions = []
+        window.contentView = host
         window.onNavigate = { [weak self] event in self?.navigate(with: event) ?? false }
 
         ui.onHide = { [weak window] in window?.close() }
@@ -129,6 +139,7 @@ final class DashboardWindow: NSWindow {
 struct DashboardWindowView: View {
     @ObservedObject var engine: AppEngine
     @ObservedObject var ui: NotchUIState
+    private let compactName = NotchGeometry.current().1.hasNotch ? "Notch" : "Pill"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -149,7 +160,7 @@ struct DashboardWindowView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         // Room for the traffic lights, which sit over the transparent titlebar.
         .padding(.horizontal, 28)
-        .padding(.top, 44)
+        .padding(.top, 12)
         .padding(.bottom, 20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(WindowBackdrop())
@@ -178,6 +189,21 @@ struct DashboardWindowView: View {
                 Text(chipSubtitle(chip)).font(.system(size: 12, design: .rounded)).foregroundColor(Theme.textDim)
             }
             Spacer(minLength: 12)
+            if let switchSurface = ui.onSwitchSurface {
+                Button { switchSurface() } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "menubar.rectangle").font(.system(size: 11, weight: .semibold))
+                        Text(compactName).font(.system(size: 12, weight: .semibold, design: .rounded))
+                    }
+                    .padding(.horizontal, 14).frame(minHeight: 32)
+                    .foregroundColor(.white.opacity(0.8))
+                    .background(Capsule().fill(Color.white.opacity(0.09)))
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .help("Switch back to the notch. The window button there brings you back here.")
+                .accessibilityLabel("Switch to the notch")
+            }
             Button { ui.advanced.toggle() } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "chart.xyaxis.line").font(.system(size: 11, weight: .semibold))
@@ -219,7 +245,6 @@ struct DashboardWindowView: View {
         } else {
             VStack(alignment: .leading, spacing: 12) {
                 LiveTiles(engine: engine, telemetry: engine.telemetry)
-                    .frame(maxHeight: .infinity)
                 CoreBars(chip: engine.chip, loads: engine.cpuLoads)
                     .frame(maxHeight: .infinity)
             }
@@ -273,7 +298,7 @@ private struct LiveTiles: View {
 
     private func tile(_ title: String, percent: Int?, detail: String, color: Color, entries: [TelemetryEntry],
                       value: @escaping (TelemetrySample) -> Double?) -> some View {
-        Card(padding: 14, fillsHeight: true) {
+        Card(padding: 14) {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 5) {
@@ -286,7 +311,7 @@ private struct LiveTiles: View {
                 }
                 .fixedSize(horizontal: true, vertical: false)
                 Sparkline(entries: entries, capacity: 120, color: color, value: value)
-                    .frame(minHeight: 40, maxHeight: .infinity)
+                    .frame(height: 58)
                     .accessibilityHidden(true)
             }
         }
