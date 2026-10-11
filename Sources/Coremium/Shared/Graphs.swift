@@ -29,22 +29,35 @@ struct CoreHeatStrip: View {
     /// Rows from top to bottom: the logical CPU index, and whether it is a performance core.
     let rows: [(cpu: Int, performance: Bool)]
 
+    /// Brightness steps. Cells in the same step and colour are drawn as one path, so a redraw is a few dozen fills
+    /// instead of one fill per cell (about 1,300 a second for an 11-core chip).
+    private static let levels = 12
+
     var body: some View {
         Canvas { context, size in
             guard !rows.isEmpty else { return }
             let rowHeight = size.height / CGFloat(rows.count)
             let slotWidth = size.width / CGFloat(capacity)
+            let cellWidth = max(slotWidth - 0.5, 0.5)
+            let cellHeight = max(rowHeight - 1, 0.5)
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color.white.opacity(0.06)))
+            // [performance][level] paths.
+            var paths = [[Path]](repeating: [Path](repeating: Path(), count: Self.levels), count: 2)
             for (slot, entry) in ChartSlots.placed(entries, capacity: capacity) {
                 guard case let .sample(sample) = entry else { continue }
                 for (row, core) in rows.enumerated() {
-                    let rect = CGRect(x: CGFloat(slot) * slotWidth, y: CGFloat(row) * rowHeight,
-                                      width: max(slotWidth - 0.5, 0.5), height: max(rowHeight - 1, 0.5))
-                    context.fill(Path(rect), with: .color(Color.white.opacity(0.06)))
                     let load = core.cpu < sample.coreLoads.count ? min(max(sample.coreLoads[core.cpu], 0), 1) : 0
-                    if load > 0.01 {
-                        let base = core.performance ? Theme.yield : Theme.eco
-                        context.fill(Path(rect), with: .color(base.opacity(0.18 + 0.82 * load)))
-                    }
+                    guard load > 0.01 else { continue }
+                    let level = min(Int(load * Double(Self.levels)), Self.levels - 1)
+                    let rect = CGRect(x: CGFloat(slot) * slotWidth, y: CGFloat(row) * rowHeight, width: cellWidth, height: cellHeight)
+                    paths[core.performance ? 0 : 1][level].addRect(rect)
+                }
+            }
+            for (kind, byLevel) in paths.enumerated() {
+                let base = kind == 0 ? Theme.yield : Theme.eco
+                for (level, path) in byLevel.enumerated() where !path.isEmpty {
+                    let load = (Double(level) + 0.5) / Double(Self.levels)
+                    context.fill(path, with: .color(base.opacity(0.18 + 0.82 * load)))
                 }
             }
         }

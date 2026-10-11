@@ -15,8 +15,8 @@ final class SimulatorState: ObservableObject {
 
     func start() {
         guard timer == nil else { return }
-        // 10 steps a second, six frames each: the same 60 frames a second of data, drawn half as often.
-        let new = Timer(timeInterval: 1.0 / 10.0, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.advance() } }
+        // 5 steps a second, twelve frames each: the same 60 frames a second of data, drawn half as often.
+        let new = Timer(timeInterval: 1.0 / 5.0, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.advance() } }
         RunLoop.main.add(new, forMode: .common)
         timer = new
     }
@@ -28,7 +28,7 @@ final class SimulatorState: ObservableObject {
     var onStep: (() -> Void)?
 
     private func advance() {
-        for _ in 0..<6 { frames.append(model.nextFrameMs()) }
+        for _ in 0..<12 { frames.append(model.nextFrameMs()) }
         if frames.count > Self.windowSize { frames.removeFirst(frames.count - Self.windowSize) }
         onStep?()
     }

@@ -12,6 +12,9 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
     private let ui = NotchUIState(geometry: NotchGeometry(hasNotch: false, notchWidth: 0, notchHeight: 24))
     private var window: DashboardWindow?
     private var occlusionObserver: NSObjectProtocol?
+    /// Whether the window currently holds its SwiftUI content. A hidden window keeps its views alive, so their timers
+    /// (the simulator, the activity sampler) would keep running. Swapping the content out stops them.
+    private var contentLive = false
 
     /// Back to the notch (wired by the app).
     var onSwitchToNotch: (() -> Void)?
@@ -28,6 +31,7 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
         if let tab { ui.tab = tab }
         let window = self.window ?? makeWindow()
         self.window = window
+        setContentLive(true)
         onVisibilityChange?(true)
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
@@ -74,10 +78,6 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
             window.center()
         }
         window.delegate = self
-        let host = NSHostingView(rootView: DashboardWindowView(engine: engine, ui: ui))
-        // The window sets the size; long tab content scrolls instead of growing the window past the screen.
-        host.sizingOptions = []
-        window.contentView = host
         window.onNavigate = { [weak self] event in self?.navigate(with: event) ?? false }
 
         ui.onHide = { [weak window] in window?.close() }
@@ -87,7 +87,9 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
             MainActor.assumeIsolated {
                 guard let self, let window else { return }
                 // Hidden behind other windows, minimised or on another Space: nothing is drawn, so nothing is sampled.
-                self.engine.isWindowVisible = window.isVisible && window.occlusionState.contains(.visible)
+                let visible = window.isVisible && window.occlusionState.contains(.visible)
+                self.engine.isWindowVisible = visible
+                self.setContentLive(visible)
             }
         }
         return window
@@ -100,7 +102,23 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         engine.isWindowVisible = false
+        setContentLive(false)
         onVisibilityChange?(false)
+    }
+
+    /// Builds the SwiftUI content when the window is on screen, and drops it when it is not. The tab state lives in
+    /// `ui` and the storage model is shared, so a rebuilt window opens where it was left.
+    private func setContentLive(_ live: Bool) {
+        guard let window, live != contentLive else { return }
+        contentLive = live
+        if live {
+            let host = NSHostingView(rootView: DashboardWindowView(engine: engine, ui: ui))
+            // The window sets the size; long tab content scrolls instead of growing the window past the screen.
+            host.sizingOptions = []
+            window.contentView = host
+        } else {
+            window.contentView = NSView()
+        }
     }
 
     /// The same tab shortcuts as the notch: ⌘1–⌘8, and Control-Tab (Control-Shift-Tab goes back).
@@ -372,7 +390,6 @@ private struct CoreBars: View {
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 60, maxHeight: .infinity)
-            .animation(.easeOut(duration: 0.4), value: load)
             Text(label).font(.system(size: 9, weight: .medium, design: .rounded)).foregroundColor(Theme.textDim)
         }
         .accessibilityElement(children: .ignore)
