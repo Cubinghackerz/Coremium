@@ -44,12 +44,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var notch: NotchController!
     private let fullscreenFix = FullscreenFix()
     private var statusItem: NSStatusItem?
+    private var dashboard: DashboardWindowController?
     private var cancellables = Set<AnyCancellable>()
     private var signalSources: [DispatchSourceSignal] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         engine = AppEngine()
         notch = NotchController(engine: engine)
+        dashboard = DashboardWindowController(engine: engine)
+        Automation.dashboard = dashboard
+        installMainMenu()
 
         engine.$rules.map(\.fullscreenFixEnabled).removeDuplicates()
             .sink { [weak self] enabled in self?.fullscreenFix.setEnabled(enabled) }.store(in: &cancellables)
@@ -87,6 +91,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         notch.expand(pinned: true)
     }
 
+    /// Not shown in the menu bar of this accessory app until it is active (the window opens it). It provides the
+    /// standard keys: ⌘W closes the window, ⌘Q quits.
+    private func installMainMenu() {
+        let mainMenu = NSMenu()
+        let appItem = NSMenuItem()
+        let appMenu = NSMenu(title: "Coremium")
+        appMenu.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        appMenu.addItem(.separator())
+        appMenu.addItem(withTitle: "Quit Coremium", action: #selector(quit), keyEquivalent: "q").target = self
+        appItem.submenu = appMenu
+        mainMenu.addItem(appItem)
+        NSApp.mainMenu = mainMenu
+    }
+
     // MARK: - Menu bar item
 
     private func installStatusItem() {
@@ -107,6 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         } else {
             menu.addItem(withTitle: "Show Coremium", action: #selector(showPanel), keyEquivalent: "").target = self
         }
+        menu.addItem(withTitle: "Open Coremium Window", action: #selector(openWindow), keyEquivalent: "").target = self
         let modes = NSMenu()
         for mode in PerformanceMode.allCases {
             let entry = NSMenuItem(title: mode.label, action: #selector(pickMode(_:)), keyEquivalent: "")
@@ -144,6 +163,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func showPanel() { notch.expand(pinned: true) }
+    @objc private func openWindow() { dashboard?.show() }
     @objc private func hidePanel() { notch.collapse() }
     @objc private func tour() { showTour() }
     @objc private func restoreAll() { engine.restoreAllNow() }

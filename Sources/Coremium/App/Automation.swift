@@ -7,8 +7,9 @@ import CoremiumCore
 enum Automation {
     static weak var engine: AppEngine?
     static weak var notch: NotchController?
+    static weak var dashboard: DashboardWindowController?
 
-    /// coremium://mode/gaming, coremium://pause, coremium://resume, coremium://open, coremium://open/storage
+    /// coremium://mode/gaming, coremium://pause, coremium://resume, coremium://open, coremium://open/storage, coremium://window
     @discardableResult
     static func handle(_ url: URL) -> Bool {
         guard url.scheme == "coremium", let engine else { return false }
@@ -23,6 +24,7 @@ enum Automation {
         case "open":
             if let argument, let tab = NotchTab.allCases.first(where: { $0.rawValue == argument }) { notch?.ui.tab = tab }
             notch?.expand(pinned: true)
+        case "window": dashboard?.show()
         default: return false
         }
         return true

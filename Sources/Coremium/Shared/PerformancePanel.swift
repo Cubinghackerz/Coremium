@@ -43,6 +43,7 @@ struct PerformancePanel: View {
                     ForEach(Span.allCases) { Text($0.rawValue).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                .tint(.white)
                 .labelsHidden()
                 .frame(width: 150)
             }
