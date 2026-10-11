@@ -7,6 +7,7 @@ import { Hero } from "@/components/hero";
 import { Install } from "@/components/install";
 import { Modes } from "@/components/modes";
 import { Nav } from "@/components/nav";
+import { Showcase } from "@/components/showcase";
 import { Steps } from "@/components/steps";
 import { Wordmark } from "@/components/wordmark";
 
@@ -17,6 +18,7 @@ export default function Page() {
       <main>
         <Hero />
         <Steps />
+        <Showcase />
         <Demo />
         <Modes />
         <Features />
