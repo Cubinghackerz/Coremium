@@ -25,7 +25,13 @@ lowering eligible background-app priority. Coremium never quits anything on its 
   aside on the right), and each decision drops out of the notch for three seconds. Clicks pass through; turn it off in Settings.
 - **Storage:** see what's filling your disk (app caches, logs, Xcode build files, old downloads, the Trash) and move what you
   choose to the Trash. Read-only scan, nothing is ever deleted for good, documents are never touched.
-- **Insights:** what Coremium actually did (measured), why it made each decision, and what it costs.
+- **Window:** Open Coremium Window (menu bar, or `coremium://window`) for a resizable window with the live graphs beside the
+  dashboard. It works on every Mac, notched or not, and needs no Dock icon.
+- **Live graphs:** per-core CPU (performance and efficiency), GPU use with each app's share, and memory and swap, over the
+  last 2 minutes (one point a second) or 30 minutes (one averaged point per 10 seconds). Boost sessions show as ticks. The
+  history lives in memory only, is collected only while the window is open, and is never saved.
+- **Insights:** what Coremium actually did (measured), why it made each decision, and what it costs. Session reports name
+  the apps that were moved aside and the CPU Coremium itself used.
 - **Simulate:** an animated illustration of the idea (clearly labelled as such).
 - **Learns locally:** suggests "Yield" for apps that hog the CPU while you play, and "Boost" for apps you work hard in.
 - **Fullscreen fix** for the macOS 27 fullscreen stutter on 120 Hz MacBooks (optional).
@@ -117,6 +123,10 @@ change other apps' priorities. This measures the engine, not native UI drawing, 
 - Helper services that macOS starts for an app (Safari web content, etc.) can't be attributed to it.
 - No battery-life or temperature claims; it can't measure either.
 - Ad-hoc signed and not notarized, so macOS asks you to approve it once.
+- The graphs show what was measured while the window was open. History before that isn't recorded, and nothing is saved
+  per sample.
+- GPU readings come from undocumented system counters, so they are advisory: they show what is busy, and Coremium can't
+  change GPU priority.
 
 ## Tested on
 
