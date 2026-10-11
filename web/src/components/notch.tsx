@@ -12,6 +12,7 @@ const activities = [
   { app: "Ollama", mode: "Local AI" },
 ];
 
+const BAR = 56;
 const spring = { type: "spring", stiffness: 420, damping: 38, mass: 0.9 } as const;
 const cores = [0.82, 0.74, 0.88, 0.69, 0.78, 0.52, 0.61, 0.47, 0.58, 0.44, 0.5];
 
@@ -70,7 +71,7 @@ export function Notch() {
   const base = wide ? 200 : 124;
   const open = hover && wide;
   const width = open ? 460 : showing ? base + 300 : base;
-  const height = open ? 214 : 40;
+  const height = open ? 230 : BAR;
   const activity = activities[index];
 
   return (
@@ -79,8 +80,8 @@ export function Notch() {
         initial={false}
         animate={{ width, height, borderBottomLeftRadius: open ? 30 : 14, borderBottomRightRadius: open ? 30 : 14 }}
         transition={reduce ? { duration: 0 } : spring}
-        className="relative overflow-visible bg-black shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)]"
-        style={{ width: base, height: 40 }}
+        className="relative overflow-visible bg-black ring-1 ring-inset ring-white/[0.08]"
+        style={{ width: base, height: BAR }}
       >
         <span className="absolute -left-[10px] top-0 size-[10px] bg-[radial-gradient(circle_at_0_100%,transparent_9.5px,#000_10px)]" />
         <span className="absolute -right-[10px] top-0 size-[10px] bg-[radial-gradient(circle_at_100%_100%,transparent_9.5px,#000_10px)]" />
@@ -94,7 +95,7 @@ export function Notch() {
                 animate={{ opacity: 1, filter: "blur(0px)" }}
                 exit={{ opacity: 0, filter: "blur(4px)" }}
                 transition={{ duration: 0.3, delay: 0.08 }}
-                className="absolute inset-0 flex items-center justify-between px-4 text-[13px] font-medium"
+                className="absolute inset-0 flex items-center justify-between px-5 text-[14px] font-medium"
               >
                 <span className="flex w-[132px] items-center gap-2 truncate text-white">
                   <span className="size-2 shrink-0 rounded-full bg-boost shadow-[0_0_10px_rgba(255,194,103,0.8)]" />
@@ -112,7 +113,7 @@ export function Notch() {
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, transition: { duration: 0.1 } }}
                 transition={{ duration: 0.3, delay: 0.12 }}
-                className="absolute inset-x-0 top-[40px] px-6 pb-5 pt-3"
+                className="absolute inset-x-0 top-[56px] px-6 pb-5 pt-3"
               >
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 text-[13px] font-semibold text-white">

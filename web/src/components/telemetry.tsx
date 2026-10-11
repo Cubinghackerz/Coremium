@@ -155,7 +155,7 @@ export function Telemetry() {
   ];
 
   return (
-    <section id="numbers" aria-labelledby="numbers-heading" className="scroll-mt-16 border-y border-white/[0.06] bg-[radial-gradient(70%_60%_at_80%_40%,rgba(98,228,255,0.07),transparent_70%)]">
+    <section id="numbers" aria-labelledby="numbers-heading" className="scroll-mt-16 border-y border-white/[0.06]">
       <div className="mx-auto grid max-w-6xl gap-14 px-5 py-24 md:px-6 md:py-36 lg:grid-cols-[1fr_1.35fr] lg:items-center lg:gap-16">
         <div>
           <h2 id="numbers-heading" className="text-balance text-[clamp(34px,5vw,64px)] font-semibold leading-[1] tracking-[-0.04em]">
@@ -181,7 +181,7 @@ export function Telemetry() {
         </div>
 
         <div ref={ref}>
-          <div className="grid gap-8 rounded-[32px] bg-black p-6 ring-1 ring-inset ring-white/12 shadow-[0_40px_100px_-40px_rgba(98,228,255,0.25)] md:grid-cols-[0.8fr_1.2fr] md:p-8">
+          <div className="grid gap-8 rounded-[32px] bg-black p-6 ring-1 ring-inset ring-white/12 md:grid-cols-[0.8fr_1.2fr] md:p-8">
             <div>
               <Chip />
               <p className="mt-6 text-[11px] font-semibold tracking-[0.14em] text-zinc-500">CORE LOAD %</p>

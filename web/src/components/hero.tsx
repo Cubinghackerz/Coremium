@@ -90,7 +90,7 @@ function Screens({ active, scale }: { active: number; scale?: MotionValue<number
 function StaticHero() {
   const [active, setActive] = useState(0);
   return (
-    <section id="top" className="wallpaper grain relative overflow-hidden pb-24 pt-[calc(var(--bar)+96px)]">
+    <section id="top" className="relative overflow-hidden bg-black pb-24 pt-[calc(var(--bar)+96px)]">
       <Headline />
       <div id="screens" className="relative mx-auto mt-16 aspect-[1560/976] w-[min(1040px,calc(100vw-24px))] overflow-hidden rounded-b-[32px] rounded-t-[18px] bg-black">
         <Screens active={active} />
@@ -133,7 +133,6 @@ export function Hero() {
   const headOpacity = useTransform(p, (v) => 1 - range(v, 0, 0.12));
   const headY = useTransform(p, (v) => 60 * range(v, 0, 0.14));
   const headBlur = useTransform(p, (v) => `blur(${10 * range(v, 0, 0.12)}px)`);
-  const wallOpacity = useTransform(p, (v) => 1 - 0.3 * range(v, 0, 0.2) - 0.7 * range(v, 0.86, 1));
   const hintOpacity = useTransform(p, (v) => 1 - range(v, 0, 0.04));
 
   if (reduce) return <StaticHero />;
@@ -147,17 +146,18 @@ export function Hero() {
   }
 
   return (
-    <section id="top" ref={ref} className="relative h-[460svh] [--nw:124px] md:[--nw:200px]">
+    <section id="top" ref={ref} className="relative h-[460svh] [--nw:124px] [--pad:40px] md:[--nw:200px] md:[--pad:0px]">
       <div id="screens" className="absolute top-[30%]" aria-hidden />
-      <div className="sticky top-0 h-svh overflow-hidden [--pw:min(1040px,calc(100vw-24px),calc((100svh-var(--bar)-200px)*1.598))]">
-        <motion.div className="wallpaper grain absolute inset-0" style={{ opacity: wallOpacity }} aria-hidden />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-black" aria-hidden />
+      <div className="sticky top-0 h-svh overflow-hidden bg-black [--pw:min(1040px,calc(100vw-24px),calc((100svh-var(--bar)-200px)*1.598))]">
 
         <motion.div
-          className="absolute left-1/2 top-0 aspect-[1560/976] w-[var(--pw)] -translate-x-1/2 overflow-hidden bg-black will-change-[clip-path]"
+          className="absolute left-1/2 top-0 h-[calc(var(--pw)/1.598+var(--pad))] w-[var(--pw)] -translate-x-1/2 overflow-hidden bg-black will-change-[clip-path]"
           style={{ clipPath }}
         >
-          <Screens active={active} scale={contentScale} />
+          <div className="absolute inset-x-0 bottom-0 top-[var(--pad)]">
+            <Screens active={active} scale={contentScale} />
+          </div>
+          <div className="pointer-events-none absolute inset-0 rounded-b-[34px] ring-1 ring-inset ring-white/12" aria-hidden />
         </motion.div>
 
         <motion.div
@@ -175,7 +175,7 @@ export function Hero() {
         </motion.div>
 
         <motion.div
-          className="absolute inset-x-0 top-[calc(var(--pw)/1.598+24px)]"
+          className="absolute inset-x-0 top-[calc(var(--pw)/1.598+var(--pad)+24px)]"
           initial={false}
           animate={{ opacity: captions ? 1 : 0, y: captions ? 0 : 12 }}
           transition={{ duration: 0.35 }}
