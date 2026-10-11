@@ -26,7 +26,9 @@ lowering eligible background-app priority. Coremium never quits anything on its 
 - **Storage:** see what's filling your disk (app caches, logs, Xcode build files, old downloads, the Trash) and move what you
   choose to the Trash. Read-only scan, nothing is ever deleted for good, documents are never touched.
 - **Window:** Open Coremium Window (menu bar, or `coremium://window`) for a resizable window with the live graphs beside the
-  dashboard. It works on every Mac, notched or not, and needs no Dock icon.
+  dashboard. It works on every Mac, notched or not. The notch and the window are never shown together: the notch steps aside
+  while the window is open. Turn on **Window only** (Settings, or the menu bar) to use Coremium as a normal app with a Dock
+  icon and no notch or pill.
 - **Live graphs:** per-core CPU (performance and efficiency), GPU use with each app's share, and memory and swap, over the
   last 2 minutes (one point a second) or 30 minutes (one averaged point per 10 seconds). Boost sessions show as ticks. The
   history lives in memory only, is collected only while the window is open, and is never saved.

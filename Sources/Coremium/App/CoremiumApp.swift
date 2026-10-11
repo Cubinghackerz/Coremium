@@ -54,13 +54,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         dashboard = DashboardWindowController(engine: engine)
         Automation.dashboard = dashboard
         // One surface at a time: the notch steps aside while the window is open and returns when it closes.
-        dashboard?.onShowTour = { [weak self] in self?.showTour() }
-        dashboard?.onVisibilityChange = { [weak self] open in self?.notch.setEnabled(!open) }
+        dashboard?.onVisibilityChange = { [weak self] open in
+            guard let self else { return }
+            self.notch.setEnabled(!open && !self.engine.windowOnly)
+        }
         installMainMenu()
 
         engine.$rules.map(\.fullscreenFixEnabled).removeDuplicates()
             .sink { [weak self] enabled in self?.fullscreenFix.setEnabled(enabled) }.store(in: &cancellables)
         installStatusItem()
+        // Window only: a normal app with a Dock icon, and no notch. Switching it on opens the window right away.
+        engine.$windowOnly.removeDuplicates().sink { [weak self] on in
+            guard let self else { return }
+            self.applyStyle()
+            if on, self.launched { self.dashboard?.show() }
+        }.store(in: &cancellables)
 
         // Restore every app to full speed if we are asked to quit by the system or from a terminal.
         for sig in [SIGTERM, SIGINT, SIGHUP] {
@@ -75,10 +83,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Automation.engine = engine
         Automation.notch = notch
 
-        if !notch.ui.onboardingCompleted {
+        launched = true
+        if engine.windowOnly {
+            if notch.ui.onboardingCompleted { dashboard?.show() } else { dashboard?.showTour() }
+        } else if !notch.ui.onboardingCompleted {
             notch.ui.showingOnboarding = true
             notch.expand(pinned: true)
         }
+    }
+
+    private var launched = false
+
+    /// Dock icon and no notch in window-only mode; menu bar and notch otherwise.
+    private func applyStyle() {
+        let windowOnly = engine.windowOnly
+        NSApp.setActivationPolicy(windowOnly ? .regular : .accessory)
+        if windowOnly {
+            notch.setEnabled(false)
+        } else if !(dashboard?.isOpen ?? false) {
+            notch.setEnabled(true)
+        }
+    }
+
+    /// Opening Coremium again (Finder, Spotlight, the Dock icon) shows its window, or the notch panel in notch style.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if engine.windowOnly { dashboard?.show() } else { showPanel() }
+        return true
     }
 
     func applicationWillTerminate(_ notification: Notification) { engine.shutdown() }
@@ -89,6 +119,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func showTour() {
+        if engine.windowOnly {
+            dashboard?.showTour()
+            return
+        }
         dashboard?.closeIfOpen()
         notch.ui.showingOnboarding = false
         notch.ui.showingTour = true
@@ -124,10 +158,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.removeAllItems()
         menu.addItem(withTitle: engine.statusLine, action: nil, keyEquivalent: "").isEnabled = false
         menu.addItem(.separator())
-        if notch.ui.expanded {
-            menu.addItem(withTitle: "Hide Coremium", action: #selector(hidePanel), keyEquivalent: "").target = self
-        } else {
-            menu.addItem(withTitle: "Show Coremium", action: #selector(showPanel), keyEquivalent: "").target = self
+        if !engine.windowOnly {
+            if notch.ui.expanded {
+                menu.addItem(withTitle: "Hide Coremium", action: #selector(hidePanel), keyEquivalent: "").target = self
+            } else {
+                menu.addItem(withTitle: "Show Coremium", action: #selector(showPanel), keyEquivalent: "").target = self
+            }
         }
         menu.addItem(withTitle: "Open Coremium Window", action: #selector(openWindow), keyEquivalent: "").target = self
         let modes = NSMenu()
@@ -142,7 +178,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         modeItem.submenu = modes
         menu.addItem(modeItem)
         addToggle(menu, "Advanced mode", notch.ui.advanced, #selector(toggleAdvanced))
-        addToggle(menu, "Show indicators in the notch", notch.ui.showIndicators, #selector(toggleIndicators))
+        if !engine.windowOnly {
+            addToggle(menu, "Show indicators in the notch", notch.ui.showIndicators, #selector(toggleIndicators))
+        }
+        addToggle(menu, "Window only (no notch)", engine.windowOnly, #selector(toggleWindowOnly))
         addToggle(menu, "Pause Coremium", engine.paused, #selector(togglePause))
         addToggle(menu, FullscreenFix.isRecommended ? "Fullscreen fix (recommended)" : "Fullscreen fix (experimental)",
                   engine.rules.fullscreenFixEnabled, #selector(toggleFullscreenFix))
@@ -178,6 +217,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let raw = sender.representedObject as? String, let mode = PerformanceMode(rawValue: raw) { engine.rules.mode = mode }
     }
     @objc private func toggleAdvanced() { notch.ui.advanced.toggle() }
+    @objc private func toggleWindowOnly() { engine.windowOnly.toggle() }
     @objc private func toggleIndicators() { notch.ui.showIndicators.toggle() }
     @objc private func togglePause() { engine.paused.toggle() }
     @objc private func toggleFullscreenFix() { engine.rules.fullscreenFixEnabled.toggle() }

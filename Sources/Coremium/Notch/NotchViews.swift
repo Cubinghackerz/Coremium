@@ -110,6 +110,16 @@ final class NotchUIState: ObservableObject {
         onboardingCompleted = defaults.bool(forKey: "onboardingCompleted")
     }
 
+    /// Re-reads the settings the notch and the window share, which each keep their own copy while they are on screen.
+    func reloadShared() {
+        let advanced = defaults.bool(forKey: "advancedMode")
+        if self.advanced != advanced { self.advanced = advanced }
+        let indicators = defaults.object(forKey: "showIndicators") as? Bool ?? true
+        if showIndicators != indicators { showIndicators = indicators }
+        let toasts = defaults.object(forKey: "decisionToasts") as? Bool ?? true
+        if decisionToasts != toasts { decisionToasts = toasts }
+    }
+
     /// Closes the panel (wired to the controller).
     var onHide: (() -> Void)?
     /// Mouse interaction can give this nonactivating panel keyboard focus without stealing focus on hover.

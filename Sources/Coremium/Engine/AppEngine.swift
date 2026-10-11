@@ -82,6 +82,10 @@ final class AppEngine: ObservableObject {
     let chip = ChipInfo.current()
 
     @Published var rules: RuleSet
+    /// Use Coremium as a normal app (Dock icon and window) with no notch or pill.
+    @Published var windowOnly = UserDefaults.standard.bool(forKey: "windowOnly") {
+        didSet { UserDefaults.standard.set(windowOnly, forKey: "windowOnly") }
+    }
     @Published var paused = false {
         didSet { if paused != oldValue { reschedule(); tick() } }
     }

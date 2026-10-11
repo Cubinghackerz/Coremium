@@ -139,6 +139,7 @@ final class NotchController: NSObject {
     func setEnabled(_ on: Bool) {
         enabled = on
         if on {
+            ui.reloadShared()
             applyFrame(expanded: ui.expanded)
             panel.orderFrontRegardless()
         } else {

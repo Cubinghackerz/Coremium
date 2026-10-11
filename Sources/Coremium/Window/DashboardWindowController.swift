@@ -12,22 +12,16 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
     private let ui = NotchUIState(geometry: NotchGeometry(hasNotch: false, notchWidth: 0, notchHeight: 24))
     private var window: DashboardWindow?
     private var occlusionObserver: NSObjectProtocol?
-    private var tourObserver: AnyCancellable?
-    /// The welcome tour lives in the notch, so the window hands it over (and closes).
-    var onShowTour: (() -> Void)?
 
     init(engine: AppEngine) {
         self.engine = engine
         super.init()
-        tourObserver = ui.$showingTour.filter { $0 }.sink { [weak self] _ in
-            guard let self else { return }
-            self.ui.showingTour = false
-            self.onShowTour?()
-        }
     }
 
     /// Opens the window (or brings it forward). Sampling starts when the window is actually visible.
-    func show() {
+    func show(tab: NotchTab? = nil) {
+        ui.reloadShared()
+        if let tab { ui.tab = tab }
         let window = self.window ?? makeWindow()
         self.window = window
         onVisibilityChange?(true)
@@ -39,6 +33,12 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
 
     /// Called with true when the window opens and false when it closes. The notch is off while the window is open.
     var onVisibilityChange: ((Bool) -> Void)?
+
+    /// The welcome tour, shown over the window.
+    func showTour() {
+        ui.showingTour = true
+        show()
+    }
 
     func closeIfOpen() {
         if isOpen { window?.close() }
@@ -155,6 +155,19 @@ struct DashboardWindowView: View {
         .background(WindowBackdrop())
         .preferredColorScheme(.dark)
         .animation(.easeInOut(duration: 0.2), value: ui.advanced)
+        .overlay {
+            if ui.showingTour {
+                ZStack {
+                    Color.black.opacity(0.88).ignoresSafeArea()
+                    WelcomeTourView(engine: engine, ui: ui, onFinish: { ui.finishOnboarding() })
+                        .frame(width: 780, height: 462)
+                        .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.black))
+                        .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(Theme.border, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                }
+                .transition(.opacity)
+            }
+        }
     }
 
     private var header: some View {
