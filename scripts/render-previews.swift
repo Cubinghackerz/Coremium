@@ -152,6 +152,20 @@ struct RenderPreviews {
                 .environment(\.renderFlat, true),
                 name: name, width: 560, height: nil, dir: dir)
         }
+        // The standard window, simple and Advanced. The history is generated for layout checks only.
+        for t in 0..<120 {
+            let time = 5_000 + TimeInterval(t)
+            var loads: [Double] = []
+            for cpu in 0..<11 { loads.append(min(max(0.35 + 0.3 * sin(time / 7 + Double(cpu)), 0), 1)) }
+            engine.telemetry.record(TelemetrySample(time: time, coreLoads: loads, gpuPercent: 30 + 20 * sin(time / 9),
+                                                    memoryUsedBytes: UInt64(11e9 + 1e9 * sin(time / 20)), swapBytes: 0, pressure: .normal))
+        }
+        for (name, advanced, width) in [("window-simple", false, 1100.0), ("window-advanced", true, 1280.0)] {
+            let ui = NotchUIState(geometry: NotchGeometry(hasNotch: false, notchWidth: 0, notchHeight: 24), defaults: previewDefaults)
+            ui.advanced = advanced
+            save(DashboardWindowView(engine: engine, ui: ui).environment(\.renderFlat, true),
+                 name: name, width: width, height: 720, dir: dir)
+        }
         // Session report card. Sample data, for layout only.
         let sampleReport = SessionReport(start: Date(timeIntervalSince1970: 0), end: Date(timeIntervalSince1970: 2_520), appName: "Roblox",
                                          mode: "Gaming", peakMovedProcesses: 23, movedCoreSeconds: 540, backgroundGPUSeconds: 30,

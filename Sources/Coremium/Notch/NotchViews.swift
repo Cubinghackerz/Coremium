@@ -338,23 +338,33 @@ struct DashboardColumn: View {
             StatusLine(engine: engine, advanced: ui.advanced)
             UpdateBanner()
             TabBar(ui: ui)
-            Group {
-                switch ui.tab {
-                case .apps: AppsTab(engine: engine, ui: ui)
-                case .insights: InsightsTab(engine: engine, advanced: ui.advanced)
-                case .simulate: SimulateTab(engine: engine, advanced: ui.advanced)
-                case .guide: GuideTab()
-                case .storage: StorageTab(ui: ui)
-                case .system: SystemTab(engine: engine, ui: ui)
-                case .settings: SettingsTab(engine: engine, ui: ui)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            DashboardTabContent(engine: engine, ui: ui)
         }
     }
 }
 
-private struct ModeBar: View {
+/// The selected tab's page.
+struct DashboardTabContent: View {
+    @ObservedObject var engine: AppEngine
+    @ObservedObject var ui: NotchUIState
+
+    var body: some View {
+        Group {
+            switch ui.tab {
+            case .apps: AppsTab(engine: engine, ui: ui)
+            case .insights: InsightsTab(engine: engine, advanced: ui.advanced)
+            case .simulate: SimulateTab(engine: engine, advanced: ui.advanced)
+            case .guide: GuideTab()
+            case .storage: StorageTab(ui: ui)
+            case .system: SystemTab(engine: engine, ui: ui)
+            case .settings: SettingsTab(engine: engine, ui: ui)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+struct ModeBar: View {
     @ObservedObject var engine: AppEngine
 
     var body: some View {
@@ -399,7 +409,7 @@ private struct ModeBar: View {
     }
 }
 
-private struct StatusLine: View {
+struct StatusLine: View {
     @ObservedObject var engine: AppEngine
     let advanced: Bool
 
@@ -476,8 +486,11 @@ private struct PanelActions: View {
     }
 }
 
-private struct TabBar: View {
+struct TabBar: View {
     @ObservedObject var ui: NotchUIState
+    /// The standard window starts with a tab focused; draw the ring only once the arrow keys have moved it.
+    var quietFocus = false
+    @State private var keyboardMoved = false
     @FocusState private var focusedTab: NotchTab?
     @State private var tabsHadFocus = false
 
@@ -485,8 +498,8 @@ private struct TabBar: View {
         HStack(spacing: 2) {
             ForEach(NotchTab.allCases) { tab in
                 let selected = ui.tab == tab
-                let focused = focusedTab == tab
-                Button { ui.selectTab(tab) } label: {
+                let focused = focusedTab == tab && (!quietFocus || keyboardMoved)
+                Button { keyboardMoved = false; ui.selectTab(tab) } label: {
                     Text(tab.title)
                         .font(.system(size: 11.5, weight: .semibold, design: .rounded))
                         .lineLimit(1).fixedSize()
@@ -503,6 +516,7 @@ private struct TabBar: View {
                 .onMoveCommand { direction in
                     guard direction == .left || direction == .right else { return }
                     let next = tab.next(offset: direction == .left ? -1 : 1)
+                    keyboardMoved = true
                     ui.selectTab(next)
                     focusedTab = next
                 }

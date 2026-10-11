@@ -149,3 +149,39 @@ struct SessionMarks: View {
         }
     }
 }
+
+/// A small filled line for one value on a 0...1 scale, with no axes. The newest reading is on the right.
+struct Sparkline: View {
+    let entries: [TelemetryEntry]
+    let capacity: Int
+    let color: Color
+    let value: (TelemetrySample) -> Double?
+
+    var body: some View {
+        Canvas { context, size in
+            let slotWidth = size.width / CGFloat(capacity)
+            var run: [CGPoint] = []
+            func flush() {
+                defer { run.removeAll() }
+                guard run.count > 1 else { return }
+                var line = Path()
+                line.move(to: run[0])
+                for point in run.dropFirst() { line.addLine(to: point) }
+                var area = line
+                area.addLine(to: CGPoint(x: run[run.count - 1].x, y: size.height))
+                area.addLine(to: CGPoint(x: run[0].x, y: size.height))
+                area.closeSubpath()
+                context.fill(area, with: .linearGradient(
+                    Gradient(colors: [color.opacity(0.32), color.opacity(0)]),
+                    startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+                context.stroke(line, with: .color(color), style: StrokeStyle(lineWidth: 1.4, lineCap: .round, lineJoin: .round))
+            }
+            for (slot, entry) in ChartSlots.placed(entries, capacity: capacity) {
+                guard case let .sample(sample) = entry, let raw = value(sample) else { flush(); continue }
+                run.append(CGPoint(x: (CGFloat(slot) + 0.5) * slotWidth,
+                                   y: size.height * (1 - CGFloat(min(max(raw, 0), 1))) * 0.92 + size.height * 0.04))
+            }
+            flush()
+        }
+    }
+}

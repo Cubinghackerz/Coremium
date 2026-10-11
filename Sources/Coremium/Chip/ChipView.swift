@@ -150,7 +150,7 @@ struct ChipPanel: View {
     }
 
     /// Every number, in a compact monospaced table.
-    private func advancedStats(_ chip: ChipInfo) -> some View {
+    func advancedStats(_ chip: ChipInfo) -> some View {
         let loads = engine.cpuLoads
         func average(_ cpus: [Int]) -> Double {
             let values = cpus.compactMap { $0 < loads.count ? loads[$0] : nil }
